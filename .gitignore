@@ -1,0 +1,26 @@
+node_modules/
+.nuxt/
+.output/
+dist/
+*.log
+.DS_Store
+
+# Generated sub-admin projects — rebuildable from the control plane at any time
+tenants/*
+!tenants/.gitkeep
+
+# Temp scripts
+scripts/*
+!scripts/.gitkeep
+
+# Local overrides
+.env.local
+*.removed-*
+
+# Archives
+*.tar.gz
+*.zip
+
+# local agent scratch
+.qwen/
+.env

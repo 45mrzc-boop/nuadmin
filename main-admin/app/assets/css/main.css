@@ -1,0 +1,36 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* Brand tokens carried over from genplus-demo.html (--primary #007aff / --radius 12px). */
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #0a84ff;
+  --color-primary-600: #0069d9;
+  --color-primary-700: #0055b3;
+  --color-primary-800: #00408a;
+  --color-primary-900: #002c61;
+  --color-primary-950: #001b3d;
+
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --font-sans: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+}
+
+::selection { background: var(--color-primary-500); color: #fff; }
+
+/* The prototype's frosted-glass panels. */
+@utility panel {
+  background-color: --theme(--color-white/70%);
+  backdrop-filter: blur(20px);
+}
+.dark .panel {
+  background-color: --theme(--color-gray-900/70%);
+}

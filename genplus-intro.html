@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GenPlus (NuAdmin) — 工业级 AI 低代码生成与微应用交付工作台</title>
+  <meta name="description" content="基于 Nuxt 3 + Vue 3 + Tailwind CSS + Nitro + MySQL + Casbin 的工业级低代码 AI 生成与微应用交付工作台，100% 独立自治工程交付，0 运行时平台依赖。" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .glass-nav {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gradient-border {
+      position: relative;
+      border-radius: 1rem;
+      background: linear-gradient(60deg, #10b981, #0ea5e9);
+      padding: 1px;
+    }
+    .glow-blob {
+      position: absolute;
+      filter: blur(90px);
+      opacity: 0.25;
+      pointer-events: none;
+      border-radius: 9999px;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #10b981;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased selection:bg-brand-500 selection:text-white min-h-screen flex flex-col relative overflow-x-hidden">
+
+  <!-- Ambient Glow Effects -->
+  <div class="glow-blob w-96 h-96 bg-brand-500 top-[-5rem] left-[-5rem]"></div>
+  <div class="glow-blob w-96 h-96 bg-sky-500 top-[25rem] right-[-5rem]"></div>
+  <div class="glow-blob w-80 h-80 bg-purple-500 bottom-[20rem] left-[10rem]"></div>
+
+  <!-- Navigation Header -->
+  <header class="sticky top-0 z-50 glass-nav border-b border-slate-800/80 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-sky-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
+            GenPlus <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 font-mono border border-brand-500/30">NuAdmin</span>
+          </span>
+          <p class="text-[10px] text-slate-400 font-medium tracking-wide">AI 低代码生成工作台</p>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Menu -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="#features" class="hover:text-brand-400 transition-colors">核心特性</a>
+        <a href="#gatekeeper" class="hover:text-brand-400 transition-colors">三大门禁</a>
+        <a href="#capabilities" class="hover:text-brand-400 transition-colors">18项能力库</a>
+        <a href="#stations" class="hover:text-brand-400 transition-colors">9大工位</a>
+        <a href="#quickstart" class="hover:text-brand-400 transition-colors">快速上手</a>
+      </nav>
+
+      <!-- Action Button -->
+      <div class="flex items-center gap-3">
+        <a href="#quickstart" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold transition-all shadow-md shadow-brand-500/20 active:scale-95">
+          <span>立即上手体验</span>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </a>
+        <!-- Mobile Menu Toggle Button -->
+        <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-6 border-b border-slate-800 bg-slate-900/95 space-y-3">
+      <a href="#features" class="block py-2 text-slate-200 font-medium hover:text-brand-400">核心特性</a>
+      <a href="#gatekeeper" class="block py-2 text-slate-200 font-medium hover:text-brand-400">三大门禁模式</a>
+      <a href="#capabilities" class="block py-2 text-slate-200 font-medium hover:text-brand-400">18项全场景能力库</a>
+      <a href="#stations" class="block py-2 text-slate-200 font-medium hover:text-brand-400">9大低代码工位</a>
+      <a href="#quickstart" class="block py-2 text-slate-200 font-medium hover:text-brand-400">快速上手教程</a>
+      <div class="pt-2">
+        <a href="#quickstart" class="w-full text-center block py-2.5 rounded-xl bg-brand-500 text-slate-950 font-bold text-sm">立即上手体验</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Hero Section -->
+  <section class="relative pt-16 pb-20 md:pt-28 md:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <div class="text-center space-y-6 max-w-4xl mx-auto">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-xs font-semibold text-brand-300 shadow-sm animate-pulse">
+        <span class="w-2 h-2 rounded-full bg-brand-400"></span>
+        <span>Agentic Architecture · 工业级独立子系统生成平台</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
+        让 AI 像资深架构师一样，<br class="hidden sm:inline" />
+        秒级生成 <span class="gradient-text">100% 独立自治</span> 的全栈系统
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-base sm:text-lg md:text-xl text-slate-400 leading-relaxed font-normal max-w-3xl mx-auto">
+        基于 <strong class="text-slate-200">Nuxt 3 + Tailwind + Nitro + MySQL + Casbin</strong>。平台与生成子系统完全物理隔离，自带独立数据库、独立权限域与独立运行时，彻底摆脱传统低代码平台捆绑。
+      </p>
+
+      <!-- Action CTA Buttons -->
+      <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#quickstart" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 transition-all transform hover:-translate-y-0.5 active:scale-95">
+          <span>快速上手部署 (4步走)</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </a>
+        <a href="#gatekeeper" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-all">
+          <span>探索门禁模式与能力库</span>
+        </a>
+      </div>
+
+      <!-- Feature Badges Row -->
+      <div class="pt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto text-left">
+        <div class="glass-card p-4 rounded-2xl border border-slate-800">
+          <div class="text-brand-400 font-bold text-lg sm:text-xl flex items-center gap-2">
+            <span>⚡ 0-Token</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">毫秒级工业编译，告别大模型海量吐码与上下文截断</p>
+        </div>
+        <div class="glass-card p-4 rounded-2xl border border-slate-800">
+          <div class="text-sky-400 font-bold text-lg sm:text-xl flex items-center gap-2">
+            <span>🛡️ 独立自治</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">独立项目目录与独立 MySQL 库，主后台宕机业务不受影响</p>
+        </div>
+        <div class="glass-card p-4 rounded-2xl border border-slate-800">
+          <div class="text-amber-400 font-bold text-lg sm:text-xl flex items-center gap-2">
+            <span>🔐 三大门禁</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">简单密码、平权成员、RBAC 深度自适应，登录与菜单全联动</p>
+        </div>
+        <div class="glass-card p-4 rounded-2xl border border-slate-800">
+          <div class="text-purple-400 font-bold text-lg sm:text-xl flex items-center gap-2">
+            <span>📦 18项能力</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">涵盖纯静态企业CMS、数据看板、海报二码、表单与审批流</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Core Pillars / Features -->
+  <section id="features" class="py-16 sm:py-24 border-t border-slate-800/80 bg-slate-900/40 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-14">
+        <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Architectural Highlights</h2>
+        <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          颠覆传统低代码的 4 大工程架构优势
+        </h3>
+        <p class="text-slate-400 text-sm sm:text-base mt-3">
+          不写死运行时、不绑死平台组件，把生产级研发的最佳实践固化在生成引擎中。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+        <!-- Card 1 -->
+        <div class="glass-card p-6 sm:p-8 rounded-3xl relative overflow-hidden group hover:border-brand-500/50 transition-all">
+          <div class="w-12 h-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center text-xl font-bold mb-5">
+            01
+          </div>
+          <h4 class="text-xl font-bold text-white mb-2 group-hover:text-brand-300 transition-colors">
+            Skills + MCP 双模式驱动（脑手合一）
+          </h4>
+          <p class="text-slate-400 text-sm leading-relaxed mb-4">
+            坚持“Skills 定规程，MCP 通底层”。杜绝一句话一干到底的盲目生成。提供 <code class="text-brand-300 bg-brand-950/80 px-1.5 py-0.5 rounded text-xs">genplus-build</code> 简略/细节双轨立项与 <code class="text-brand-300 bg-brand-950/80 px-1.5 py-0.5 rounded text-xs">genplus-maintain</code> 增量维护。大模型通过标准化 MCP 协议直通 7 大控制面、独立数据库与无头浏览器真机截图。
+          </p>
+          <div class="flex flex-wrap gap-2 text-xs font-mono text-slate-300">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">genplus-mcp.mjs</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">CDP 无头渲染</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">双轨对齐</span>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="glass-card p-6 sm:p-8 rounded-3xl relative overflow-hidden group hover:border-sky-500/50 transition-all">
+          <div class="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center text-xl font-bold mb-5">
+            02
+          </div>
+          <h4 class="text-xl font-bold text-white mb-2 group-hover:text-sky-300 transition-colors">
+            完全自治与 100% 物理隔离
+          </h4>
+          <p class="text-slate-400 text-sm leading-relaxed mb-4">
+            每个子系统生成在独立目录中，拥有自己的独立 MySQL 数据库（<code class="text-sky-300 bg-sky-950/80 px-1.5 py-0.5 rounded text-xs">nuadmin_t_*</code>）、专属 JWT 秘钥与独立端口。即使把主控制面整库删除，生成的子后台依旧可以直接 <code class="text-sky-300 bg-sky-950/80 px-1.5 py-0.5 rounded text-xs">npm run build</code> 并在生产环境独立运行。
+          </p>
+          <div class="flex flex-wrap gap-2 text-xs font-mono text-slate-300">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">零平台绑定</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">独立 JWT</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">独立端口</span>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="glass-card p-6 sm:p-8 rounded-3xl relative overflow-hidden group hover:border-amber-500/50 transition-all">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl font-bold mb-5">
+            03
+          </div>
+          <h4 class="text-xl font-bold text-white mb-2 group-hover:text-amber-300 transition-colors">
+            B + C 双端闭环与纯静态微门户
+          </h4>
+          <p class="text-slate-400 text-sm leading-relaxed mb-4">
+            不止能生成中后台 CRUD！通过一键装配 <code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_cms</code>、<code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_poster</code>、<code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_form</code> 等微门户能力，工作台能同步构建**纯静态、0-API 水合、自带暗黑主题的对外公开门户**，实现业务全链路闭环。
+          </p>
+          <div class="flex flex-wrap gap-2 text-xs font-mono text-slate-300">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">纯静态 CMS</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">渠道海报二码</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">表单动态收集</span>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="glass-card p-6 sm:p-8 rounded-3xl relative overflow-hidden group hover:border-purple-500/50 transition-all">
+          <div class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-xl font-bold mb-5">
+            04
+          </div>
+          <h4 class="text-xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors">
+            毫秒级工业编译，Token 消耗直降 95%
+          </h4>
+          <p class="text-slate-400 text-sm leading-relaxed mb-4">
+            传统 AI 编程需大模型持续吐出成千上万行 Vue 模板与 Nitro 路由，极易断流报错；GenPlus 让模型只需决策几十 Token 的结构化描述，由本地确切编译引擎（Deterministic Industrial Engine）毫秒级完成全套工程编译。
+          </p>
+          <div class="flex flex-wrap gap-2 text-xs font-mono text-slate-300">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">极速落库</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">确定性 AST</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">高鲁棒性</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Three Gatekeeper Modes Interactive Showcase -->
+  <section id="gatekeeper" class="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Gatekeeper Authentication</h2>
+      <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+        三大自适应门禁鉴权模式
+      </h3>
+      <p class="text-slate-400 text-sm sm:text-base mt-3">
+        告别千篇一律的伪 RBAC！系统根据选定模式深度自适应登录界面、侧边栏菜单与权限策略。
+      </p>
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="flex justify-center mb-8">
+      <div class="glass-card p-1.5 rounded-2xl flex flex-wrap gap-1 border border-slate-800 max-w-lg w-full">
+        <button onclick="switchMode('simple')" id="btn-mode-simple" class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-brand-500 text-slate-950 shadow-md">
+          🔑 简单密码 (simple)
+        </button>
+        <button onclick="switchMode('users')" id="btn-mode-users" class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white">
+          👥 成员平权 (users)
+        </button>
+        <button onclick="switchMode('rbac')" id="btn-mode-rbac" class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white">
+          🛡️ 完整权限 (rbac)
+        </button>
+      </div>
+    </div>
+
+    <!-- Interactive Mode Display Box -->
+    <div class="glass-card rounded-3xl p-6 sm:p-10 border border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <!-- Left Column: Descriptions -->
+      <div class="lg:col-span-5 space-y-5">
+        <div id="mode-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30">
+          极速开门 · 内部敏捷模式
+        </div>
+        <h4 id="mode-title" class="text-2xl sm:text-3xl font-bold text-white">
+          简单密码模式 (Simple Mode)
+        </h4>
+        <p id="mode-desc" class="text-slate-300 text-sm sm:text-base leading-relaxed">
+          全站共用安全门禁口令（默认 admin123），完全不区分谁在操作。专为内部工具、原型演示、数据采集后台打造。
+        </p>
+
+        <!-- Feature Points List -->
+        <ul id="mode-points" class="space-y-3 text-sm text-slate-300">
+          <li class="flex items-start gap-2.5">
+            <span class="text-brand-400 font-bold">✓</span>
+            <span><strong>免账号登录</strong>：登录页彻底隐藏账号输入框，仅保留门禁口令与【验证开门】</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-brand-400 font-bold">✓</span>
+            <span><strong>侧边栏自动精简</strong>：自动隐藏【用户管理】与【角色管理】，只留纯粹业务菜单</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-brand-400 font-bold">✓</span>
+            <span><strong>持门者身份</strong>：左下角身份标识为“持门者（门禁授权通行）”，避免虚假角色的困惑</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Right Column: Simulated UI Mockup -->
+      <div class="lg:col-span-7 bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-800 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+            <span class="text-xs font-mono text-slate-400 ml-2" id="mockup-url">http://127.0.0.1:6005/preview/app_demo/login</span>
+          </div>
+          <span class="text-[11px] font-mono text-brand-400 bg-brand-950/60 px-2 py-0.5 rounded" id="mockup-mode-tag">MODE: simple</span>
+        </div>
+
+        <!-- Visual Mockup Canvas -->
+        <div id="mockup-content" class="bg-slate-950 rounded-xl p-6 border border-slate-800/80 flex flex-col items-center justify-center min-h-[260px] text-center">
+          <!-- Simple Mockup -->
+          <div class="max-w-xs w-full space-y-4">
+            <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs text-left flex items-center gap-2">
+              <span>🔑</span>
+              <div>
+                <p class="font-bold">单一门禁口令模式</p>
+                <p class="text-[11px] text-emerald-400/80">全站共用访问密码，输入验证后即可快速通行</p>
+              </div>
+            </div>
+            <div class="text-left space-y-1">
+              <label class="text-xs text-slate-400 font-medium">门禁口令</label>
+              <div class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 flex items-center justify-between">
+                <span>••••••••••••</span>
+                <span class="text-slate-500 text-[11px]">口令</span>
+              </div>
+            </div>
+            <button class="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20">
+              <span>🚪 验证开门</span>
+            </button>
+            <p class="text-[11px] text-slate-500">已自动剔除用户账号框与复杂的RBAC策略</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: 18 Capabilities Matrix -->
+  <section id="capabilities" class="py-16 sm:py-24 border-t border-slate-800/80 bg-slate-900/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-10">
+        <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Capabilities Ecosystem</h2>
+        <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          18 项工业级全场景能力库
+        </h3>
+        <p class="text-slate-400 text-sm sm:text-base mt-3">
+          涵盖从核心基础治理、复杂业务流程到全静态前台微门户，在建模或维护期均可随时一键装配。
+        </p>
+      </div>
+
+      <!-- Filter Buttons -->
+      <div class="flex flex-wrap justify-center gap-2 mb-10">
+        <button onclick="filterCaps('all')" class="cap-btn active px-4 py-1.5 rounded-full text-xs font-semibold bg-brand-500 text-slate-950 transition-all shadow-sm">
+          全部 (18)
+        </button>
+        <button onclick="filterCaps('landing')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">
+          前台微门户 (4)
+        </button>
+        <button onclick="filterCaps('process')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">
+          流程与调度 (4)
+        </button>
+        <button onclick="filterCaps('data')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">
+          数据与交互 (6)
+        </button>
+        <button onclick="filterCaps('governance')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">
+          系统安全治理 (4)
+        </button>
+      </div>
+
+      <!-- Capabilities Grid -->
+      <div id="caps-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- 1. landing_cms -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="landing">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🌐</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold">landing_cms</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">纯静态企业官网与内容CMS</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">纯静态 0-API 水合官网页面，暗黑主题实时切换，文章抽屉式极速阅读，自带 SEO 优化。</p>
+        </div>
+
+        <!-- 2. landing_poster -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="landing">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🖼️</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">landing_poster</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">推广海报与二码中心</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">参数化渠道二维码生成、带参海报落地页展示，支持扫码流转与线索埋点溯源。</p>
+        </div>
+
+        <!-- 3. landing_form -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="landing">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">📝</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">landing_form</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">动态线索收集表单</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">移动端自适应公开收集页，自定义表单校验规则，提交后数据即刻安全入库入审。</p>
+        </div>
+
+        <!-- 4. landing_portal -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="landing">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🏛️</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">landing_portal</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">前台复合业务门户</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">聚合业务卡片展示、分类检索、预约挂号与活动报名等前台移动端沉浸式体验。</p>
+        </div>
+
+        <!-- 5. dashboard -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="process">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">📊</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold">dashboard</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">实时业务数据看板</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">核心指标卡片、趋势折线、分类占比饼图，自带统计聚合 SQL 自动化注入。</p>
+        </div>
+
+        <!-- 6. flow -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="process">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🔄</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">flow</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">状态机审批工作流</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">多阶段审核流转，流转历史时间轴追溯，驳回原因记录与权限状态守卫。</p>
+        </div>
+
+        <!-- 7. job -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="process">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">⏱️</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">job</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">分布式定时调度任务</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">可视化 Cron 表达式配置、任务启停切换、手动立即触发与详尽执行日志审计。</p>
+        </div>
+
+        <!-- 8. message -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="process">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🔔</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">message</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">系统站内信广播通知</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">用户未读角标提示、系统公告推送、业务事件即时通知与已读状态管理。</p>
+        </div>
+
+        <!-- 9. dict -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="governance">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">📖</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold">dict</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">全动态数据字典中枢</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">键值对与标签状态管理，全局组件自动联动，支持动态色标与枚举快速翻译。</p>
+        </div>
+
+        <!-- 10. log -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="governance">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🛡️</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">log</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">操作审计与安全日志</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">自动捕获全站写操作请求与入参出参，精准追溯操作人 IP、耗时与变更结果。</p>
+        </div>
+
+        <!-- 11. security -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="governance">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🔒</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">security</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">安全基线与频次限流</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">防暴力破解阈值拦截、账户锁定机制、请求频次 Rate Limit 与安全头注入。</p>
+        </div>
+
+        <!-- 12. i18n -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="governance">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🌍</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">i18n</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">多语言国际化包</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">中英双语即时切换，支持动态菜单与多语种字段联动，满足全球化出海业务。</p>
+        </div>
+
+        <!-- 13. io -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">📤</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold">io</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">智能导入导出 (Excel/CSV)</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">一键导出当前筛选数据，支持下载规范模板并批量导入，自动执行唯一键冲突检测。</p>
+        </div>
+
+        <!-- 14. file -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">📁</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">file</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">文件上传与媒体存储</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">本地/OSS 无缝直传、图片缩略图自动生成、文件 MIME 白名单与安全扩展名拦截。</p>
+        </div>
+
+        <!-- 15. batch -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">⚡</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">batch</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">批量操作动作矩阵</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">表格多选勾选、批量删除、批量修改枚举状态、批量审批，大幅提升运营效能。</p>
+        </div>
+
+        <!-- 16. tree -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🌲</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">tree</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">无限级树形结构</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">部门层级、商品类目树、无限级嵌套表格展示与自动父子级联查找。</p>
+        </div>
+
+        <!-- 17. recycle -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">♻️</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">recycle</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">软删除与数据回收站</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">防误删逻辑软删除、数据快照版本备份、一键全量还原或彻底物理粉碎。</p>
+        </div>
+
+        <!-- 18. print -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🖨️</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold">print</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">票据与单据套打</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">可视化订单凭据打印排版、敏感信息脱敏水印渲染与打印机原生无缝对接。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: 9 Stations Pipeline -->
+  <section id="stations" class="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Workbench Pipeline</h2>
+      <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+        9 大专业低代码工位全景协同
+      </h3>
+      <p class="text-slate-400 text-sm sm:text-base mt-3">
+        每个项目配备 9 大专项工位，从底层模型到前端呈现，每个细节皆可被精确掌控。
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">🏗️</div>
+        <h5 class="text-base font-bold text-white">1. 建模站 (Model)</h5>
+        <p class="text-xs text-slate-400 mt-2">分组、模块与字段定义，支持类型推断、外键关联与 JSON 模型规范一键导入导出。</p>
+      </div>
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">🧩</div>
+        <h5 class="text-base font-bold text-white">2. 能力库 (Capability)</h5>
+        <p class="text-xs text-slate-400 mt-2">18 项能力自主装配中枢，配置表单可视化注入与多能力依赖冲突自动校验。</p>
+      </div>
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">🎨</div>
+        <h5 class="text-base font-bold text-white">3. 设计站 (Design)</h5>
+        <p class="text-xs text-slate-400 mt-2">5 套登录页视觉模板、全站色调色系、侧边栏折叠形态与三大门禁认证模式配置。</p>
+      </div>
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">🔌</div>
+        <h5 class="text-base font-bold text-white">4. 逻辑站 (Logic)</h5>
+        <p class="text-xs text-slate-400 mt-2">配置 8 个服务端生命周期钩子（前置拦截、入库校验、联动通知）与自定义扩展路由。</p>
+      </div>
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">🗄️</div>
+        <h5 class="text-base font-bold text-white">5. 数据站 (Seed)</h5>
+        <p class="text-xs text-slate-400 mt-2">启发式拟真商业数据播种规则，开发与验收期一键生成逼真业务测试数据。</p>
+      </div>
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">✅</div>
+        <h5 class="text-base font-bold text-white">6. 验证站 (Verify)</h5>
+        <p class="text-xs text-slate-400 mt-2">AST 语法分析、esbuild 完整性扫描、物理 DDL 实跑迁移与接口自动化断言。</p>
+      </div>
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">👁️</div>
+        <h5 class="text-base font-bold text-white">7. 预览站 (Preview)</h5>
+        <p class="text-xs text-slate-400 mt-2">控制面同源反向代理，在工作台内实时内嵌操作运行中的子系统，零跨域阻碍。</p>
+      </div>
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">⚙️</div>
+        <h5 class="text-base font-bold text-white">8. 生成站 (Generator)</h5>
+        <p class="text-xs text-slate-400 mt-2">一键触发确定性工程编译，产出全套 Nuxt 3 代码并支持 Git 时间线版本回滚。</p>
+      </div>
+      <div class="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all">
+        <div class="text-2xl mb-3">🤖</div>
+        <h5 class="text-base font-bold text-white">9. AI 创作中枢 (AI Studio)</h5>
+        <p class="text-xs text-slate-400 mt-2">自然语言协同对话编排，产出结构化变更动作，支持签署确认后一键落地。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Quickstart 4-Steps Guide -->
+  <section id="quickstart" class="py-16 sm:py-24 border-t border-slate-800/80 bg-slate-900/40">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-14">
+        <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Getting Started Guide</h2>
+        <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          极速上手 4 步走：从 0 到 独立子系统
+        </h3>
+        <p class="text-slate-400 text-sm sm:text-base mt-3">
+          开箱即用，只需几条标准命令，即可在本地完整跑通全流程。
+        </p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Step 1 -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row gap-6 items-start">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 font-bold flex items-center justify-center shrink-0 text-lg border border-brand-500/30">
+            1
+          </div>
+          <div class="space-y-2 flex-1 w-full">
+            <h5 class="text-lg font-bold text-white">准备环境与导入控制面数据库</h5>
+            <p class="text-xs sm:text-sm text-slate-400">
+              确保本机已安装 Node.js >= 18 与 MySQL 8.0+。执行根目录下的 <code class="text-brand-300 bg-brand-950 px-1 py-0.5 rounded text-xs">nuadmin.sql</code> 即可一键初始化控制面库与预设字典：
+            </p>
+            <div class="bg-slate-950 rounded-xl p-3.5 border border-slate-800 text-xs font-mono text-slate-300 flex items-center justify-between group">
+              <span class="select-all">mysql -h 127.0.0.1 -P 3306 -u root -p &lt; nuadmin.sql</span>
+              <button onclick="copyCode('mysql -h 127.0.0.1 -P 3306 -u root -p < nuadmin.sql')" class="text-slate-500 hover:text-brand-400 text-xs">复制</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row gap-6 items-start">
+          <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 font-bold flex items-center justify-center shrink-0 text-lg border border-sky-500/30">
+            2
+          </div>
+          <div class="space-y-2 flex-1 w-full">
+            <h5 class="text-lg font-bold text-white">配置并启动主控制面服务 (Port 6005)</h5>
+            <p class="text-xs sm:text-sm text-slate-400">
+              进入 <code class="text-slate-200">main-admin</code> 目录，复制环境配置模板并启动：
+            </p>
+            <div class="bg-slate-950 rounded-xl p-3.5 border border-slate-800 text-xs font-mono text-slate-300 flex items-center justify-between group">
+              <span class="select-all">cd main-admin && cp .env.example .env && npm install && npm run dev</span>
+              <button onclick="copyCode('cd main-admin && cp .env.example .env && npm install && npm run dev')" class="text-slate-500 hover:text-sky-400 text-xs">复制</button>
+            </div>
+            <p class="text-xs text-slate-500">启动后访问 <a href="http://localhost:6005" target="_blank" class="text-brand-400 underline">http://localhost:6005</a>，默认管理员账号：<code class="text-slate-300">admin</code> / 密码：<code class="text-slate-300">admin123</code></p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row gap-6 items-start">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center shrink-0 text-lg border border-amber-500/30">
+            3
+          </div>
+          <div class="space-y-2 flex-1 w-full">
+            <h5 class="text-lg font-bold text-white">通过 AI 对话或 9 大工位一键立项建模</h5>
+            <p class="text-xs sm:text-sm text-slate-400">
+              使用 AI 智能体对话（输入如：“构建一套医院预约挂号系统并装配数据看板和官网CMS”），选择【简略模式】单轮确认，或在工位中精细勾选 18 项能力包与门禁鉴权形态。
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row gap-6 items-start">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center shrink-0 text-lg border border-purple-500/30">
+            4
+          </div>
+          <div class="space-y-2 flex-1 w-full">
+            <h5 class="text-lg font-bold text-white">一键生成独立工程与脱耦独立部署</h5>
+            <p class="text-xs sm:text-sm text-slate-400">
+              在【生成站】点击生成，工程将自动输出至 <code class="text-purple-300 bg-purple-950 px-1 py-0.5 rounded text-xs">tenants/&lt;slug&gt;</code>，可脱离控制面独立部署：
+            </p>
+            <div class="bg-slate-950 rounded-xl p-3.5 border border-slate-800 text-xs font-mono text-slate-300 flex items-center justify-between group">
+              <span class="select-all">cd tenants/app_demo && npm install && npm run build</span>
+              <button onclick="copyCode('cd tenants/app_demo && npm install && npm run build')" class="text-slate-500 hover:text-purple-400 text-xs">复制</button>
+            </div>
+            <p class="text-xs text-slate-500">产出标准的 <code class="text-slate-300">.output/server/index.mjs</code>，支持 Docker 容器化或 PM2 部署上线。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Section: Handcrafted vs GenPlus -->
+  <section class="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Comparison Matrix</h2>
+      <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+        为什么选择 GenPlus？
+      </h3>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs sm:text-sm text-slate-300 glass-card rounded-2xl overflow-hidden border border-slate-800">
+        <thead class="bg-slate-900/90 text-slate-100 font-bold text-xs uppercase tracking-wider border-b border-slate-800">
+          <tr>
+            <th class="py-4 px-5">对比维度</th>
+            <th class="py-4 px-5 text-slate-400">传统手工编码</th>
+            <th class="py-4 px-5 text-slate-400">传统低代码 (平台式)</th>
+            <th class="py-4 px-5 text-brand-400 bg-brand-500/10 font-extrabold">GenPlus (NuAdmin)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800">
+          <tr>
+            <td class="py-4 px-5 font-semibold text-white">交付物归属</td>
+            <td class="py-4 px-5 text-slate-400">自有代码</td>
+            <td class="py-4 px-5 text-rose-400">强绑定平台，无法脱离</td>
+            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">100% 独立独立 Nuxt 3 工程</td>
+          </tr>
+          <tr>
+            <td class="py-4 px-5 font-semibold text-white">数据存储隔离</td>
+            <td class="py-4 px-5 text-slate-400">手工多租户或多库</td>
+            <td class="py-4 px-5 text-rose-400">共享大宽表，安全隐患大</td>
+            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">物理独立专属 MySQL 数据库</td>
+          </tr>
+          <tr>
+            <td class="py-4 px-5 font-semibold text-white">AI 编程效率与成本</td>
+            <td class="py-4 px-5 text-slate-400">昂贵，动辄百万 Token</td>
+            <td class="py-4 px-5 text-slate-400">不支持或仅辅助文本</td>
+            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">极低 Token 消耗，0-Token 编译</td>
+          </tr>
+          <tr>
+            <td class="py-4 px-5 font-semibold text-white">门禁与鉴权自适应</td>
+            <td class="py-4 px-5 text-slate-400">需重复手工手写</td>
+            <td class="py-4 px-5 text-slate-400">固定一套死板权限</td>
+            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">简单密码 / 平权成员 / RBAC 动态联动</td>
+          </tr>
+          <tr>
+            <td class="py-4 px-5 font-semibold text-white">B+C 双端业务闭环</td>
+            <td class="py-4 px-5 text-slate-400">两套工程分别开发</td>
+            <td class="py-4 px-5 text-rose-400">仅限管理后台 CRUD</td>
+            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">后台 CRUD + 纯静态全域微门户同体</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Toast Notification element -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-brand-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow-2xl text-xs flex items-center gap-2">
+    <span>✓ 已成功复制到剪贴板</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-slate-950 py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-[10px]">
+          G+
+        </div>
+        <span>GenPlus (NuAdmin) · 基于 Nuxt 3 工业级低代码 AI 生成工作台</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="CONTRACT.md" class="hover:text-slate-300 transition-colors">接口契约</a>
+        <a href="AGENTS.md" class="hover:text-slate-300 transition-colors">Agent 规范</a>
+        <a href="README.md" class="hover:text-slate-300 transition-colors">说明文档</a>
+        <span class="text-slate-600">|</span>
+        <span class="text-slate-400">MIT Licensed</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Interactive Logic Scripts -->
+  <script>
+    // Mobile menu toggle
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // Three Gatekeeper Modes Data
+    const modesData = {
+      simple: {
+        badge: '极速开门 · 内部敏捷模式',
+        title: '简单密码模式 (Simple Mode)',
+        desc: '全站共用安全门禁口令（默认 admin123），完全不区分谁在操作。专为内部敏捷工具、原型演示与快速数据采集打造。',
+        url: 'http://127.0.0.1:6005/preview/app_demo/login',
+        tag: 'MODE: simple',
+        points: [
+          '免账号登录：登录页彻底隐藏账号输入框，仅保留单个门禁口令输入与【验证开门】',
+          '侧边栏自动精简：彻底剔除【用户管理】与【角色管理】，无任何无用菜单冗余',
+          '持门者通行：当前身份标识为“持门者（门禁授权通行）”，直观明了'
+        ],
+        mockup: `
+          <div class="max-w-xs w-full space-y-4">
+            <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs text-left flex items-center gap-2">
+              <span>🔑</span>
+              <div>
+                <p class="font-bold">单一门禁口令模式</p>
+                <p class="text-[11px] text-emerald-400/80">全站共用访问密码，输入验证后即可快速通行</p>
+              </div>
+            </div>
+            <div class="text-left space-y-1">
+              <label class="text-xs text-slate-400 font-medium">门禁口令</label>
+              <div class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 flex items-center justify-between">
+                <span>••••••••••••</span>
+                <span class="text-slate-500 text-[11px]">口令</span>
+              </div>
+            </div>
+            <button class="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20">
+              <span>🚪 验证开门</span>
+            </button>
+            <p class="text-[11px] text-slate-500">已自动剔除用户账号框与复杂的RBAC策略</p>
+          </div>
+        `
+      },
+      users: {
+        badge: '平权协作 · 团队共享模式',
+        title: '成员平权模式 (Users Mode)',
+        desc: '每人分配一个独立账号密码，能登录即享有全部业务管理权限。适合中小团队平权高效办公，免去频繁配置角色的烦恼。',
+        url: 'http://127.0.0.1:6005/preview/app_demo/admin/system/user',
+        tag: 'MODE: users',
+        points: [
+          '账号密码登录：登录页保留标准账号与密码输入，支持精确记录操作者',
+          '免角色干扰：侧边栏保留【用户管理】并彻底隐藏【角色管理】',
+          '平权机制列：用户列表中明确显示“平权成员”标签，新增成员弹窗无需选择角色'
+        ],
+        mockup: `
+          <div class="w-full space-y-3 text-left">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-white">👥 团队成员管理 (平权协作)</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">共 3 人</span>
+              </div>
+              <span class="text-[10px] px-2 py-1 rounded bg-sky-500 text-slate-950 font-bold">+ 新建成员</span>
+            </div>
+            <div class="space-y-2 font-mono text-xs">
+              <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <span class="text-slate-300 font-bold">admin</span>
+                <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[11px]">平权成员</span>
+                <span class="text-emerald-400 text-[11px]">启用</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <span class="text-slate-300 font-bold">operator_01</span>
+                <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[11px]">平权成员</span>
+                <span class="text-emerald-400 text-[11px]">启用</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 text-center">所有成员平权协作，无需创建和分配复杂角色</p>
+          </div>
+        `
+      },
+      rbac: {
+        badge: '精细授权 · 企业分权模式',
+        title: '完整权限控制模式 (RBAC Mode)',
+        desc: '多角色分权与 Casbin 权限引擎全量开启，支持针对每个角色精确配置菜单权限、页面按钮操作矩阵以及后端 API 策略拦截。',
+        url: 'http://127.0.0.1:6005/preview/app_demo/admin/system/role',
+        tag: 'MODE: rbac (Casbin)',
+        points: [
+          '全量菜单开启：侧边栏同时展示【用户管理】与【角色管理】',
+          'Casbin 策略拦截：基于 domain 域隔离的高效权限判定，未授权访问精准 403',
+          '细粒度动作矩阵：支持对增、删、改、查、导、审等各动作单独授权'
+        ],
+        mockup: `
+          <div class="w-full space-y-3 text-left">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-white">🛡️ 角色管理 (Casbin RBAC)</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">3 个角色</span>
+              </div>
+              <span class="text-[10px] px-2 py-1 rounded bg-purple-500 text-white font-bold">+ 新建角色</span>
+            </div>
+            <div class="space-y-2 font-mono text-xs">
+              <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <span class="text-slate-300 font-bold mr-2">admin</span>
+                  <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px]">超级管理员</span>
+                </div>
+                <span class="text-brand-400 text-[11px]">全权通行</span>
+              </div>
+              <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <span class="text-slate-300 font-bold mr-2">editor</span>
+                  <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px]">业务运营</span>
+                </div>
+                <span class="text-sky-400 text-[11px] underline">配置菜单与权限</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 text-center">严格按用户角色与 Casbin 规则进行权限阻断</p>
+          </div>
+        `
+      }
+    };
+
+    function switchMode(modeKey) {
+      const data = modesData[modeKey];
+      if (!data) return;
+
+      // Update button styles
+      ['simple', 'users', 'rbac'].forEach(k => {
+        const btn = document.getElementById('btn-mode-' + k);
+        if (k === modeKey) {
+          btn.className = 'flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-brand-500 text-slate-950 shadow-md';
+        } else {
+          btn.className = 'flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white';
+        }
+      });
+
+      // Update contents
+      document.getElementById('mode-badge').innerText = data.badge;
+      document.getElementById('mode-title').innerText = data.title;
+      document.getElementById('mode-desc').innerText = data.desc;
+      document.getElementById('mockup-url').innerText = data.url;
+      document.getElementById('mockup-mode-tag').innerText = data.tag;
+      document.getElementById('mockup-content').innerHTML = data.mockup;
+
+      // Update points
+      const ul = document.getElementById('mode-points');
+      ul.innerHTML = data.points.map(p => `
+        <li class="flex items-start gap-2.5">
+          <span class="text-brand-400 font-bold">✓</span>
+          <span>${p}</span>
+        </li>
+      `).join('');
+    }
+
+    // Filter capabilities
+    function filterCaps(cat) {
+      const cards = document.querySelectorAll('.cap-card');
+      const btns = document.querySelectorAll('.cap-btn');
+
+      btns.forEach(b => {
+        b.className = 'cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all';
+      });
+      event.target.className = 'cap-btn active px-4 py-1.5 rounded-full text-xs font-semibold bg-brand-500 text-slate-950 transition-all shadow-sm';
+
+      cards.forEach(card => {
+        if (cat === 'all' || card.getAttribute('data-cat') === cat) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Copy to clipboard with toast
+    function copyCode(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        setTimeout(() => {
+          toast.classList.remove('translate-y-0', 'opacity-100');
+          toast.classList.add('translate-y-20', 'opacity-0');
+        }, 2200);
+      });
+    }
+  </script>
+</body>
+</html>
