@@ -1010,7 +1010,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_generate_project',
-    description: '触发生成站，编译并导出全套 Nuxt 3 + Vite + Tailwind CSS + Nitro + Casbin 的独立工程源码。',
+    description: '触发生成站，编译并导出全套 Nuxt 4 + Vite + Tailwind CSS + Nitro + Casbin 的独立工程源码。',
     inputSchema: {
       type: 'object',
       properties: {

@@ -22,7 +22,7 @@ import type { TenantPlan } from './types'
 export function uiFiles(p: TenantPlan): Record<string, string>
 ```
 
-返回 `相对路径 -> 文件内容`，全部是**生成的子内部件**（Nuxt 3 + Vue 3 script setup，`ssr:false`）。
+返回 `相对路径 -> 文件内容`，全部是**生成的子内部件**（Nuxt 4 + Vue 3 script setup，`ssr:false`）。
 必须覆盖：
 
 - `layouts/default.vue`（侧边菜单 + 顶栏 + 水印）、`layouts/blank.vue`（登录页用）
@@ -70,7 +70,7 @@ export function uiFiles(p: TenantPlan): Record<string, string>
 
 ## 域 B 契约：主后台 API
 
-Nuxt 3 nitro，`server/api/**`。全部用已存在的工具函数（自动导入，无需 import）：
+Nuxt 4 nitro，`server/api/**`。全部用已存在的工具函数（自动导入，无需 import）：
 `q/one/run/execScript/ident/ok/paged/useDb/useDbAt`、`defineAuthed/currentUser/hashPassword/verifyPassword/signToken/readToken`、
 `authorize(event, dom, obj, act)/grantRole/addRule/enforce/invalidateCasbin`、
 `buildPlan/allocatePort/toSlug/toCamel/toSnake/rowToModule`、`CAPABILITY_CATALOG`。

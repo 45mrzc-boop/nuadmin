@@ -1,7 +1,7 @@
 # 🚀 GenPlus (NuAdmin) — 工业级 AI 低代码生成与微应用交付工作台
 
 <p align="center">
-  <b>基于 Nuxt 3 + Vue 3 + Tailwind CSS + Nitro + MySQL + Casbin 的高可用低代码研发与独立子系统生成平台</b>
+  <b>基于 Nuxt 4 + Vue 3 + Tailwind CSS + Nitro + MySQL + Casbin 的高可用低代码研发与独立子系统生成平台</b>
 </p>
 
 ---
@@ -68,7 +68,7 @@
 
 ## 🛠️ 技术栈总览
 
-- **前端框架**：[Nuxt 3](https://nuxt.com/) / [Vue 3](https://vuejs.org/) (Composition API, `<script setup>`)
+- **前端框架**：[Nuxt 4](https://nuxt.com/) / [Vue 3](https://vuejs.org/) (Composition API, `<script setup>`)
 - **UI 体系**：[Nuxt UI](https://ui.nuxt.com/) + [Tailwind CSS](https://tailwindcss.com/)
 - **服务端运行时**：[Nitro Engine](https://nitro.unjs.io/) (全栈无缝部署)
 - **数据库**：MySQL 8.0+ (utf8mb4，连接池管理)
@@ -88,7 +88,7 @@
 ├── bin/
 │   └── genplus-mcp.mjs         # 工作台标准 MCP 独立服务入口
 ├── main-admin/                 # 控制面工程（AI 低代码主后台）
-│   ├── app/                    # 控制面前端（Nuxt 3 页面与工位视图）
+│   ├── app/                    # 控制面前端（Nuxt 4 页面与工位视图）
 │   │   ├── components/stations # 9 大低代码工位组件
 │   │   └── pages/              # 控制面路由
 │   ├── server/                 # Nitro 服务端与低代码编译引擎
@@ -159,7 +159,7 @@ npm run dev
 1. 🏗️ **建模站 (Model)**：可视化分组、模型定义、字段数据类型映射、关联外键与 JSON 模型一键导入导出。
 2. 🧩 **能力库 (Capability)**：18 项能力自主装配开关、配置表单注入与依赖冲突自动检测。
 3. 🎨 **设计站 (Design)**：5 套登录页视觉模板、主题色彩体系生成、侧边栏形态与三门禁鉴权模式选择。
-4. ⚙️ **生成站 (Generator)**：点击一键触发工业级编译，自动产出全栈 Nuxt 3 独立工程与数据库迁移脚本。
+4. ⚙️ **生成站 (Generator)**：点击一键触发工业级编译，自动产出全栈 Nuxt 4 独立工程与数据库迁移脚本。
 5. 🔌 **逻辑站 (Logic)**：数据保存前后 8 个服务端生命周期钩子配置与自定义扩展端点注入。
 6. 🗄️ **数据站 (Seed)**：启发式拟真商业数据生成规则，支持开发期一键播种初始数据。
 7. ✅ **验证站 (Verify)**：代码语法检查、esbuild AST 完整性校验、真实的 DDL 实跑与启动握手检测。
