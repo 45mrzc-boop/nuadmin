@@ -1,7 +1,22 @@
 # 🚀 GenPlus (NuAdmin) — 工业级 AI 低代码生成与微应用交付工作台
 
 <p align="center">
-  <b>基于 Nuxt 4 + Vue 3 + Tailwind CSS + Nitro + MySQL + Casbin 的高可用低代码研发与独立子系统生成平台</b>
+  <a href="https://nuxt.com" target="_blank"><img src="https://img.shields.io/badge/Nuxt-v4.5-00DC82?style=flat-square&logo=nuxt&logoColor=white" alt="Nuxt 4" /></a>
+  <a href="https://vuejs.org" target="_blank"><img src="https://img.shields.io/badge/Vue-v3.5-4FC08D?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3.5" /></a>
+  <a href="https://ui.nuxt.com" target="_blank"><img src="https://img.shields.io/badge/Nuxt_UI-v4.11-00DC82?style=flat-square&logo=nuxt&logoColor=white" alt="Nuxt UI 4" /></a>
+  <a href="https://tailwindcss.com" target="_blank"><img src="https://img.shields.io/badge/TailwindCSS-v4.3-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind 4" /></a>
+  <a href="https://www.mysql.com" target="_blank"><img src="https://img.shields.io/badge/MySQL-v8.0+-4479A1?style=flat-square&logo=mysql&logoColor=white" alt="MySQL 8" /></a>
+  <a href="https://casbin.org" target="_blank"><img src="https://img.shields.io/badge/Casbin-RBAC-blue?style=flat-square" alt="Casbin" /></a>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT" />
+</p>
+
+<p align="center">
+  <b>基于 Nuxt 4 + Vue 3.5 + Tailwind CSS 4 + Nitro + MySQL + Casbin 的高可用低代码研发与独立子系统生成平台</b>
+</p>
+
+<p align="center">
+  🌐 <b><a href="https://45mrzc-boop.github.io/nuadmin/">【点击在线浏览 H5 产品特性全景演示】</a></b> &nbsp;|&nbsp;
+  📦 <b><a href="https://github.com/45mrzc-boop/nuadmin">【GitHub 源码仓库】</a></b>
 </p>
 
 ---
