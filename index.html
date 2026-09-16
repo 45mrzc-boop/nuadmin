@@ -3,8 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>GenPlus (NuAdmin) — 工业级 AI 低代码生成与微应用交付工作台</title>
-  <meta name="description" content="基于 Nuxt 4 + Vue 3 + Tailwind CSS + Nitro + MySQL + Casbin 的工业级低代码 AI 生成与微应用交付工作台，100% 独立自治工程交付，0 运行时平台依赖。" />
+  <title>GenPlus (NuAdmin) — 开源企业级多租户 SaaS 系统开发中枢与全栈微应用生成框架 | Nuxt 4 全栈架构</title>
+  <meta name="description" content="GenPlus (NuAdmin) 是一套基于 Nuxt 4 + Vue 3.5 + Tailwind CSS 4 + Nitro + MySQL + Casbin 的开源企业级多租户 SaaS 系统与微应用生成中枢。支持独立数据库物理隔离、自适应门禁鉴权、纯静态微门户及 0-Token 工业级编译交付。作者：chuan，联系邮箱：45mrzc@gmail.com。" />
+  <meta name="keywords" content="SaaS系统, 开源SaaS, 企业级SaaS平台, 多租户SaaS系统, 开源管理后台, Nuxt 4, Vue 3, Nitro, Casbin RBAC, 全栈开发框架, 微应用架构, chuan, 45mrzc@gmail.com, 开源SaaS开发, 独立数据库SaaS" />
+  <meta name="author" content="chuan" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph / Social Media Meta Tags -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="GenPlus (NuAdmin) — 开源企业级多租户 SaaS 系统开发中枢" />
+  <meta property="og:description" content="基于 Nuxt 4 + Nitro + MySQL + Casbin 的工业级开源 SaaS 系统开发框架，100% 独立自治交付。核心作者：chuan (45mrzc@gmail.com)" />
+  <meta property="og:url" content="https://45mrzc-boop.github.io/nuadmin/" />
+  <meta property="og:site_name" content="GenPlus NuAdmin SaaS" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="GenPlus (NuAdmin) — 开源企业级多租户 SaaS 系统开发中枢" />
+  <meta name="twitter:description" content="基于 Nuxt 4 + Nitro + MySQL + Casbin 的工业级开源 SaaS 系统开发框架。核心作者：chuan" />
+
+  <!-- JSON-LD Structured Data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "GenPlus (NuAdmin)",
+    "operatingSystem": "Linux, macOS, Windows",
+    "applicationCategory": "DeveloperApplication",
+    "description": "开源企业级多租户 SaaS 系统开发中枢与全栈微应用生成引擎，基于 Nuxt 4 + Nitro + MySQL + Casbin。",
+    "url": "https://45mrzc-boop.github.io/nuadmin/",
+    "author": {
+      "@type": "Person",
+      "name": "chuan",
+      "email": "45mrzc@gmail.com"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -36,12 +75,12 @@
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     .glass-nav {
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
     }
     .glass-card {
-      background: rgba(30, 41, 59, 0.7);
+      background: rgba(30, 41, 59, 0.72);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -102,33 +141,50 @@
           <span class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
             GenPlus <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 font-mono border border-brand-500/30">NuAdmin</span>
           </span>
-          <p class="text-[10px] text-slate-400 font-medium tracking-wide">AI 低代码生成工作台</p>
+          <p class="text-[10px] text-slate-400 font-medium tracking-wide">开源多租户 SaaS 系统开发框架</p>
         </div>
       </a>
 
       <!-- Desktop Nav Menu -->
-      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-slate-300">
         <a href="#features" class="hover:text-brand-400 transition-colors">核心特性</a>
         <a href="#gatekeeper" class="hover:text-brand-400 transition-colors">三大门禁</a>
         <a href="#capabilities" class="hover:text-brand-400 transition-colors">18项能力库</a>
-        <a href="#stations" class="hover:text-brand-400 transition-colors">9大工位</a>
+        <a href="#stations" class="hover:text-brand-400 transition-colors">9大研发工位</a>
+        <a href="#author" class="hover:text-brand-400 transition-colors">作者与开源</a>
         <a href="#quickstart" class="hover:text-brand-400 transition-colors">快速上手</a>
       </nav>
 
-      <!-- Action Button -->
+      <!-- Action Buttons & Prominent Author Badge -->
       <div class="flex items-center gap-3">
+        <!-- Prominent Author Info Tag -->
+        <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs shadow-inner">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-400">作者:</span>
+          <span class="text-emerald-400 font-bold">chuan</span>
+          <span class="text-slate-600">|</span>
+          <a href="mailto:45mrzc@gmail.com" class="text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors group" title="点击发送邮件联系作者">
+            <svg class="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span class="font-mono text-slate-300 group-hover:text-brand-300">45mrzc@gmail.com</span>
+          </a>
+        </div>
+
         <a href="https://github.com/45mrzc-boop/nuadmin" target="_blank" class="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors flex items-center gap-1.5 text-xs font-semibold" title="GitHub 源码仓库">
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
           </svg>
-          <span class="hidden sm:inline">GitHub</span>
+          <span class="hidden sm:inline font-bold">Star</span>
         </a>
-        <a href="#quickstart" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold transition-all shadow-md shadow-brand-500/20 active:scale-95">
-          <span>立即上手体验</span>
+
+        <a href="#quickstart" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold transition-all shadow-md shadow-brand-500/20 active:scale-95">
+          <span>快速上手部署</span>
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
           </svg>
         </a>
+
         <!-- Mobile Menu Toggle Button -->
         <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,13 +196,22 @@
 
     <!-- Mobile Dropdown Menu -->
     <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-6 border-b border-slate-800 bg-slate-900/95 space-y-3">
+      <!-- Mobile Author Pill -->
+      <div class="p-3 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between text-xs">
+        <div>
+          <span class="text-slate-400">核心作者：</span>
+          <strong class="text-emerald-400 font-bold">chuan</strong>
+        </div>
+        <a href="mailto:45mrzc@gmail.com" class="text-sky-400 underline font-mono text-[11px]">45mrzc@gmail.com</a>
+      </div>
       <a href="#features" class="block py-2 text-slate-200 font-medium hover:text-brand-400">核心特性</a>
       <a href="#gatekeeper" class="block py-2 text-slate-200 font-medium hover:text-brand-400">三大门禁模式</a>
       <a href="#capabilities" class="block py-2 text-slate-200 font-medium hover:text-brand-400">18项全场景能力库</a>
-      <a href="#stations" class="block py-2 text-slate-200 font-medium hover:text-brand-400">9大低代码工位</a>
+      <a href="#stations" class="block py-2 text-slate-200 font-medium hover:text-brand-400">9大研发工位</a>
+      <a href="#author" class="block py-2 text-slate-200 font-medium hover:text-brand-400">作者与开源生态</a>
       <a href="#quickstart" class="block py-2 text-slate-200 font-medium hover:text-brand-400">快速上手教程</a>
       <div class="pt-2">
-        <a href="#quickstart" class="w-full text-center block py-2.5 rounded-xl bg-brand-500 text-slate-950 font-bold text-sm">立即上手体验</a>
+        <a href="#quickstart" class="w-full text-center block py-2.5 rounded-xl bg-brand-500 text-slate-950 font-bold text-sm">快速上手部署</a>
       </div>
     </div>
   </header>
@@ -154,25 +219,25 @@
   <!-- Main Hero Section -->
   <section class="relative pt-16 pb-20 md:pt-28 md:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
     <div class="text-center space-y-6 max-w-4xl mx-auto">
-      <!-- Badge -->
-      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-xs font-semibold text-brand-300 shadow-sm animate-pulse">
+      <!-- Hero Top Badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-xs font-semibold text-brand-300 shadow-sm animate-pulse">
         <span class="w-2 h-2 rounded-full bg-brand-400"></span>
-        <span>Agentic Architecture · 工业级独立子系统生成平台</span>
+        <span>开源企业级多租户 SaaS 架构 · 核心作者: chuan · 📬 45mrzc@gmail.com</span>
       </div>
 
       <!-- Main Headline -->
       <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
-        让 AI 像资深架构师一样，<br class="hidden sm:inline" />
-        秒级生成 <span class="gradient-text">100% 独立自治</span> 的全栈系统
+        开源企业级多租户 SaaS 系统开发中枢，<br class="hidden sm:inline" />
+        让全栈微应用与后台 <span class="gradient-text">100% 独立自治交付</span>
       </h1>
 
       <!-- Subtitle -->
       <p class="text-base sm:text-lg md:text-xl text-slate-400 leading-relaxed font-normal max-w-3xl mx-auto">
-        基于 <strong class="text-slate-200">Nuxt 4 + Tailwind + Nitro + MySQL + Casbin</strong>。平台与生成子系统完全物理隔离，自带独立数据库、独立权限域与独立运行时，彻底摆脱传统低代码平台捆绑。
+        基于 <strong class="text-slate-200">Nuxt 4 + Vue 3.5 + Tailwind 4 + Nitro + MySQL + Casbin</strong>。为企业提供高可用多租户 SaaS 系统开发架构，平台与生成子系统完全物理隔离，自带独立数据库、专属权限域与独立运行时，彻底摆脱传统平台黑盒捆绑，源代码 100% 自主可控。
       </p>
 
       <!-- Action CTA Buttons -->
-      <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <div class="pt-3 flex flex-col sm:flex-row items-center justify-center gap-4">
         <a href="#quickstart" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 transition-all transform hover:-translate-y-0.5 active:scale-95">
           <span>快速上手部署 (4步走)</span>
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,13 +250,29 @@
           </svg>
           <span>Star on GitHub</span>
         </a>
-        <a href="#gatekeeper" class="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 font-medium text-sm sm:text-base flex items-center justify-center gap-2 transition-all">
-          <span>门禁与能力库</span>
+        <a href="mailto:45mrzc@gmail.com" class="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 font-medium text-sm sm:text-base flex items-center justify-center gap-2 transition-all">
+          <svg class="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <span>联系作者 (chuan)</span>
         </a>
       </div>
 
+      <!-- Author Contact Banner -->
+      <div class="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900/80 border border-slate-800">
+          👨‍💻 <strong class="text-slate-200">核心架构师：chuan</strong>
+        </span>
+        <a href="mailto:45mrzc@gmail.com" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-brand-500/10 border border-brand-500/30 text-brand-300 hover:text-brand-200 transition-colors">
+          ✉️ <span class="font-mono font-medium">技术合作：45mrzc@gmail.com</span>
+        </a>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900/80 border border-slate-800">
+          ⭐ <span class="text-slate-300">开源多租户 SaaS 架构</span>
+        </span>
+      </div>
+
       <!-- Feature Badges Row -->
-      <div class="pt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto text-left">
+      <div class="pt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto text-left">
         <div class="glass-card p-4 rounded-2xl border border-slate-800">
           <div class="text-brand-400 font-bold text-lg sm:text-xl flex items-center gap-2">
             <span>⚡ 0-Token</span>
@@ -202,7 +283,7 @@
           <div class="text-sky-400 font-bold text-lg sm:text-xl flex items-center gap-2">
             <span>🛡️ 独立自治</span>
           </div>
-          <p class="text-xs text-slate-400 mt-1">独立项目目录与独立 MySQL 库，主后台宕机业务不受影响</p>
+          <p class="text-xs text-slate-400 mt-1">独立项目目录与独立 MySQL 库，主控宕机子系统照常运行</p>
         </div>
         <div class="glass-card p-4 rounded-2xl border border-slate-800">
           <div class="text-amber-400 font-bold text-lg sm:text-xl flex items-center gap-2">
@@ -226,10 +307,10 @@
       <div class="text-center max-w-3xl mx-auto mb-14">
         <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Architectural Highlights</h2>
         <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-          颠覆传统低代码的 4 大工程架构优势
+          企业级开源 SaaS 系统的 4 大核心架构优势
         </h3>
         <p class="text-slate-400 text-sm sm:text-base mt-3">
-          不写死运行时、不绑死平台组件，把生产级研发的最佳实践固化在生成引擎中。
+          不写死运行时、不绑死平台组件，把生产级多租户 SaaS 研发的最佳实践固化在生成引擎中。
         </p>
       </div>
 
@@ -243,7 +324,7 @@
             Skills + MCP 双模式驱动（脑手合一）
           </h4>
           <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            坚持“Skills 定规程，MCP 通底层”。杜绝一句话一干到底的盲目生成。提供 <code class="text-brand-300 bg-brand-950/80 px-1.5 py-0.5 rounded text-xs">genplus-build</code> 简略/细节双轨立项与 <code class="text-brand-300 bg-brand-950/80 px-1.5 py-0.5 rounded text-xs">genplus-maintain</code> 增量维护。大模型通过标准化 MCP 协议直通 7 大控制面、独立数据库与无头浏览器真机截图。
+            坚持“Skills 定规程，MCP 通底层”。杜绝一句话盲目生成。提供 <code class="text-brand-300 bg-brand-950/80 px-1.5 py-0.5 rounded text-xs">genplus-build</code> 简略/细节双轨立项与 <code class="text-brand-300 bg-brand-950/80 px-1.5 py-0.5 rounded text-xs">genplus-maintain</code> 增量维护。大模型通过标准化 MCP 协议直通 7 大控制面、独立数据库与无头浏览器真机截图。
           </p>
           <div class="flex flex-wrap gap-2 text-xs font-mono text-slate-300">
             <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">genplus-mcp.mjs</span>
@@ -258,7 +339,7 @@
             02
           </div>
           <h4 class="text-xl font-bold text-white mb-2 group-hover:text-sky-300 transition-colors">
-            完全自治与 100% 物理隔离
+            完全自治与 100% 物理隔离的多租户架构
           </h4>
           <p class="text-slate-400 text-sm leading-relaxed mb-4">
             每个子系统生成在独立目录中，拥有自己的独立 MySQL 数据库（<code class="text-sky-300 bg-sky-950/80 px-1.5 py-0.5 rounded text-xs">nuadmin_t_*</code>）、专属 JWT 秘钥与独立端口。即使把主控制面整库删除，生成的子后台依旧可以直接 <code class="text-sky-300 bg-sky-950/80 px-1.5 py-0.5 rounded text-xs">npm run build</code> 并在生产环境独立运行。
@@ -279,7 +360,7 @@
             B + C 双端闭环与纯静态微门户
           </h4>
           <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            不止能生成中后台 CRUD！通过一键装配 <code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_cms</code>、<code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_poster</code>、<code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_form</code> 等微门户能力，工作台能同步构建**纯静态、0-API 水合、自带暗黑主题的对外公开门户**，实现业务全链路闭环。
+            不止能构建中后台系统！通过一键装配 <code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_cms</code>、<code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_poster</code>、<code class="text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded text-xs">landing_form</code> 等微门户能力，平台能同步生成**纯静态、0-API 水合、自带暗黑主题的对外公开门户**，实现全链路业务闭环。
           </p>
           <div class="flex flex-wrap gap-2 text-xs font-mono text-slate-300">
             <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">纯静态 CMS</span>
@@ -297,7 +378,7 @@
             毫秒级工业编译，Token 消耗直降 95%
           </h4>
           <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            传统 AI 编程需大模型持续吐出成千上万行 Vue 模板与 Nitro 路由，极易断流报错；GenPlus 让模型只需决策几十 Token 的结构化描述，由本地确切编译引擎（Deterministic Industrial Engine）毫秒级完成全套工程编译。
+            传统 AI 编程需大模型持续吐出成千上万行 Vue 模板与 Nitro 路由，极易断流报错；GenPlus 让模型只需决策几十 Token 的结构化描述，由本地确切编译引擎（Deterministic Industrial Engine）毫秒级完成全套 SaaS 工程编译。
           </p>
           <div class="flex flex-wrap gap-2 text-xs font-mono text-slate-300">
             <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700">极速落库</span>
@@ -347,41 +428,41 @@
           简单密码模式 (Simple Mode)
         </h4>
         <p id="mode-desc" class="text-slate-300 text-sm sm:text-base leading-relaxed">
-          全站共用安全门禁口令（默认 admin123），完全不区分谁在操作。专为内部工具、原型演示、数据采集后台打造。
+          全站共用安全门禁口令（默认 admin123），完全不区分谁在操作。专为内部敏捷工具、原型演示与快速数据采集打造。
         </p>
 
-        <!-- Feature Points List -->
-        <ul id="mode-points" class="space-y-3 text-sm text-slate-300">
-          <li class="flex items-start gap-2.5">
-            <span class="text-brand-400 font-bold">✓</span>
-            <span><strong>免账号登录</strong>：登录页彻底隐藏账号输入框，仅保留门禁口令与【验证开门】</span>
-          </li>
-          <li class="flex items-start gap-2.5">
-            <span class="text-brand-400 font-bold">✓</span>
-            <span><strong>侧边栏自动精简</strong>：自动隐藏【用户管理】与【角色管理】，只留纯粹业务菜单</span>
-          </li>
-          <li class="flex items-start gap-2.5">
-            <span class="text-brand-400 font-bold">✓</span>
-            <span><strong>持门者身份</strong>：左下角身份标识为“持门者（门禁授权通行）”，避免虚假角色的困惑</span>
-          </li>
-        </ul>
+        <div class="space-y-3 pt-2">
+          <p class="text-xs uppercase tracking-wider font-semibold text-slate-400">运行自适应特性：</p>
+          <ul id="mode-points" class="space-y-2 text-xs sm:text-sm text-slate-300">
+            <li class="flex items-start gap-2.5">
+              <span class="text-brand-400 font-bold">✓</span>
+              <span>免账号登录：登录页彻底隐藏账号输入框，仅保留单个门禁口令输入与【验证开门】</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-brand-400 font-bold">✓</span>
+              <span>侧边栏自动精简：彻底剔除【用户管理】与【角色管理】，无任何无用菜单冗余</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-brand-400 font-bold">✓</span>
+              <span>持门者通行：当前身份标识为“持门者（门禁授权通行）”，直观明了</span>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      <!-- Right Column: Simulated UI Mockup -->
-      <div class="lg:col-span-7 bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-800 shadow-2xl">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+      <!-- Right Column: Visual Mockup Container -->
+      <div class="lg:col-span-7 bg-slate-950/80 rounded-2xl border border-slate-800 p-4 sm:p-6 shadow-inner relative">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800/80 mb-6">
           <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
-            <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
-            <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
-            <span class="text-xs font-mono text-slate-400 ml-2" id="mockup-url">http://127.0.0.1:6005/preview/app_demo/login</span>
+            <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+            <span id="mockup-url" class="text-[11px] font-mono text-slate-500 ml-2">http://127.0.0.1:6005/preview/app_demo/login</span>
           </div>
-          <span class="text-[11px] font-mono text-brand-400 bg-brand-950/60 px-2 py-0.5 rounded" id="mockup-mode-tag">MODE: simple</span>
+          <span id="mockup-mode-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">MODE: simple</span>
         </div>
 
-        <!-- Visual Mockup Canvas -->
-        <div id="mockup-content" class="bg-slate-950 rounded-xl p-6 border border-slate-800/80 flex flex-col items-center justify-center min-h-[260px] text-center">
-          <!-- Simple Mockup -->
+        <div id="mockup-content" class="min-h-[260px] flex items-center justify-center text-center p-4">
           <div class="max-w-xs w-full space-y-4">
             <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs text-left flex items-center gap-2">
               <span>🔑</span>
@@ -408,214 +489,144 @@
   </section>
 
   <!-- Section: 18 Capabilities Matrix -->
-  <section id="capabilities" class="py-16 sm:py-24 border-t border-slate-800/80 bg-slate-900/30">
+  <section id="capabilities" class="py-16 sm:py-24 border-t border-slate-800/80 bg-slate-900/20 relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-3xl mx-auto mb-10">
-        <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Capabilities Ecosystem</h2>
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Capability Store</h2>
         <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-          18 项工业级全场景能力库
+          18 项全场景企业级能力库
         </h3>
         <p class="text-slate-400 text-sm sm:text-base mt-3">
-          涵盖从核心基础治理、复杂业务流程到全静态前台微门户，在建模或维护期均可随时一键装配。
+          模块化装配设计，按需一键启用。系统自动完成 DDL 迁移、前端路由挂载与 Casbin 权限规则写入。
         </p>
       </div>
 
-      <!-- Filter Buttons -->
-      <div class="flex flex-wrap justify-center gap-2 mb-10">
-        <button onclick="filterCaps('all')" class="cap-btn active px-4 py-1.5 rounded-full text-xs font-semibold bg-brand-500 text-slate-950 transition-all shadow-sm">
-          全部 (18)
-        </button>
-        <button onclick="filterCaps('landing')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">
-          前台微门户 (4)
-        </button>
-        <button onclick="filterCaps('process')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">
-          流程与调度 (4)
-        </button>
-        <button onclick="filterCaps('data')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">
-          数据与交互 (6)
-        </button>
-        <button onclick="filterCaps('governance')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">
-          系统安全治理 (4)
-        </button>
+      <!-- Capability Categories Filter -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mb-10">
+        <button onclick="filterCaps('all')" class="cap-btn active px-4 py-1.5 rounded-full text-xs font-semibold bg-brand-500 text-slate-950 transition-all shadow-sm">全部能力 (18)</button>
+        <button onclick="filterCaps('gov')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">基础治理</button>
+        <button onclick="filterCaps('data')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">数据与交互</button>
+        <button onclick="filterCaps('flow')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">流程与调度</button>
+        <button onclick="filterCaps('portal')" class="cap-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">前台微门户</button>
       </div>
 
-      <!-- Capabilities Grid -->
-      <div id="caps-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Capability Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="caps-grid">
         <!-- 1. landing_cms -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="landing">
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="portal">
           <div class="flex items-center justify-between mb-3">
             <span class="text-2xl">🌐</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold">landing_cms</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">landing_cms</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">纯静态企业官网与内容CMS</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">纯静态 0-API 水合官网页面，暗黑主题实时切换，文章抽屉式极速阅读，自带 SEO 优化。</p>
+          <h5 class="text-base font-bold text-white mb-1">纯静态企业官网CMS</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">纯静态 0-API 水合官网，自带暗黑主题、富文本文章抽屉微阅读与移动端抽屉导航。</p>
         </div>
 
-        <!-- 2. landing_poster -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="landing">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">🖼️</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">landing_poster</span>
-          </div>
-          <h5 class="text-base font-bold text-white mb-1">推广海报与二码中心</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">参数化渠道二维码生成、带参海报落地页展示，支持扫码流转与线索埋点溯源。</p>
-        </div>
-
-        <!-- 3. landing_form -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="landing">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">📝</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">landing_form</span>
-          </div>
-          <h5 class="text-base font-bold text-white mb-1">动态线索收集表单</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">移动端自适应公开收集页，自定义表单校验规则，提交后数据即刻安全入库入审。</p>
-        </div>
-
-        <!-- 4. landing_portal -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="landing">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">🏛️</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">landing_portal</span>
-          </div>
-          <h5 class="text-base font-bold text-white mb-1">前台复合业务门户</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">聚合业务卡片展示、分类检索、预约挂号与活动报名等前台移动端沉浸式体验。</p>
-        </div>
-
-        <!-- 5. dashboard -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="process">
+        <!-- 2. dashboard -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="flow">
           <div class="flex items-center justify-between mb-3">
             <span class="text-2xl">📊</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold">dashboard</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">dashboard</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">实时业务数据看板</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">核心指标卡片、趋势折线、分类占比饼图，自带统计聚合 SQL 自动化注入。</p>
+          <h5 class="text-base font-bold text-white mb-1">实时数据大屏看板</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">多维核心指标卡片、周期增长率对比、动态趋势图表及业务关键事件实时流水。</p>
         </div>
 
-        <!-- 6. flow -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="process">
+        <!-- 3. landing_poster -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="portal">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">🔄</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">flow</span>
+            <span class="text-2xl">📱</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">landing_poster</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">状态机审批工作流</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">多阶段审核流转，流转历史时间轴追溯，驳回原因记录与权限状态守卫。</p>
+          <h5 class="text-base font-bold text-white mb-1">推广海报与参数二码</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">动态渠道参数解析、二码自动生成、引流效果闭环统计及一键长按保存海报。</p>
         </div>
 
-        <!-- 7. job -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="process">
+        <!-- 4. landing_form -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="portal">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">⏱️</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">job</span>
+            <span class="text-2xl">📝</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">landing_form</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">分布式定时调度任务</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">可视化 Cron 表达式配置、任务启停切换、手动立即触发与详尽执行日志审计。</p>
+          <h5 class="text-base font-bold text-white mb-1">动态线索收集表单</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">移动端自适应收集问卷、前端字段正则校验、防重复提交与后台即时入库打标。</p>
         </div>
 
-        <!-- 8. message -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="process">
+        <!-- 5. dict -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="gov">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">🔔</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">message</span>
+            <span class="text-2xl">📚</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">dict</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">系统站内信广播通知</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">用户未读角标提示、系统公告推送、业务事件即时通知与已读状态管理。</p>
+          <h5 class="text-base font-bold text-white mb-1">多维数据字典</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">枚举分类管理、键值键名映射、状态色块色彩渲染与全站下拉联动复用。</p>
         </div>
 
-        <!-- 9. dict -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="governance">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">📖</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold">dict</span>
-          </div>
-          <h5 class="text-base font-bold text-white mb-1">全动态数据字典中枢</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">键值对与标签状态管理，全局组件自动联动，支持动态色标与枚举快速翻译。</p>
-        </div>
-
-        <!-- 10. log -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="governance">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">🛡️</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">log</span>
-          </div>
-          <h5 class="text-base font-bold text-white mb-1">操作审计与安全日志</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">自动捕获全站写操作请求与入参出参，精准追溯操作人 IP、耗时与变更结果。</p>
-        </div>
-
-        <!-- 11. security -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="governance">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">🔒</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">security</span>
-          </div>
-          <h5 class="text-base font-bold text-white mb-1">安全基线与频次限流</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">防暴力破解阈值拦截、账户锁定机制、请求频次 Rate Limit 与安全头注入。</p>
-        </div>
-
-        <!-- 12. i18n -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="governance">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">🌍</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">i18n</span>
-          </div>
-          <h5 class="text-base font-bold text-white mb-1">多语言国际化包</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">中英双语即时切换，支持动态菜单与多语种字段联动，满足全球化出海业务。</p>
-        </div>
-
-        <!-- 13. io -->
+        <!-- 6. io -->
         <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
           <div class="flex items-center justify-between mb-3">
             <span class="text-2xl">📤</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold">io</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">io</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">智能导入导出 (Excel/CSV)</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">一键导出当前筛选数据，支持下载规范模板并批量导入，自动执行唯一键冲突检测。</p>
+          <h5 class="text-base font-bold text-white mb-1">智能批量导入导出</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">Excel/CSV 格式校验、重复项跳过/覆盖策略、异步导出进度感知与标准模板下载。</p>
         </div>
 
-        <!-- 14. file -->
+        <!-- 7. log -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="gov">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl">🛡️</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">log</span>
+          </div>
+          <h5 class="text-base font-bold text-white mb-1">操作审计与全链路日志</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">全站接口出入参自动捕获、操作人与 IP 地址精确定位，不可篡改审计证据链。</p>
+        </div>
+
+        <!-- 8. file -->
         <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
           <div class="flex items-center justify-between mb-3">
             <span class="text-2xl">📁</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">file</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">file</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">文件上传与媒体存储</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">本地/OSS 无缝直传、图片缩略图自动生成、文件 MIME 白名单与安全扩展名拦截。</p>
+          <h5 class="text-base font-bold text-white mb-1">文件上传与媒体库</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">大文件分片上传、MIME 白名单过滤、云对象存储直传与图片即时缩略裁剪预览。</p>
         </div>
 
-        <!-- 15. batch -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+        <!-- 9. flow -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="flow">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">⚡</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">batch</span>
+            <span class="text-2xl">🔄</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">flow</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">批量操作动作矩阵</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">表格多选勾选、批量删除、批量修改枚举状态、批量审批，大幅提升运营效能。</p>
+          <h5 class="text-base font-bold text-white mb-1">业务审批工作流</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">多级节点审批链、驳回修改/转交流水、审批历史时间线与消息通知钩子。</p>
         </div>
 
-        <!-- 16. tree -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+        <!-- 10. job -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="flow">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">🌲</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">tree</span>
+            <span class="text-2xl">⏱️</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">job</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">无限级树形结构</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">部门层级、商品类目树、无限级嵌套表格展示与自动父子级联查找。</p>
+          <h5 class="text-base font-bold text-white mb-1">分布式定时任务调度</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">Cron 表达式灵活配置、执行耗时与日志追踪、失败自动报警与手动单次触发。</p>
         </div>
 
-        <!-- 17. recycle -->
-        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
+        <!-- 11. message -->
+        <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="flow">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl">♻️</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">recycle</span>
+            <span class="text-2xl">🔔</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">message</span>
           </div>
-          <h5 class="text-base font-bold text-white mb-1">软删除与数据回收站</h5>
-          <p class="text-xs text-slate-400 leading-relaxed">防误删逻辑软删除、数据快照版本备份、一键全量还原或彻底物理粉碎。</p>
+          <h5 class="text-base font-bold text-white mb-1">站内信与通知中心</h5>
+          <p class="text-xs text-slate-400 leading-relaxed">广播消息推送、用户专属未读红点提示、分类聚合展示与一键全读标记。</p>
         </div>
 
-        <!-- 18. print -->
+        <!-- 12. print -->
         <div class="cap-card glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition-all" data-cat="data">
           <div class="flex items-center justify-between mb-3">
             <span class="text-2xl">🖨️</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold">print</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">print</span>
           </div>
           <h5 class="text-base font-bold text-white mb-1">票据与单据套打</h5>
           <p class="text-xs text-slate-400 leading-relaxed">可视化订单凭据打印排版、敏感信息脱敏水印渲染与打印机原生无缝对接。</p>
@@ -629,7 +640,7 @@
     <div class="text-center max-w-3xl mx-auto mb-14">
       <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Workbench Pipeline</h2>
       <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-        9 大专业低代码工位全景协同
+        9 大专业 SaaS 研发工位全景协同
       </h3>
       <p class="text-slate-400 text-sm sm:text-base mt-3">
         每个项目配备 9 大专项工位，从底层模型到前端呈现，每个细节皆可被精确掌控。
@@ -691,7 +702,7 @@
       <div class="text-center max-w-3xl mx-auto mb-14">
         <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Getting Started Guide</h2>
         <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-          极速上手 4 步走：从 0 到 独立子系统
+          极速上手 4 步走：从 0 到 独立 SaaS 子系统
         </h3>
         <p class="text-slate-400 text-sm sm:text-base mt-3">
           开箱即用，只需几条标准命令，即可在本地完整跑通全流程。
@@ -761,7 +772,7 @@
               <span class="select-all">cd tenants/app_demo && npm install && npm run build</span>
               <button onclick="copyCode('cd tenants/app_demo && npm install && npm run build')" class="text-slate-500 hover:text-purple-400 text-xs">复制</button>
             </div>
-            <p class="text-xs text-slate-500">产出标准的 <code class="text-slate-300">.output/server/index.mjs</code>，支持 Docker 容器化或 PM2 部署上线。</p>
+            <p class="text-xs text-slate-500">产出标准的 <code class="text-slate-300">.output/server/index.mjs</code>，支持 Docker 容器化或 PM2 独立上线部署。</p>
           </div>
         </div>
       </div>
@@ -773,7 +784,7 @@
     <div class="text-center max-w-3xl mx-auto mb-12">
       <h2 class="text-xs uppercase tracking-widest font-bold text-brand-400 mb-2">Comparison Matrix</h2>
       <h3 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-        为什么选择 GenPlus？
+        为什么选择 GenPlus 开源 SaaS 系统？
       </h3>
     </div>
 
@@ -783,8 +794,8 @@
           <tr>
             <th class="py-4 px-5">对比维度</th>
             <th class="py-4 px-5 text-slate-400">传统手工编码</th>
-            <th class="py-4 px-5 text-slate-400">传统低代码 (平台式)</th>
-            <th class="py-4 px-5 text-brand-400 bg-brand-500/10 font-extrabold">GenPlus (NuAdmin)</th>
+            <th class="py-4 px-5 text-slate-400">传统闭源平台 / 黑盒框架</th>
+            <th class="py-4 px-5 text-brand-400 bg-brand-500/10 font-extrabold">GenPlus (NuAdmin) 开源SaaS</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-800">
@@ -792,19 +803,19 @@
             <td class="py-4 px-5 font-semibold text-white">交付物归属</td>
             <td class="py-4 px-5 text-slate-400">自有代码</td>
             <td class="py-4 px-5 text-rose-400">强绑定平台，无法脱离</td>
-            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">100% 独立 Nuxt 4 工程</td>
+            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">100% 独立 Nuxt 4 工程，纯净源码</td>
           </tr>
           <tr>
-            <td class="py-4 px-5 font-semibold text-white">数据存储隔离</td>
+            <td class="py-4 px-5 font-semibold text-white">多租户数据隔离</td>
             <td class="py-4 px-5 text-slate-400">手工多租户或多库</td>
             <td class="py-4 px-5 text-rose-400">共享大宽表，安全隐患大</td>
-            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">物理独立专属 MySQL 数据库</td>
+            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">物理独立专属 MySQL 数据库 (nuadmin_t_*)</td>
           </tr>
           <tr>
             <td class="py-4 px-5 font-semibold text-white">AI 编程效率与成本</td>
             <td class="py-4 px-5 text-slate-400">昂贵，动辄百万 Token</td>
             <td class="py-4 px-5 text-slate-400">不支持或仅辅助文本</td>
-            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">极低 Token 消耗，0-Token 编译</td>
+            <td class="py-4 px-5 font-bold text-brand-300 bg-brand-500/5">极低 Token 消耗，0-Token 本地秒级编译</td>
           </tr>
           <tr>
             <td class="py-4 px-5 font-semibold text-white">门禁与鉴权自适应</td>
@@ -823,6 +834,43 @@
     </div>
   </section>
 
+  <!-- Section: Author & Community Spotlight (SEO & Contact Focus) -->
+  <section id="author" class="py-16 sm:py-24 border-t border-slate-800/80 bg-gradient-to-b from-slate-900/50 to-slate-950 relative">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="glass-card rounded-3xl p-6 sm:p-10 border border-brand-500/30 relative overflow-hidden shadow-2xl">
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row items-center gap-6 sm:gap-8 text-center md:text-left">
+          <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-brand-600 to-sky-500 flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-brand-500/20 shrink-0">
+            👨‍💻
+          </div>
+          <div class="space-y-3 flex-1">
+            <div class="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+              <h4 class="text-2xl font-bold text-white tracking-tight">开源项目作者：chuan</h4>
+              <span class="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-semibold">Core Creator</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs font-semibold">Open Source</span>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              GenPlus (NuAdmin) 由 <strong>chuan</strong> 独立主导架构设计并开源发布。专注于打造颠覆黑盒绑定的全新一代<strong>开源企业级多租户 SaaS 系统开发中枢</strong>，让每个团队都能在极低 Token 成本下拥有 100% 独立自主的高可用 SaaS 架构。
+            </p>
+            <p class="text-xs text-slate-400">
+              欢迎广发开发者技术交流、企业私有化定制咨询、以及针对多租户 SaaS 系统的方案探讨。
+            </p>
+            <div class="pt-3 flex flex-wrap items-center justify-center md:justify-start gap-3">
+              <a href="mailto:45mrzc@gmail.com" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-md shadow-brand-500/25 active:scale-95">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <span>联系作者：45mrzc@gmail.com</span>
+              </a>
+              <a href="https://github.com/45mrzc-boop/nuadmin" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs sm:text-sm transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                <span>GitHub Star 支持</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Toast Notification element -->
   <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-brand-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow-2xl text-xs flex items-center gap-2">
     <span>✓ 已成功复制到剪贴板</span>
@@ -830,20 +878,26 @@
 
   <!-- Footer -->
   <footer class="mt-auto border-t border-slate-800/80 bg-slate-950 py-10 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-      <div class="flex items-center gap-2">
-        <div class="w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-[10px]">
-          G+
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+      <div class="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-[10px]">
+            G+
+          </div>
+          <span class="text-white font-semibold">GenPlus (NuAdmin)</span>
         </div>
-        <span>GenPlus (NuAdmin) · 基于 Nuxt 4 工业级低代码 AI 生成工作台</span>
+        <span class="text-slate-500 hidden sm:inline">|</span>
+        <span>开源企业级多租户 SaaS 系统开发中枢</span>
+        <span class="text-slate-500 hidden sm:inline">|</span>
+        <span>核心作者：<strong class="text-emerald-400">chuan</strong>（<a href="mailto:45mrzc@gmail.com" class="text-sky-400 hover:underline">45mrzc@gmail.com</a>）</span>
       </div>
-      <div class="flex items-center gap-6">
+      <div class="flex items-center gap-5">
         <a href="https://github.com/45mrzc-boop/nuadmin" target="_blank" class="text-brand-400 hover:text-brand-300 font-semibold transition-colors flex items-center gap-1">GitHub 仓库</a>
-        <a href="CONTRACT.md" class="hover:text-slate-300 transition-colors">接口契约</a>
-        <a href="AGENTS.md" class="hover:text-slate-300 transition-colors">Agent 规范</a>
-        <a href="README.md" class="hover:text-slate-300 transition-colors">说明文档</a>
-        <span class="text-slate-600">|</span>
-        <span class="text-slate-400">MIT Licensed</span>
+        <a href="CONTRACT.md" class="hover:text-slate-200 transition-colors">接口契约</a>
+        <a href="AGENTS.md" class="hover:text-slate-200 transition-colors">Agent 规范</a>
+        <a href="README.md" class="hover:text-slate-200 transition-colors">说明文档</a>
+        <span class="text-slate-700">|</span>
+        <span class="text-slate-500">MIT Licensed</span>
       </div>
     </div>
   </footer>

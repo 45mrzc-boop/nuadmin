@@ -1,6 +1,8 @@
-# 🚀 GenPlus (NuAdmin) — 工业级 AI 低代码生成与微应用交付工作台
+# 🚀 GenPlus (NuAdmin) — 开源企业级多租户 SaaS 系统开发中枢与微应用生成引擎
 
 <p align="center">
+  <a href="https://github.com/45mrzc-boop"><img src="https://img.shields.io/badge/Author-chuan-10b981?style=flat-square&logo=github" alt="Author: chuan" /></a>
+  <a href="mailto:45mrzc@gmail.com"><img src="https://img.shields.io/badge/Contact-45mrzc%40gmail.com-0ea5e9?style=flat-square&logo=gmail" alt="Email: 45mrzc@gmail.com" /></a>
   <a href="https://nuxt.com" target="_blank"><img src="https://img.shields.io/badge/Nuxt-v4.5-00DC82?style=flat-square&logo=nuxt&logoColor=white" alt="Nuxt 4" /></a>
   <a href="https://vuejs.org" target="_blank"><img src="https://img.shields.io/badge/Vue-v3.5-4FC08D?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3.5" /></a>
   <a href="https://ui.nuxt.com" target="_blank"><img src="https://img.shields.io/badge/Nuxt_UI-v4.11-00DC82?style=flat-square&logo=nuxt&logoColor=white" alt="Nuxt UI 4" /></a>
@@ -11,37 +13,50 @@
 </p>
 
 <p align="center">
-  <b>基于 Nuxt 4 + Vue 3.5 + Tailwind CSS 4 + Nitro + MySQL + Casbin 的高可用低代码研发与独立子系统生成平台</b>
+  <b>基于 Nuxt 4 + Vue 3.5 + Tailwind CSS 4 + Nitro + MySQL + Casbin 的开源企业级多租户 SaaS 系统开发框架与独立微应用生成中枢</b>
 </p>
 
 <p align="center">
   🌐 <b><a href="https://45mrzc-boop.github.io/nuadmin/">【点击在线浏览 H5 产品特性全景演示】</a></b> &nbsp;|&nbsp;
-  📦 <b><a href="https://github.com/45mrzc-boop/nuadmin">【GitHub 源码仓库】</a></b>
+  📦 <b><a href="https://github.com/45mrzc-boop/nuadmin">【GitHub 开源仓库】</a></b> &nbsp;|&nbsp;
+  👨‍💻 <b>作者：chuan（45mrzc@gmail.com）</b>
 </p>
 
 ---
 
 ## 🌟 项目定位与核心愿景
 
-**GenPlus (NuAdmin)** 是一套面向企业级敏捷开发与全场景业务交付的 AI 低代码生成工作台。
+**GenPlus (NuAdmin)** 是一套面向企业级敏捷开发、多租户业务隔离与全场景微应用交付的**开源企业级 SaaS 系统开发中枢与生成引擎**。
 
-平台采用**控制面（Main Admin）与数据面/子系统（Tenants）完全解耦**的先进架构：
-- **主后台只做两件事**：业务建模编排与 AI 智能体调度。
-- **生成的子后台 100% 独立自治**：每个生成的子系统拥有**独立的项目目录、独立的专属 MySQL 数据库、独立的 JWT 密钥体系以及独立的 Casbin 权限策略**。
-- **0 运行时依赖**：子工程生成后即可脱离主后台单独打包、独立部署（`npm run build`），彻底杜绝传统低代码平台“平台宕机、业务全崩”的耦合弊端。
+传统的管理系统或闭源框架往往存在强行捆绑、大宽表混杂、一旦平台故障业务全崩的严重缺陷。GenPlus 采用**控制面（Control Plane）与多租户自治系统（Tenant Systems）完全解耦**的先进架构：
+- **主后台只做两件事**：业务建模编排、能力库装配与 AI 智能体调度。
+- **生成的子后台 100% 独立自治**：每个生成的子系统拥有**独立的项目目录、独立的专属 MySQL 数据库（`nuadmin_t_*`）、独立的 JWT 密钥体系以及专属的 Casbin 权限隔离域**。
+- **0 运行时依赖**：子工程生成后即可脱离主后台单独打包、独立部署（`npm run build`），获得标准的纯净代码，彻底杜绝黑盒捆绑。
+
+---
+
+## 👨‍💻 核心作者与交流联系 (Author & Contact)
+
+- **核心作者 / 架构师**：**chuan**
+- **联系邮箱**：[45mrzc@gmail.com](mailto:45mrzc@gmail.com)
+- **GitHub 主页**：[https://github.com/45mrzc-boop](https://github.com/45mrzc-boop)
+- **项目开源仓库**：[https://github.com/45mrzc-boop/nuadmin](https://github.com/45mrzc-boop/nuadmin)
+- **在线产品介绍站**：[https://45mrzc-boop.github.io/nuadmin/](https://45mrzc-boop.github.io/nuadmin/)
+
+> 💡 **合作与咨询**：欢迎广大开发者、技术团队以及企业伙伴进行开源技术交流、多租户 SaaS 架构探讨、私有化部署及业务定制合作，欢迎邮件联系！
 
 ---
 
 ## 💎 核心架构与技术亮点
 
-### 1. Skills + MCP 双模式驱动架构（Agentic Low-Code）
-工作台深度拥抱智能体开发标准，提供完善的 **Skills 规程库** 与 **MCP 工具协议**：
+### 1. Skills + MCP 双模式驱动架构（Agentic SaaS Engine）
+工作台深度拥抱智能体协作开发标准，提供完善的 **Skills 规程库** 与 **MCP 工具协议**：
 - **`genplus-build` 技能**：支持【简略模式 (Concise)】与【细节模式 (Detailed)】，内置“能力库主动唤醒反射弧”，严禁粗暴一干到底，通过结构化交互实现高精度需求对齐。
 - **`genplus-maintain` 技能**：针对已上线的租户项目提供增量加字段、改样式、权限排查与平滑热重启。
 - **`genplus-mcp` (MCP Server)**：封装 7 大工作台核心 API、独立 MySQL 直连与排查、以及基于无头浏览器 CDP 的实时真机渲染截图与视觉校验工具。
-- **极低 Token 消耗**：大模型仅需决策数十个 Token 的结构化元数据，本地毫秒级工业编译引擎自动转换为数万行标准全栈代码。
+- **极低 Token 消耗**：大模型仅需决策数十个 Token 的结构化元数据，本地毫秒级工业编译引擎（Deterministic AST Engine）自动转换为数万行标准全栈代码。
 
-### 2. 三大门禁认证形态（Gatekeeper Modes）
+### 2. 三大门禁认证形态（Gatekeeper Authentication Modes）
 设计站与控制面支持 3 种深度自适应的鉴权模式，从前端登录交互到侧边栏菜单、从数据表结构到权限中枢全方位动态适配：
 1. **简单密码模式 (`simple`)**：
    - 适用于原型预览、内部临时管理、单一工具后台；
@@ -72,7 +87,7 @@
 | | `print` | 票据与单据打印 | 动态单据模板套打、脱敏快照渲染 |
 | **流程与调度** | `dashboard` | 实时数据看板 | 核心指标统计卡片、趋势图表、分布饼图 |
 | | `flow` | 审批工作流 | 状态机驱动、流转历史时间线、驳回与同意 |
-| | `job` | 分布式定时任务 | Cron 规则配置、执行日志审计、手动触发执行 |
+| | `job` | 分布式定时任务 | Cron 表达式灵活配置、执行耗时与日志追踪、手动触发执行 |
 | | `message` | 站内通知与消息 | 站内信广播、未读标记、通知角标实时推送 |
 | **前台微门户** | `landing_cms` | 纯静态企业官网CMS | **纯静态 0-API 水合官网**、暗黑主题切换、文章抽屉微阅读 |
 | | `landing_poster` | 渠道推广与海报 | 动态渠道参数二码、带参落地页、扫码流转追踪 |
@@ -83,10 +98,10 @@
 
 ## 🛠️ 技术栈总览
 
-- **前端框架**：[Nuxt 4](https://nuxt.com/) / [Vue 3](https://vuejs.org/) (Composition API, `<script setup>`)
-- **UI 体系**：[Nuxt UI](https://ui.nuxt.com/) + [Tailwind CSS](https://tailwindcss.com/)
-- **服务端运行时**：[Nitro Engine](https://nitro.unjs.io/) (全栈无缝部署)
-- **数据库**：MySQL 8.0+ (utf8mb4，连接池管理)
+- **前端框架**：[Nuxt 4](https://nuxt.com/) / [Vue 3.5](https://vuejs.org/) (Composition API, `<script setup>`)
+- **UI 体系**：[Nuxt UI](https://ui.nuxt.com/) + [Tailwind CSS 4](https://tailwindcss.com/)
+- **服务端运行时**：[Nitro Engine](https://nitro.unjs.io/) (全栈多端无缝部署)
+- **数据库**：MySQL 8.0+ (utf8mb4，连接池管理，多租户独立数据库架构)
 - **权限与安全**：[Casbin](https://casbin.org/) (RBAC with domains) + [jose](https://github.com/panva/jose) (JWT 签名验证)
 - **智能体协议**：Model Context Protocol (MCP) + Agent Skills
 
@@ -102,18 +117,19 @@
 │   └── mcp_config.json         # MCP 服务端连接配置
 ├── bin/
 │   └── genplus-mcp.mjs         # 工作台标准 MCP 独立服务入口
-├── main-admin/                 # 控制面工程（AI 低代码主后台）
+├── main-admin/                 # 控制面工程（SaaS 开发控制中枢）
 │   ├── app/                    # 控制面前端（Nuxt 4 页面与工位视图）
-│   │   ├── components/stations # 9 大低代码工位组件
+│   │   ├── components/stations # 9 大专业研发工位组件
 │   │   └── pages/              # 控制面路由
-│   ├── server/                 # Nitro 服务端与低代码编译引擎
+│   ├── server/                 # Nitro 服务端与确定性代码编译引擎
 │   │   ├── api/                # 控制面 RESTful 接口
-│   │   └── utils/gen/          # ★ 毫秒级确定性工业代码生成器
+│   │   └── utils/gen/          # ★ 毫秒级确定性工业代码生成器 (AST)
 │   ├── nuxt.config.ts          # Nuxt 配置文件
 │   └── package.json            # 控制面依赖声明
-├── tenants/                    # 生成的独立子系统目录（已配置 .gitkeep）
+├── tenants/                    # 生成的独立多租户子系统目录（已配置 .gitkeep）
 ├── scripts/                    # 运维与自动化脚本目录
 ├── nuadmin.sql                 # 完整的 MySQL 基础结构与初始种子字典
+├── index.html                  # 线上宣传与功能演示 H5 单页（GitHub Pages）
 ├── AGENTS.md                   # AI 智能体协作开发总章程
 ├── CONTRACT.md                 # 控制面与子系统前后端接口契约
 └── README.md                   # 项目工程官方说明文档
@@ -168,7 +184,7 @@ npm run dev
 
 ---
 
-## 🖥️ 9 大低代码工位使用指引
+## 🖥️ 9 大专业 SaaS 研发工位使用指引
 
 进入主后台后，每个项目拥有 9 大专有配置工位：
 1. 🏗️ **建模站 (Model)**：可视化分组、模型定义、字段数据类型映射、关联外键与 JSON 模型一键导入导出。
@@ -183,20 +199,20 @@ npm run dev
 
 ---
 
-## 📦 独立子后台运行与独立部署
+## 📦 独立子系统运行与生产部署
 
-当在工作台生成一个子后台（如 `app_demo`）后，该工程会完整输出到 `tenants/app_demo/`：
+当在工作台生成一个多租户子系统（如 `app_demo`）后，该工程会完整输出到 `tenants/app_demo/`：
 ```bash
 # 进入生成的子系统目录
 cd tenants/app_demo
 
-# 安装子系统依赖（完全脱离主后台）
+# 安装子系统依赖（完全脱离主后台，独立运行）
 npm install
 
 # 本地开发调试
 npm run dev
 
-# 生产环境打包（零运行时低代码平台依赖）
+# 生产环境打包（零运行时平台依赖）
 npm run build
 node .output/server/index.mjs
 ```
@@ -205,4 +221,7 @@ node .output/server/index.mjs
 
 ## 🤝 协作与开源协议
 
-本项目基于 MIT 协议开源。欢迎提交 Issue 与 Pull Request 共同完善新能力组件与生成模板！
+本项目由 **chuan** 独立主导开发，基于 **MIT 协议** 开源。
+欢迎提交 Issue 与 Pull Request 共同完善新能力组件与生成模板！
+- **联系作者**：[45mrzc@gmail.com](mailto:45mrzc@gmail.com)
+- **源码仓库**：[https://github.com/45mrzc-boop/nuadmin](https://github.com/45mrzc-boop/nuadmin)
