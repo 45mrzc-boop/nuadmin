@@ -12,6 +12,7 @@ tenants/*
 # Temp scripts
 scripts/*
 !scripts/.gitkeep
+!scripts/check-db-connection.mjs
 
 # Local overrides
 .env.local

@@ -20,6 +20,22 @@ description: >-
 
 ---
 
+## 阶段 0：动态确认与探活 MySQL 数据库连接（强制前置门禁）
+
+> [!CRITICAL]
+> **严禁在任何 Skill 脚本、代码或方案中硬编码 MySQL 主机、端口、用户名或密码！**
+> 在开始任何立项、建库建表、代码生成或数据播种前，大模型**必须首先动态确认当前的 MySQL 数据库真实连接信息**：
+> 1. **执行连接握手探活**：
+>    - 运行探活脚本：`node /config/nuadmin/scripts/check-db-connection.mjs`；
+>    - 或调用 MCP 工具 `genplus_get_db_connection`（不传参，自动解析 main-admin 控制面库并执行 ping 探活）；
+> 2. **确认环境连接配置**：
+>    - 自动从 `/config/nuadmin/main-admin/.env` 中读取并确认 `DB_HOST`、`DB_PORT`、`DB_USER`、`DB_PASS`、`DB_NAME`；
+>    - 确认握手结果为 `ok: true` / `connected: true`，保证 MySQL 实例在线且凭证有效；
+> 3. **配置动态继承与零硬编码**：
+>    - 所有后续的数据库交互（包括子系统专属库 `nuadmin_t_*` 的建库校验、初始种子数据播种脚本、数据排查查询等），必须直接读取使用 `main-admin/.env` 的动态配置，彻底杜绝硬编码！
+
+---
+
 ## 路线 A：简略模式 (Concise Mode / 快速原型构建)
 
 适用于用户想快速出原型、快速体验或不需要逐一斟酌每个字段细节的场景。

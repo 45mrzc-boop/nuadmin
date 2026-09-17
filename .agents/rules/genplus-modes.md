@@ -71,3 +71,17 @@ trigger: always_on
 * **二者搭配法则**：
   - **无 Skill 不准妄动 MCP**（必须有立项或维护流程的意图对齐与签署，才能调用写操作 MCP）；
   - **有 MCP 绝不手工旁路**（所有落库操作一律调用 MCP，保障元数据完整性与架构标准性）。
+
+## 4. MySQL 数据库动态确认与零硬编码铁律
+
+> [!CRITICAL]
+> **绝对禁止在任何 Skill、脚本、代码或 Agent 决策中硬编码 MySQL 凭证（包括主机名、端口、账号、密码）！**
+> 1. **前置探活门禁**：在调用任何 Skill 执行租户建档、表结构迁移、数据播种或 SQL 查询排查前，大模型**必须首先确认真实的 MySQL 数据库连接信息**：
+>    - 运行握手探活命令：`node /config/nuadmin/scripts/check-db-connection.mjs`；
+>    - 或调用 MCP 工具：`genplus_get_db_connection`（无参调用即可实时检测 main-admin 控制面库并执行握手）；
+> 2. **动态读取主控制面配置**：
+>    - 数据库真实连接信息的唯一真理来源为 `/config/nuadmin/main-admin/.env`；
+>    - 探活必须验证返回值 `ok: true` / `connected: true`，确认 MySQL 服务在线且凭证有效；
+> 3. **上下文动态传递**：
+>    - 所有后续的数据库操作（包括子系统的独立库 `nuadmin_t_*`、数据播种、查询检验等），必须直接动态继承此连接配置，严禁手写写死任何 IP 或密码！
+

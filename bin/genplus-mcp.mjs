@@ -82,13 +82,16 @@ async function resolveTenant(args = {}) {
   throw new Error(`找不到 ID 为 ${tid} 的租户`)
 }
 
-function getTenantDbConfig(slug) {
-  const envPath = `/config/nuadmin/tenants/${slug}/.env`
-  let host = process.env.DB_HOST || 'mysql-db'
-  let port = Number(process.env.DB_PORT) || 3306
-  let user = process.env.DB_USER || 'root'
-  let password = process.env.DB_PASS || 'joejoe1980'
-  let database = `nuadmin_t_${slug}`
+function loadMainAdminDbConfig() {
+  const envPath = '/config/nuadmin/main-admin/.env'
+  const config = {
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.DB_PORT) || 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASS || '',
+    database: process.env.DB_NAME || 'nuadmin',
+    envPath
+  }
 
   if (existsSync(envPath)) {
     const raw = readFileSync(envPath, 'utf-8')
@@ -99,11 +102,43 @@ function getTenantDbConfig(slug) {
       if (idx > 0) {
         const k = trimmed.slice(0, idx).trim()
         const v = trimmed.slice(idx + 1).trim()
-        if (k === 'DB_HOST') host = v
-        if (k === 'DB_PORT') port = Number(v)
-        if (k === 'DB_USER') user = v
-        if (k === 'DB_PASS') password = v
-        if (k === 'DB_NAME') database = v
+        if (k === 'DB_HOST' && !process.env.DB_HOST) config.host = v
+        if (k === 'DB_PORT' && !process.env.DB_PORT) config.port = Number(v)
+        if (k === 'DB_USER' && !process.env.DB_USER) config.user = v
+        if (k === 'DB_PASS' && !process.env.DB_PASS) config.password = v
+        if (k === 'DB_NAME' && !process.env.DB_NAME) config.database = v
+      }
+    }
+  }
+
+  return config
+}
+
+function getTenantDbConfig(slug) {
+  const base = loadMainAdminDbConfig()
+  let host = base.host
+  let port = base.port
+  let user = base.user
+  let password = base.password
+  let database = slug ? `nuadmin_t_${slug}` : base.database
+
+  if (slug) {
+    const envPath = `/config/nuadmin/tenants/${slug}/.env`
+    if (existsSync(envPath)) {
+      const raw = readFileSync(envPath, 'utf-8')
+      for (const line of raw.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith('#')) continue
+        const idx = trimmed.indexOf('=')
+        if (idx > 0) {
+          const k = trimmed.slice(0, idx).trim()
+          const v = trimmed.slice(idx + 1).trim()
+          if (k === 'DB_HOST') host = v
+          if (k === 'DB_PORT') port = Number(v)
+          if (k === 'DB_USER') user = v
+          if (k === 'DB_PASS') password = v
+          if (k === 'DB_NAME') database = v
+        }
       }
     }
   }
@@ -1034,12 +1069,13 @@ const TOOLS = [
   },
   {
     name: 'genplus_get_db_connection',
-    description: '获取指定租户子项目的独立数据库连接配置及连接串，方便直连排查或对接外部客户端。',
+    description: '动态获取并探活验证 MySQL 数据库连接配置与连接串。若不传 tenantId/slug，则默认动态解析 /config/nuadmin/main-admin/.env 并执行实时握手探活；若传入 tenantId/slug，则获取并探活该租户专属数据库。',
     inputSchema: {
       type: 'object',
       properties: {
-        tenantId: { type: 'number', description: '租户 ID' },
-        slug: { type: 'string', description: '租户英文标识 slug (与 tenantId 二选一)' }
+        tenantId: { type: 'number', description: '可选：租户 ID。留空则直接检测 main-admin 控制面数据库' },
+        slug: { type: 'string', description: '可选：租户英文标识 slug。留空则直接检测 main-admin 控制面数据库' },
+        testConnection: { type: 'boolean', description: '是否执行实时握手探活（默认为 true）' }
       }
     }
   },
@@ -1436,18 +1472,57 @@ async function handleToolCall(name, args) {
       }
     }
     case 'genplus_get_db_connection': {
-      const tenant = await resolveTenant(args)
-      const cfg = getTenantDbConfig(tenant.slug)
+      let tenant = null
+      let isMain = false
+      if (args.tenantId || args.slug) {
+        tenant = await resolveTenant(args)
+      } else {
+        isMain = true
+      }
+      const slug = tenant ? tenant.slug : null
+      const cfg = getTenantDbConfig(slug)
+
+      let testResult = null
+      if (args.testConnection !== false) {
+        try {
+          if (!mysql) mysql = require('mysql2/promise')
+          const conn = await mysql.createConnection({
+            host: cfg.host,
+            port: cfg.port,
+            user: cfg.user,
+            password: cfg.password,
+            database: cfg.database
+          })
+          const [rows] = await conn.query('SELECT 1 AS ping, VERSION() AS version, DATABASE() AS current_db, NOW() AS now')
+          await conn.end()
+          testResult = {
+            ok: true,
+            version: rows[0]?.version,
+            currentDb: rows[0]?.current_db,
+            serverTime: rows[0]?.now
+          }
+        } catch (e) {
+          testResult = {
+            ok: false,
+            error: e.message,
+            code: e.code
+          }
+        }
+      }
+
       return {
         success: true,
-        tenantId: tenant.id,
-        slug: tenant.slug,
+        scope: isMain ? 'main_admin' : 'tenant',
+        tenantId: tenant ? tenant.id : null,
+        slug: tenant ? tenant.slug : null,
+        envPath: isMain ? '/config/nuadmin/main-admin/.env' : `/config/nuadmin/tenants/${slug}/.env`,
         host: cfg.host,
         port: cfg.port,
         user: cfg.user,
         password: cfg.password,
         database: cfg.database,
-        connectionUri: cfg.connectionUri
+        connectionUri: cfg.connectionUri,
+        test: testResult
       }
     }
     case 'genplus_db_query': {

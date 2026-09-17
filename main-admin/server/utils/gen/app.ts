@@ -87,10 +87,10 @@ export default defineNuxtConfig({
 `,
 
     '.env': `# ${p.title} — 独立数据库、独立密钥，与主后台无任何运行时耦合
-DB_HOST=mysql-db
-DB_PORT=3306
-DB_USER=root
-DB_PASS=${process.env.DB_PASS ?? 'joejoe1980'}
+DB_HOST=${process.env.DB_HOST ?? '127.0.0.1'}
+DB_PORT=${process.env.DB_PORT ?? '3306'}
+DB_USER=${process.env.DB_USER ?? 'root'}
+DB_PASS=${process.env.DB_PASS ?? ''}
 DB_NAME=${p.dbName}
 JWT_SECRET=${p.jwtSecret}
 PORT=${p.port}

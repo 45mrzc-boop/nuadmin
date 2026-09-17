@@ -11,6 +11,22 @@ description: >-
 
 ---
 
+## 阶段 0：动态确认与探活 MySQL 数据库连接（强制前置门禁）
+
+> [!CRITICAL]
+> **严禁在维护脚本与排查命令中硬编码 MySQL 凭证！**
+> 在执行任何维护、数据库排查（`genplus_db_query`）、迁移变更或种子数据修正前，大模型**必须首先动态确认当前的 MySQL 数据库真实连接信息**：
+> 1. **执行连接握手探活**：
+>    - 运行探活脚本：`node /config/nuadmin/scripts/check-db-connection.mjs`；
+>    - 或调用 MCP 工具 `genplus_get_db_connection`（不传参探活主库，或传入 `tenantId`/`slug` 探活目标租户库）；
+> 2. **确认环境连接配置**：
+>    - 自动从 `/config/nuadmin/main-admin/.env` 中读取并确认 `DB_HOST`、`DB_PORT`、`DB_USER`、`DB_PASS`、`DB_NAME`；
+>    - 确保返回 `ok: true`，确认 MySQL 服务可用；
+> 3. **配置动态继承**：
+>    - 所有的 SQL 执行、结构比对和临时排查脚本，必须动态引用上述环境变量，严禁硬编码！
+
+---
+
 ## 阶段一：定位目标系统上下文
 
 1. **获取当前项目信息**：
