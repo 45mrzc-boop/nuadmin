@@ -35,6 +35,14 @@
 
 ---
 
+## 📢 最新版本更新说明 (v2.1.0 - 2026-09-17)
+
+- 🛡️ **MySQL 数据库动态探活与零硬编码**：全工程废除写死数据库凭证，新增 [`scripts/check-db-connection.mjs`](file:///config/nuadmin/scripts/check-db-connection.mjs) 握手探活工具，唯一真理来源收敛至 [`main-admin/.env`](file:///config/nuadmin/main-admin/.env)。大模型在调用任何构建与维护技能前**强制执行探活门禁**。
+- 🤖 **全面原生适配 Claude Code 规范**：新增根目录 [`CLAUDE.md`](file:///config/nuadmin/CLAUDE.md)、`.claude/skills/` 技能库与 `.claude/settings.json` MCP 配置，实现 Claude Code 智能体环境下无感开箱即用。
+- 📘 详细更新记录请阅读 [**完整更新日志 (CHANGELOG.md)**](file:///config/nuadmin/CHANGELOG.md)。
+
+---
+
 ## 👨‍💻 核心作者与交流联系 (Author & Contact)
 
 - **核心作者 / 架构师**：**chuan**
@@ -111,10 +119,15 @@
 
 ```bash
 /config/nuadmin/
-├── .agents/                    # GenPlus AI 智能体规范库
+├── .agents/                    # GenPlus AI 智能体规范库 (Antigravity / Generic Agent)
 │   ├── skills/                 # 核心技能：genplus-build / genplus-maintain
 │   ├── rules/                  # 智能体行为规则与门禁守则
 │   └── mcp_config.json         # MCP 服务端连接配置
+├── .claude/                    # Claude Code 规范目录 (原生双轨支持)
+│   ├── skills/                 # Claude Code 技能库：genplus-build / genplus-maintain
+│   ├── rules/                  # 行为规则：genplus-modes.md
+│   ├── mcp.json                # Claude Code MCP 配置
+│   └── settings.json           # Claude Code 项目环境设定
 ├── bin/
 │   └── genplus-mcp.mjs         # 工作台标准 MCP 独立服务入口
 ├── main-admin/                 # 控制面工程（SaaS 开发控制中枢）
@@ -127,10 +140,12 @@
 │   ├── nuxt.config.ts          # Nuxt 配置文件
 │   └── package.json            # 控制面依赖声明
 ├── tenants/                    # 生成的独立多租户子系统目录（已配置 .gitkeep）
-├── scripts/                    # 运维与自动化脚本目录
+├── scripts/                    # 运维与自动化脚本目录 (含 check-db-connection.mjs)
 ├── nuadmin.sql                 # 完整的 MySQL 基础结构与初始种子字典
 ├── index.html                  # 线上宣传与功能演示 H5 单页（GitHub Pages）
 ├── AGENTS.md                   # AI 智能体协作开发总章程
+├── CLAUDE.md                   # Claude Code 原生指引与 SOP 门禁
+├── CHANGELOG.md                # 官方版本更新日志
 ├── CONTRACT.md                 # 控制面与子系统前后端接口契约
 └── README.md                   # 项目工程官方说明文档
 ```
