@@ -67,7 +67,7 @@
 # 1. 数据库动态探活握手（内置跨平台与动态根目录自适应）
 node <repoRoot>/scripts/check-db-connection.mjs
 
-# 2. 启动控制面主后台 (Port 6005)
+# 2. 启动控制面主后台 (Port 10000)
 cd <repoRoot>/main-admin && npm run dev
 
 # 3. 独立子系统构建与部署 (以 app_demo 为例)

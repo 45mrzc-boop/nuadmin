@@ -37,9 +37,9 @@
 
 ## 📢 最新版本更新说明 (v2.1.0 - 2026-09-17)
 
-- 🛡️ **MySQL 数据库动态探活与零硬编码**：全工程废除写死数据库凭证，新增 [`scripts/check-db-connection.mjs`](file:///config/nuadmin/scripts/check-db-connection.mjs) 握手探活工具，唯一真理来源收敛至 [`main-admin/.env`](file:///config/nuadmin/main-admin/.env)。大模型在调用任何构建与维护技能前**强制执行探活门禁**。
-- 🤖 **全面原生适配 Claude Code 规范**：新增根目录 [`CLAUDE.md`](file:///config/nuadmin/CLAUDE.md)、`.claude/skills/` 技能库与 `.claude/settings.json` MCP 配置，实现 Claude Code 智能体环境下无感开箱即用。
-- 📘 详细更新记录请阅读 [**完整更新日志 (CHANGELOG.md)**](file:///config/nuadmin/CHANGELOG.md)。
+- 🛡️ **MySQL 数据库动态探活与零硬编码**：全工程废除写死数据库凭证，新增 [`scripts/check-db-connection.mjs`](scripts/check-db-connection.mjs) 握手探活工具，唯一真理来源收敛至 [`main-admin/.env`](main-admin/.env)。大模型在调用任何构建与维护技能前**强制执行探活门禁**。
+- 🤖 **全面原生适配 Claude Code 规范**：新增根目录 [`CLAUDE.md`](CLAUDE.md)、`.claude/skills/` 技能库与 `.claude/settings.json` MCP 配置，实现 Claude Code 智能体环境下无感开箱即用。
+- 📘 详细更新记录请阅读 [**完整更新日志 (CHANGELOG.md)**](CHANGELOG.md)。
 
 ---
 
@@ -118,7 +118,7 @@
 ## 📂 项目目录结构
 
 ```bash
-/config/nuadmin/
+<repoRoot>/
 ├── .agents/                    # GenPlus AI 智能体规范库 (Antigravity / Generic Agent)
 │   ├── skills/                 # 核心技能：genplus-build / genplus-maintain
 │   ├── rules/                  # 智能体行为规则与门禁守则
@@ -181,7 +181,7 @@ DB_PASS=your_password
 DB_NAME=nuadmin
 
 JWT_SECRET=your_custom_jwt_secret_key
-PORT=6005
+PORT=10000
 HOST=0.0.0.0
 ```
 
@@ -193,7 +193,7 @@ npm run dev
 ```
 
 服务启动后，在浏览器访问：
-- **控制面访问地址**：`http://localhost:6005`
+- **控制面访问地址**：`http://localhost:10000`
 - **默认管理员账号**：`admin`
 - **默认管理员密码**：`admin123`
 

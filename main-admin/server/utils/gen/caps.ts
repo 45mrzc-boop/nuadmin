@@ -531,17 +531,19 @@ export function landingPortalFiles(p: TenantPlan): Record<string, string> {
   const matchedMod = allModels.find(m => m.key === listModel || m.tableName === listModel || m.table === listModel || m.name === listModel)
   if (matchedMod) listModel = matchedMod.key
   else if (!listModel && allModels.length > 0) listModel = allModels[0].key
+  const allowedTable = matchedMod ? String(matchedMod.tableName || matchedMod.table || '') : ''
 
   return {
     'server/api/public/portal/list.get.ts': `export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const allowedRes = ${JSON.stringify(listModel)}
+  const allowedTable = ${JSON.stringify(allowedTable)}
   const defaultRes = allowedRes || Object.keys(TABLES)[0] || ''
   const res = String(query.res || defaultRes)
   if (!res) return ok({ list: [], total: 0, page: 1, pageSize: 10 })
 
   const t = tableOf(res)
-  if (allowedRes && t.key !== allowedRes && t.table !== allowedRes) {
+  if (allowedTable && t.table !== allowedTable) {
     throw createError({ statusCode: 403, message: '该业务模型未对外公开' })
   }
 
@@ -574,12 +576,13 @@ export function landingPortalFiles(p: TenantPlan): Record<string, string> {
   const id = Number(getRouterParam(event, 'id'))
   const query = getQuery(event)
   const allowedRes = ${JSON.stringify(listModel)}
+  const allowedTable = ${JSON.stringify(allowedTable)}
   const defaultRes = allowedRes || Object.keys(TABLES)[0] || ''
   const res = String(query.res || defaultRes)
   if (!res || !id) throw createError({ statusCode: 400, message: '参数无效' })
 
   const t = tableOf(res)
-  if (allowedRes && t.key !== allowedRes && t.table !== allowedRes) {
+  if (allowedTable && t.table !== allowedTable) {
     throw createError({ statusCode: 403, message: '该业务模型未对外公开' })
   }
 

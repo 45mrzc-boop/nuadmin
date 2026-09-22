@@ -1,5 +1,6 @@
 import test, { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { createJiti } from 'jiti'
@@ -547,11 +548,18 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(portalDetailApi.includes('allowedRes'), 'portal detail API must check allowedRes')
     assert.ok(portalDetailApi.includes('safeCols'), 'portal detail API must filter safeCols')
 
-    // D8: Public landing pages excluded from admin menus
+    // S3: Public landing pages assigned to dedicated '前台运营' group, not '系统管理'
     const bootstrapContent = srv['server/utils/schema.ts']
     assert.ok(bootstrapContent, 'server/utils/schema.ts must exist')
-    assert.ok(!bootstrapContent.includes('"path": "/p/form"'), 'public /p/form route must not be in admin MENUS')
-    assert.ok(!bootstrapContent.includes('"path": "/portal"'), 'public /portal route must not be in admin MENUS')
+    assert.ok(bootstrapContent.includes('"path": "/p/form"'), 'public /p/form route must be in MENUS')
+    assert.ok(bootstrapContent.includes('"path": "/portal"'), 'public /portal route must be in MENUS')
+    assert.ok(bootstrapContent.includes('"grp": "前台运营"'), 'public pages must belong to 前台运营 group')
+
+    // S4: init.ts includes idempotent INSERT IGNORE top-up for admin role menus and excludes 前台运营 from editor/viewer
+    const initPlugin = srv['server/plugins/init.ts']
+    assert.ok(initPlugin, 'server/plugins/init.ts must exist')
+    assert.ok(initPlugin.includes('INSERT IGNORE INTO sys_role_menu (role_id, menu_path, btn_perms)'), 'init plugin must top up admin role menus')
+    assert.ok(initPlugin.includes("m.grp !== '前台运营'"), 'editor/viewer must exclude 前台运营')
 
     // D6: Pill radius styling maintains container geometry
     const mainCss = app['app/assets/css/main.css']
@@ -566,6 +574,35 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(posterCap.spec.tables?.some(t => t.name === 'channel_scan_log'), 'landing_poster must declare channel_scan_log table')
     assert.ok(posterCap.spec.columns?.some(col => col.key === 'pv'), 'landing_poster must declare pv column')
     assert.ok(posterCap.spec.columns?.some(col => col.key === 'uv'), 'landing_poster must declare uv column')
+  })
+
+  it('13. AI Self-test Channel & Health Probe upgrades (Batch 1)', async () => {
+    // 1. Sub-admin generated files include health.get.ts and isDbReady in db.ts
+    const srv = serverFiles(mockPlan)
+    const subHealth = srv['server/api/health.get.ts']
+    assert.ok(subHealth, 'sub-admin server/api/health.get.ts must be generated')
+    assert.ok(subHealth.includes('isDbReady()'), 'sub-admin health must check isDbReady()')
+    assert.ok(subHealth.includes("await q('SELECT 1')"), 'sub-admin health must probe database via SELECT 1')
+    assert.ok(subHealth.includes('latencyMs'), 'sub-admin health must return latencyMs')
+
+    const subDb = srv['server/utils/db.ts']
+    assert.ok(subDb.includes('export function isDbReady()'), 'sub-admin db.ts must export isDbReady()')
+    assert.ok(subDb.includes('_isReady = true'), 'sub-admin db.ts must track _isReady')
+
+    // 2. Control-plane health.get.ts reads dynamic package.json version and probes DB
+    const cpHealthPath = resolve(root, 'server/api/health.get.ts')
+    const cpHealthCode = readFileSync(cpHealthPath, 'utf-8')
+    assert.ok(cpHealthCode.includes("from '../../package.json'"), 'control plane health must import package.json')
+    assert.ok(cpHealthCode.includes("await q('SELECT 1')"), 'control plane health must probe DB')
+    assert.ok(cpHealthCode.includes('pkg.version'), 'control plane health must read pkg.version')
+
+    // 3. MCP server tool definitions contain 25 tools with standard annotations
+    const mcpCode = readFileSync(resolve(root, '../bin/genplus-mcp.mjs'), 'utf-8')
+    assert.ok(mcpCode.includes("name: 'genplus_health'"), 'MCP must contain genplus_health tool')
+    assert.ok(mcpCode.includes("name: 'genplus_verify'"), 'MCP must contain genplus_verify tool')
+    assert.ok(mcpCode.includes("name: 'genplus_inspect_output'"), 'MCP must contain genplus_inspect_output tool')
+    assert.ok(mcpCode.includes("name: 'genplus_diff_tenant'"), 'MCP must contain genplus_diff_tenant tool')
+    assert.ok(mcpCode.includes("rel.startsWith('..') || isAbsolute(rel)"), 'inspect_output must enforce path traversal security check')
   })
 })
 

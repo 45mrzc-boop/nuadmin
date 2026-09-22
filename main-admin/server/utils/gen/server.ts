@@ -162,8 +162,17 @@ export function tenantBootstrap(p: TenantPlan) {
   for (const k of Object.keys(p.caps)) {
     for (const pg of capSpec(k)?.pages ?? []) {
       const isPublic = (pg as any).surface === 'public' || pg.route.startsWith('/p/') || pg.route.startsWith('/portal') || (pg.route.startsWith('/cms') && !pg.route.startsWith('/admin'))
-      if (isPublic) continue
-      menus.push({ res_key: pg.key, name: pg.name, icon: pg.icon, path: pg.route, grp: '系统管理', perm: pg.key, sort: sort++, hidden: false })
+      // C 端公开页不混入「系统管理」，归入独立「前台运营」分组，避免后台功能与公开入口混淆
+      menus.push({
+        res_key: pg.key,
+        name: pg.name,
+        icon: pg.icon,
+        path: pg.route,
+        grp: isPublic ? '前台运营' : '系统管理',
+        perm: pg.key,
+        sort: sort++,
+        hidden: false
+      })
     }
   }
   // GVA 角色管理、用户管理、门禁模式无条件挂载进系统管理菜单
@@ -287,9 +296,11 @@ export const ok = <T,>(data: T) => ({ code: 0, message: 'ok', data })
  * Nitro does not guarantee plugin execution order, so any plugin that touches
  * tables must await this rather than racing the init plugin that creates them.
  */
+let _isReady = false
 let _resolveReady: () => void
-export const dbReady = new Promise<void>((r) => { _resolveReady = r })
+export const dbReady = new Promise<void>((r) => { _resolveReady = () => { _isReady = true; r() } })
 export function markDbReady() { _resolveReady() }
+export function isDbReady(): boolean { return _isReady }
 `,
 
     'server/utils/schema.ts': `// GENERATED — 表结构与初始化数据。修改业务模型请回到主后台建模站重新生成。
@@ -792,7 +803,7 @@ export default defineNitroPlugin(async () => {
         VALUES ('admin', ?, 'create,edit,delete,export,detail')
         ON DUPLICATE KEY UPDATE btn_perms='create,edit,delete,export,detail'\`, [m.path])
       // editor 拥有业务模块完整按钮权限
-      if (m.grp !== '系统管理') {
+      if (m.grp !== '系统管理' && m.grp !== '前台运营') {
         await exec(\`INSERT INTO sys_role_menu (role_id, menu_path, btn_perms)
           VALUES ('editor', ?, 'create,edit,delete,export,detail')
           ON DUPLICATE KEY UPDATE btn_perms='create,edit,delete,export,detail'\`, [m.path])
@@ -804,13 +815,22 @@ export default defineNitroPlugin(async () => {
     }
   }
 
+  // 3b. 补授「新增菜单」给 admin。
+  // sys_role_menu 只在首次初始化时注入，后续版本新加的菜单（如 C 端「前台运营」入口）
+  // 对既有租户永远不可见：sys_menu 里有这条，侧边栏却渲染不出来。
+  // 这里只补缺失项（INSERT IGNORE），不触碰用户已调整过的既有授权。
+  for (const m of MENUS) {
+    await exec(\`INSERT IGNORE INTO sys_role_menu (role_id, menu_path, btn_perms)
+      VALUES ('admin', ?, 'create,edit,delete,export,detail')\`, [m.path])
+  }
+
   // 4. 初始化 Casbin RBAC 策略
   if (!(await one('SELECT id FROM casbin_rule LIMIT 1'))) {
     await exec('INSERT INTO casbin_rule (ptype,v0,v1,v2,v3) VALUES (?,?,?,?,?)', ['p', 'role:admin', DOM, '/api/*', '*'])
   }
   // editor 拥有业务模块全部 API
   for (const m of MENUS) {
-    if (m.grp !== '系统管理') {
+    if (m.grp !== '系统管理' && m.grp !== '前台运营') {
       await exec(\`INSERT INTO casbin_rule (ptype,v0,v1,v2,v3) SELECT 'p','role:editor',?, ?, '*'
         WHERE NOT EXISTS (SELECT 1 FROM casbin_rule WHERE ptype='p' AND v0='role:editor' AND v1=? AND v2=? AND v3='*')\`,
         [DOM, m.path.replace('/admin/', '/api/') + '/*', DOM, m.path.replace('/admin/', '/api/') + '/*'])
@@ -958,6 +978,32 @@ export function randomValue(f: FieldDef, i: number): unknown {
       return pick(['华北', '华东', '华南', '西南']) + '-' + (i + 1)
   }
 }
+`,
+
+    'server/api/health.get.ts': `import { isDbReady, q, ok } from '../utils/db'
+
+export default defineEventHandler(async () => {
+  let dbUp = false
+  let latencyMs = 0
+  const t0 = performance.now()
+  try {
+    await q('SELECT 1')
+    dbUp = true
+    latencyMs = Math.round(performance.now() - t0)
+  } catch {
+    latencyMs = Math.round(performance.now() - t0)
+  }
+
+  return ok({
+    ok: true,
+    db: {
+      up: dbUp,
+      latencyMs
+    },
+    initReady: isDbReady(),
+    uptime: Math.round(process.uptime() * 10) / 10
+  })
+})
 `,
 
     'server/api/login.post.ts': `import { readBody } from 'h3'

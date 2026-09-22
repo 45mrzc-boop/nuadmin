@@ -7,19 +7,19 @@
 
 工作空间提供两种标准化研发模式：
 1. **构建模式（Build Mode）**：
-   - 技能包：[genplus-build](file:///config/nuadmin/.agents/skills/genplus-build/SKILL.md)
+   - 技能包：[genplus-build](.agents/skills/genplus-build/SKILL.md)
    - **最高铁律**：**严禁一句话直接一干到底**！必须通过交互式对齐后方可生成。支持**双轨设定**：
      * **简略模式 (Concise Mode)**：用户仅描述大概需求，AI 输出核心概要（含智能唤醒装配的能力库清单），与用户进行单轮确认对齐后，其余所有底层细节（字段类型、UI组件、搜索维度、动作矩阵、标准字典）**全部由系统智能拟定**，直接自动化安装能力、生成并启动！
      * **细节模式 (Detailed Mode)**：企业级深度定制，多阶段全流程精细研讨（基础信息、实体关联、字段规则、动作矩阵天花板、系统能力库装配矩阵、终审签署），满足复杂业务要求。
 2. **维护模式（Maintain Mode）**：
-   - 技能包：[genplus-maintain](file:///config/nuadmin/.agents/skills/genplus-maintain/SKILL.md)
+   - 技能包：[genplus-maintain](.agents/skills/genplus-maintain/SKILL.md)
    - 用于对现有已上线的租户项目进行增量迭代、加字段、调样式、排查权限与热更新。
 
 ## 2. 工具链支持 (MCP)
 
 工作台提供标准 MCP Server：
-- 配置文件：[mcp_config.json](file:///config/nuadmin/.agents/mcp_config.json)
-- 可执行服务端：[`bin/genplus-mcp.mjs`](file:///config/nuadmin/bin/genplus-mcp.mjs)
+- 配置文件：[mcp_config.json](.agents/mcp_config.json)
+- 可执行服务端：[`bin/genplus-mcp.mjs`](bin/genplus-mcp.mjs)
 - 提供涵盖 7 大站点的全部核心工作台操作能力（租户建档、字典管理、模型分组、实体建模、字段定义、设计矩阵、能力查询与安装 `genplus_list_capabilities` / `genplus_install_capability`、代码生成、服务启停）。
 - 提供独立数据库连接与排查工具（`genplus_get_db_connection`、`genplus_db_query`、`genplus_db_execute`）。
 - 提供对外公开微页面一键脚手架工具（`genplus_create_public_landing`），实现 B+C 双端业务闭环。

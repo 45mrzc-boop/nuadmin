@@ -1,4 +1,6 @@
 import { readFileSync, existsSync } from 'node:fs'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { TenantPlan } from './types'
 import { allModules } from './types'
 import { findPalette, skinCss } from '#shared/skins'
@@ -10,7 +12,8 @@ export const capSpec = (key: string) =>
 const has = (p: TenantPlan, k: string) => !!p.caps[k]
 
 function getControlPlaneDbConfig() {
-  const envPath = '/config/nuadmin/main-admin/.env'
+  const adminRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
+  const envPath = process.env.MAIN_ADMIN_ENV || resolve(adminRoot, '.env')
   const out = {
     host: process.env.DB_HOST || '127.0.0.1',
     port: process.env.DB_PORT || '3306',

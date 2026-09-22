@@ -2,9 +2,9 @@
   "mcpServers": {
     "genplus": {
       "command": "node",
-      "args": ["/config/nuadmin/bin/genplus-mcp.mjs"],
+      "args": ["${workspaceFolder}/bin/genplus-mcp.mjs"],
       "env": {
-        "MAIN_URL": "http://127.0.0.1:6005"
+        "MAIN_URL": "http://127.0.0.1:10000"
       }
     }
   }

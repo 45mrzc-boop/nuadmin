@@ -1,9 +1,10 @@
 {
   "name": "nuadmin-main",
+  "version": "2.2.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "nuxt dev --port 6005",
+    "dev": "nuxt dev",
     "build": "nuxt build",
     "preview": "node .output/server/index.mjs",
     "db:migrate": "node --env-file=.env server/scripts/migrate.ts",

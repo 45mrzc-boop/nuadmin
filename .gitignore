@@ -13,6 +13,7 @@ tenants/*
 scripts/*
 !scripts/.gitkeep
 !scripts/check-db-connection.mjs
+!scripts/genplus-mcp-call.mjs
 
 # Local overrides
 .env.local

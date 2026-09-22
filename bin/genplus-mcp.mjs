@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import readline from 'node:readline'
 import { spawn } from 'node:child_process'
-import { readFileSync, writeFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, resolve, relative, isAbsolute } from 'node:path'
 import { tmpdir } from 'node:os'
+import { createHash } from 'node:crypto'
 import net from 'node:net'
 import { createRequire } from 'node:module'
 
@@ -17,7 +18,7 @@ try {
   // lazy loaded on db tool calls if needed
 }
 
-const MAIN_URL = process.env.MAIN_URL || 'http://127.0.0.1:6005'
+const MAIN_URL = process.env.MAIN_URL || 'http://127.0.0.1:10000'
 let adminToken = ''
 
 async function getAdminToken() {
@@ -96,6 +97,36 @@ async function resolveTenant(args = {}) {
     return { id: tid || null, slug, name: slug, port: null }
   }
   throw new Error(`找不到 ID 为 ${tid} 的租户`)
+}
+
+async function resolveModule(args = {}) {
+  let modId = args.moduleId
+  if (modId) return { id: Number(modId) }
+  const modKey = args.moduleKey || args.key
+  if (!modKey) return null
+  let tid = args.tenantId
+  if (!tid && args.slug) {
+    const t = await resolveTenant(args).catch(() => null)
+    if (t?.id) tid = t.id
+  }
+  if (!tid) return null
+  const mListRaw = await api(`/api/module?tenantId=${tid}`).catch(() => [])
+  const mList = Array.isArray(mListRaw) ? mListRaw : (mListRaw?.list || [])
+  const found = mList.find(m => m.key === modKey || m.tableName === modKey || m.table === modKey || m.name === modKey)
+  return found || null
+}
+
+async function resolveField(args = {}) {
+  let fid = args.fieldId
+  if (fid) return { id: Number(fid) }
+  const colKey = args.colKey || args.key
+  if (!colKey) return null
+  const mod = await resolveModule(args)
+  if (!mod?.id) return null
+  const fListRaw = await api(`/api/module/${mod.id}`).catch(() => null)
+  const fields = fListRaw?.fields || []
+  const found = fields.find(f => f.colKey === colKey || f.key === colKey || f.name === colKey)
+  return found || null
 }
 
 function loadMainAdminDbConfig() {
@@ -891,6 +922,7 @@ function copyLink() {
 const TOOLS = [
   {
     name: 'genplus_list_tenants',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     description: '列出 GenPlus 工作台中现有的所有租户项目及其状态、端口和路径。',
     inputSchema: {
       type: 'object',
@@ -899,6 +931,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_get_tenant_detail',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     description: '获取指定租户的完整架构档案，包括分组、模块、字段列表、设计矩阵与系统能力。',
     inputSchema: {
       type: 'object',
@@ -910,6 +943,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_create_tenant',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '在 GenPlus 工作台中创建新租户项目建档，分配独立工程目录、独立数据库与专属开发端口。',
     inputSchema: {
       type: 'object',
@@ -928,6 +962,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_update_tenant',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '更新租户级设置（支持设置应用标题 app_title、系统名称 name、门禁模式 auth_mode (rbac/users/open)、门禁配置 auth_config、登录页模板 login_tpl、布局风格 layout、主题 theme 等）。',
     inputSchema: {
       type: 'object',
@@ -949,6 +984,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_save_dict',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     description: '录入或更新业务枚举字典，为实体建模提供标准下拉枚举支撑。',
     inputSchema: {
       type: 'object',
@@ -976,6 +1012,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_create_model_group',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '创建业务模块分组（如 仓储基础数据、运营中心），用于左侧导航菜单的一级归类。',
     inputSchema: {
       type: 'object',
@@ -990,6 +1027,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_create_module',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '在指定租户与分组下创建业务数据模型（例如 货品SKU、出库单）。',
     inputSchema: {
       type: 'object',
@@ -1007,11 +1045,14 @@ const TOOLS = [
   },
   {
     name: 'genplus_add_fields',
-    description: '批量为业务模块定义业务字段。',
+    annotations: { readOnlyHint: false, destructiveHint: false },
+    description: '批量为业务模块定义业务字段（支持按 moduleId 或 tenantId + moduleKey 寻址）。',
     inputSchema: {
       type: 'object',
       properties: {
-        moduleId: { type: 'number', description: '模块 ID' },
+        moduleId: { type: 'number', description: '模块 ID (与 tenantId + moduleKey 二选一)' },
+        tenantId: { type: 'number', description: '租户 ID (当使用 moduleKey 时必填)' },
+        moduleKey: { type: 'string', description: '模块标识符，如 warehouse, order (与 moduleId 二选一)' },
         fields: {
           type: 'array',
           description: '字段配置列表',
@@ -1039,18 +1080,21 @@ const TOOLS = [
           }
         }
       },
-      required: ['moduleId', 'fields']
+      required: ['fields']
     }
   },
   {
     name: 'genplus_update_field',
-    description: '更新已有业务字段的定义（包括修改外键关联 refTable/refLabel/refValue、控件类型 component、必填、查询模式等）。',
+    annotations: { readOnlyHint: false, destructiveHint: false },
+    description: '更新已有业务字段的定义（支持按 fieldId 或 tenantId + moduleKey + colKey 寻址）。',
     inputSchema: {
       type: 'object',
       properties: {
-        fieldId: { type: 'number', description: '字段 ID' },
-        name: { type: 'string', description: '字段名称' },
+        fieldId: { type: 'number', description: '字段 ID (与 tenantId + moduleKey + colKey 二选一)' },
+        tenantId: { type: 'number', description: '租户 ID (当按模块与列名寻址时使用)' },
+        moduleKey: { type: 'string', description: '模块标识符 (当按模块与列名寻址时使用)' },
         colKey: { type: 'string', description: '数据库列名' },
+        name: { type: 'string', description: '字段名称' },
         type: { type: 'string', enum: ['id', 'varchar', 'text', 'richtext', 'int', 'decimal', 'money', 'date', 'datetime', 'bool', 'enum', 'json', 'fk', 'file', 'image'], description: '字段类型: id, varchar, text, richtext, int, decimal, money, date, datetime, bool (布尔开关), enum (字典枚举), json, fk (外键), file (附件), image (图片)' },
         length: { type: 'number', description: '字符长度' },
         required: { type: 'boolean', description: '是否必填' },
@@ -1065,12 +1109,12 @@ const TOOLS = [
         detailShow: { type: 'boolean', description: '是否在详情抽屉中展示' },
         exportShow: { type: 'boolean', description: '导出 Excel 时是否包含该列' },
         sortable: { type: 'boolean', description: '表格该列是否支持排序' }
-      },
-      required: ['fieldId']
+      }
     }
   },
   {
     name: 'genplus_configure_design',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     description: '配置设计矩阵：包括全局皮肤主题、圆角、调色板，以及关键的“模块动作能力天花板”（如关闭只读审计模块的 create/edit/delete）。',
     inputSchema: {
       type: 'object',
@@ -1114,6 +1158,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_list_capabilities',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     description: '查询工作台能力库的所有可用扩展能力包（如 C端推广海报 landing_poster、动态表单 landing_form、前台门户 landing_portal、企业官网 landing_cms、数据字典 dict、看板 dashboard、导入导出 io 等），支持按租户查看已安装状态。',
     inputSchema: {
       type: 'object',
@@ -1124,6 +1169,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_install_capability',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     description: '在能力站一键安装并配置扩展能力包（支持 landing_poster 推广海报、landing_form 收集表单、landing_portal 复合门户、landing_cms 品牌官网、dict 数据字典、dashboard 数据看板、file 附件存储、flow 审批流、job 定时任务等）。',
     inputSchema: {
       type: 'object',
@@ -1143,6 +1189,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_generate_project',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '触发生成站，编译并导出全套 Nuxt 4 + Vite + Tailwind CSS + Nitro + Casbin 的独立工程源码。',
     inputSchema: {
       type: 'object',
@@ -1155,6 +1202,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_manage_service',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '管理指定租户的运行服务（启动 start、停止 stop、查询状态 status）。',
     inputSchema: {
       type: 'object',
@@ -1166,8 +1214,70 @@ const TOOLS = [
     }
   },
   {
+    name: 'genplus_health',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    description: '探活控制面与（可选）指定租户子站，返回进程存活、数据库可达性与自检完成状态。只读，不产生任何结构变更。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantId: { type: 'number', description: '可选：租户 ID。不传则只探活控制面。' },
+        slug: { type: 'string', description: '可选：租户 slug (与 tenantId 二选一)。' }
+      }
+    }
+  },
+  {
+    name: 'genplus_verify',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    description: '对指定租户执行真机冒烟门禁（工程结构 / TS 语法 / 物理建表 / 租户隔离 / 具名槽 / 真实登录 / 能力探针）。只读检测，服务端直接返回汇总 summary (pass/fail/skip/gate)，不修改租户数据。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantId: { type: 'number', description: '租户 ID (与 slug 二选一)' },
+        slug: { type: 'string', description: '租户 slug (与 tenantId 二选一)' },
+        boot: { type: 'boolean', default: true, description: 'true=全量（含 esbuild 语法与 DDL 检查）；false=轻量子集，跳过昂贵检查。' },
+        failFast: { type: 'boolean', default: false, description: '遇到首个失败用例时是否立即中断返回' }
+      }
+    }
+  },
+  {
+    name: 'genplus_inspect_output',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    description: '读取指定租户生成工程内的文件内容或检索片段，用于核对生成结果是否符合预期（只读，且严格限制在 tenants/<slug>/ 目录内，防路径穿越）。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantId: { type: 'number', description: '租户 ID (与 slug 二选一)' },
+        slug: { type: 'string', description: '租户 slug (与 tenantId 二选一)' },
+        path: { type: 'string', description: '工程内相对路径，如 server/utils/schema.ts 或 app/pages/p/form.vue' },
+        grep: { type: 'string', description: '可选。传入则返回匹配行及行号，而非全文。' },
+        maxBytes: { type: 'number', default: 32768, description: '最大读取字节数，默认 32KB' }
+      },
+      required: ['path']
+    }
+  },
+  {
+    name: 'genplus_diff_tenant',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    description: '对比两个租户生成工程的文件与内容差异（用于上游版本 A/B 比对、回归核实）。只读。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantA: { type: 'number', description: '基准租户 A 的 ID (与 slugA 二选一)' },
+        slugA: { type: 'string', description: '基准租户 A 的 slug (与 tenantA 二选一)' },
+        tenantB: { type: 'number', description: '对比租户 B 的 ID (与 slugB 二选一)' },
+        slugB: { type: 'string', description: '对比租户 B 的 slug (与 tenantB 二选一)' },
+        paths: {
+          type: 'array',
+          items: { type: 'string' },
+          description: '可选。限定对比的文件相对路径列表（如 ["server/utils/schema.ts"]），不传则对比核心工程文件。'
+        }
+      }
+    }
+  },
+  {
     name: 'genplus_get_db_connection',
-    description: '动态获取并探活验证 MySQL 数据库连接配置与连接串。若不传 tenantId/slug，则默认动态解析 /config/nuadmin/main-admin/.env 并执行实时握手探活；若传入 tenantId/slug，则获取并探活该租户专属数据库。',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    description: '动态获取并探活验证 MySQL 数据库连接配置与连接串。若不传 tenantId/slug，则默认动态解析 <repoRoot>/main-admin/.env 并执行实时握手探活；若传入 tenantId/slug，则获取并探活该租户专属数据库。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1179,6 +1289,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_db_query',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     description: '在指定租户的独立数据库上执行只读 SQL 查询（如 SELECT、SHOW TABLES、EXPLAIN、DESCRIBE 等），检查物理表与数据。',
     inputSchema: {
       type: 'object',
@@ -1197,6 +1308,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_db_execute',
+    annotations: { readOnlyHint: false, destructiveHint: true },
     description: '【底层运维与排障逃生舱】在指定租户的独立数据库上执行写入或结构维护 SQL（如 INSERT、UPDATE、DELETE、ALTER TABLE 等）。仅用于紧急排障或修复，严禁在常规业务流程中绕过工作台建模契约。',
     inputSchema: {
       type: 'object',
@@ -1215,6 +1327,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_take_screenshot',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     description: '在无头浏览器中渲染指定租户的页面并拍摄高清 PNG 截图，支持自动登录认证与水合等待，供直观视觉预览和功能审查。',
     inputSchema: {
       type: 'object',
@@ -1231,6 +1344,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_create_public_landing',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '为租户系统自动生成对外公开的前端微页面 (如 C端带参渠道二维码推广页 /p/[scene]、移动端展示卡片、免鉴权业务接口与数据台账闭环)。',
     inputSchema: {
       type: 'object',
@@ -1250,6 +1364,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_build_style_preset',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '构建与应用实战风格库：提供涵盖 7 套皮肤规范、26+ 调色板及 8 大行业实战预设（智慧医疗、科技SaaS、金融风控、党政国企、极客运维、新零售、潮流艺术、工业智造）的完整视觉基线。支持风格库全景查询、按行业语义智能推导、一键整套构建应用至租户（联动更新皮肤、配色、圆角、侧栏折叠模式、登录页与布局），以及注册自定义实战风格预设。',
     inputSchema: {
       type: 'object',
@@ -1292,6 +1407,7 @@ const TOOLS = [
   },
   {
     name: 'genplus_build_capability_component',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     description: '构建与注册全新的能力库组件（Capability Component）：允许 AI Agent 或开发者在平台能力站中动态定义全新的扩展能力包（包含能力标识、名称、分类、版本、说明、专属数据表结构、API端点、前端页面、可配置项与验证标准），并支持一键安装注入到租户系统中。',
     inputSchema: {
       type: 'object',
@@ -1418,20 +1534,44 @@ async function handleToolCall(name, args) {
       const t = await api(`/api/tenant/${tid}`)
       if (!t) throw new Error(`获取租户 #${tid} 详情失败：未找到租户数据`)
 
+      const errors = []
       // GET /api/tenant/:id 已经聚合了 groups (含各 group 的 modules 与 fields)
       let groups = (Array.isArray(t.groups) && t.groups.length > 0) ? t.groups : null
       if (!groups) {
-        const gRes = await api(`/api/model/group?tenantId=${tid}`).catch(() => [])
-        groups = Array.isArray(gRes) ? gRes : (gRes?.list || [])
+        try {
+          const gRes = await api(`/api/model/group?tenantId=${tid}`)
+          groups = Array.isArray(gRes) ? gRes : (gRes?.list || [])
+        } catch (e) {
+          errors.push(`获取分组列表失败: ${e.message}`)
+          groups = []
+        }
       }
       let modules = (groups || []).flatMap(g => g.modules || [])
       if (!modules.length) {
-        const mRes = await api(`/api/module?tenantId=${tid}`).catch(() => [])
-        modules = Array.isArray(mRes) ? mRes : (mRes?.list || [])
+        try {
+          const mRes = await api(`/api/module?tenantId=${tid}`)
+          modules = Array.isArray(mRes) ? mRes : (mRes?.list || [])
+        } catch (e) {
+          errors.push(`获取模块列表失败: ${e.message}`)
+          modules = []
+        }
       }
-      const rawDicts = await api(`/api/dict?tenantId=${tid}`).catch(() => [])
-      const dicts = Array.isArray(rawDicts) ? rawDicts : (rawDicts?.list || [])
-      const caps = Array.isArray(t.caps) ? t.caps : await api(`/api/capability?tenantId=${tid}`).catch(() => [])
+      let dicts = []
+      try {
+        const rawDicts = await api(`/api/dict?tenantId=${tid}`)
+        dicts = Array.isArray(rawDicts) ? rawDicts : (rawDicts?.list || [])
+      } catch (e) {
+        errors.push(`获取字典列表失败: ${e.message}`)
+      }
+      let caps = Array.isArray(t.caps) ? t.caps : []
+      if (!caps.length) {
+        try {
+          const rawCaps = await api(`/api/capability?tenantId=${tid}`)
+          caps = Array.isArray(rawCaps) ? rawCaps : (rawCaps?.list || [])
+        } catch (e) {
+          errors.push(`获取能力包列表失败: ${e.message}`)
+        }
+      }
 
       return {
         tenant: t,
@@ -1444,7 +1584,8 @@ async function handleToolCall(name, args) {
           modules: (modules || []).length,
           dicts: (dicts || []).length,
           caps: (Array.isArray(caps) ? caps : []).length
-        }
+        },
+        ...(errors.length > 0 ? { _errors: errors } : {})
       }
     }
     case 'genplus_create_tenant': {
@@ -1512,15 +1653,27 @@ async function handleToolCall(name, args) {
       return { success: true, module: res }
     }
     case 'genplus_add_fields': {
-      const res = await api(`/api/module/${args.moduleId}/field`, {
+      let modId = args.moduleId
+      if (!modId) {
+        const mod = await resolveModule(args)
+        if (mod?.id) modId = mod.id
+      }
+      if (!modId) throw new Error('必须提供 moduleId 或 (tenantId + moduleKey)')
+      const res = await api(`/api/module/${modId}/field`, {
         method: 'POST',
         body: { fields: args.fields }
       })
       return { success: true, fields: res }
     }
     case 'genplus_update_field': {
-      const { fieldId, ...body } = args
-      const res = await api(`/api/field/${fieldId}`, {
+      let fid = args.fieldId
+      if (!fid) {
+        const field = await resolveField(args)
+        if (field?.id) fid = field.id
+      }
+      if (!fid) throw new Error('必须提供 fieldId 或 (tenantId + moduleKey + colKey)')
+      const { fieldId, moduleId, moduleKey, tenantId, ...body } = args
+      const res = await api(`/api/field/${fid}`, {
         method: 'PATCH',
         body
       })
@@ -1537,14 +1690,11 @@ async function handleToolCall(name, args) {
         })
       }
       if (Array.isArray(args.moduleActions)) {
-        let tenantModules = null
         for (const ma of args.moduleActions) {
           let modId = ma.moduleId
           if (!modId && ma.moduleKey) {
-            if (!tenantModules) tenantModules = await api(`/api/module?tenantId=${args.tenantId}`).catch(() => [])
-            const mList = Array.isArray(tenantModules) ? tenantModules : (tenantModules?.list || [])
-            const found = mList.find(m => m.key === ma.moduleKey)
-            if (found) modId = found.id
+            const mod = await resolveModule({ tenantId: args.tenantId, moduleKey: ma.moduleKey })
+            if (mod?.id) modId = mod.id
           }
           if (!modId) continue
 
@@ -1607,6 +1757,247 @@ async function handleToolCall(name, args) {
       } else {
         const res = await api(`/api/tenant/${args.tenantId}/status`)
         return { action: 'status', result: res }
+      }
+    }
+    case 'genplus_health': {
+      let cpHealth = null
+      let cpError = null
+      try {
+        const res = await fetch(`${MAIN_URL}/api/health`, { signal: AbortSignal.timeout(3000) })
+        const json = await res.json().catch(() => null)
+        cpHealth = json?.data || json || { status: res.status }
+      } catch (e) {
+        cpError = e.message
+        cpHealth = { status: 'down', error: e.message }
+      }
+
+      let tenantHealth = null
+      const errors = []
+      if (cpError) errors.push(`控制面探活异常: ${cpError}`)
+
+      if (args.tenantId || args.slug) {
+        try {
+          const t = await resolveTenant(args)
+          const port = t.port
+          let portOpen = false
+          let httpOk = false
+          let subHealth = null
+
+          if (port) {
+            portOpen = await new Promise((res) => {
+              const s = net.createConnection({ host: '127.0.0.1', port, timeout: 1500 }, () => {
+                s.destroy()
+                res(true)
+              })
+              s.on('error', () => res(false))
+              s.on('timeout', () => { s.destroy(); res(false) })
+            })
+
+            if (portOpen) {
+              try {
+                const subRes = await fetch(`http://127.0.0.1:${port}/api/health`, { signal: AbortSignal.timeout(3000) })
+                const subJson = await subRes.json().catch(() => null)
+                subHealth = subJson?.data || subJson
+                httpOk = subRes.ok && (subHealth?.ok === true || subHealth?.status === 'up')
+              } catch (e) {
+                errors.push(`子后台 HTTP health 请求失败: ${e.message}`)
+              }
+            }
+          }
+
+          tenantHealth = {
+            id: t.id,
+            slug: t.slug,
+            port,
+            portOpen,
+            httpOk,
+            db: subHealth?.db || null,
+            initReady: subHealth?.initReady ?? null,
+            uptime: subHealth?.uptime ?? null,
+            running: portOpen
+          }
+        } catch (e) {
+          errors.push(`租户解析/探活异常: ${e.message}`)
+        }
+      }
+
+      return {
+        controlPlane: cpHealth,
+        ...(tenantHealth ? { tenant: tenantHealth } : {}),
+        errors
+      }
+    }
+    case 'genplus_verify': {
+      const t = await resolveTenant(args)
+      const raw = await api(`/api/verify/${t.id}`, {
+        method: 'POST',
+        body: {
+          boot: args.boot !== false,
+          failFast: !!args.failFast
+        }
+      })
+
+      const cases = Array.isArray(raw?.cases) ? raw.cases : []
+      let pass = 0, fail = 0, skip = 0
+      const failures = []
+      for (const c of cases) {
+        if (c.status === 'pass') pass++
+        else if (c.status === 'fail') {
+          fail++
+          failures.push({ case_key: c.case_key, title: c.title, detail: c.detail || c.message || '' })
+        } else if (c.status === 'skip') {
+          skip++
+          failures.push({ case_key: c.case_key, title: c.title, detail: c.detail || '跳过' })
+        }
+      }
+      const isPartial = args.boot === false
+      const gate = (!isPartial && fail === 0 && skip === 0) ? 'PASSED' : (isPartial ? 'PARTIAL' : 'FAILED')
+
+      return {
+        jobId: raw?.jobId,
+        tenantId: t.id,
+        slug: t.slug,
+        summary: {
+          pass,
+          fail,
+          skip,
+          total: cases.length,
+          gate
+        },
+        failures,
+        durationMs: raw?.durationMs,
+        cases
+      }
+    }
+    case 'genplus_inspect_output': {
+      const t = await resolveTenant(args)
+      const tenantDir = resolve(t.project_path || join(ROOT, 'tenants', t.slug))
+      if (!existsSync(tenantDir)) {
+        throw new Error(`租户工程目录不存在: ${tenantDir}`)
+      }
+
+      const rawPath = String(args.path || '').trim()
+      if (!rawPath) throw new Error('必须指定待检查的工程相对路径 path')
+
+      const targetFile = resolve(tenantDir, rawPath)
+      const rel = relative(tenantDir, targetFile)
+      if (rel.startsWith('..') || isAbsolute(rel)) {
+        throw new Error(`安全违规：文件路径越界 (${rawPath})，仅允许访问 tenants/${t.slug}/ 内的文件`)
+      }
+
+      if (!existsSync(targetFile)) {
+        throw new Error(`文件不存在: ${rawPath}`)
+      }
+
+      const st = statSync(targetFile)
+      if (st.isDirectory()) {
+        const entries = readdirSync(targetFile)
+        return { isDirectory: true, path: rawPath, entries }
+      }
+
+      const maxBytes = Number(args.maxBytes) || 32768
+      const content = readFileSync(targetFile, 'utf-8')
+      const truncated = content.length > maxBytes
+      const slice = truncated ? content.slice(0, maxBytes) : content
+
+      if (args.grep) {
+        const pattern = String(args.grep)
+        const lines = content.split('\n')
+        const matches = []
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes(pattern)) {
+            matches.push({ line: i + 1, text: lines[i] })
+          }
+        }
+        return {
+          path: rawPath,
+          grep: pattern,
+          totalMatches: matches.length,
+          matches: matches.slice(0, 100)
+        }
+      }
+
+      return {
+        path: rawPath,
+        size: st.size,
+        truncated,
+        content: slice
+      }
+    }
+    case 'genplus_diff_tenant': {
+      let tA = null
+      let tB = null
+      if (args.tenantA || args.slugA) {
+        tA = await resolveTenant({ tenantId: args.tenantA, slug: args.slugA })
+      }
+      if (args.tenantB || args.slugB) {
+        tB = await resolveTenant({ tenantId: args.tenantB, slug: args.slugB })
+      }
+      if (!tA || !tB) throw new Error('必须同时指定 tenantA (或 slugA) 与 tenantB (或 slugB)')
+
+      const dirA = resolve(tA.project_path || join(ROOT, 'tenants', tA.slug))
+      const dirB = resolve(tB.project_path || join(ROOT, 'tenants', tB.slug))
+
+      if (!existsSync(dirA)) throw new Error(`租户 A 工程目录不存在: ${dirA}`)
+      if (!existsSync(dirB)) throw new Error(`租户 B 工程目录不存在: ${dirB}`)
+
+      function hashFile(file) {
+        if (!existsSync(file)) return null
+        return createHash('sha256').update(readFileSync(file)).digest('hex')
+      }
+
+      function scanDir(base, sub = '') {
+        const dir = join(base, sub)
+        let files = []
+        if (!existsSync(dir)) return files
+        for (const f of readdirSync(dir)) {
+          if (f === 'node_modules' || f === '.git' || f === '.nuxt' || f === '.output') continue
+          const rel = sub ? `${sub}/${f}` : f
+          const full = join(base, rel)
+          if (statSync(full).isDirectory()) {
+            files = files.concat(scanDir(base, rel))
+          } else {
+            files.push(rel)
+          }
+        }
+        return files
+      }
+
+      const paths = Array.isArray(args.paths) && args.paths.length > 0
+        ? args.paths
+        : [...new Set([...scanDir(dirA), ...scanDir(dirB)])]
+
+      const added = []
+      const removed = []
+      const modified = []
+      const identical = []
+
+      for (const p of paths) {
+        const fA = join(dirA, p)
+        const fB = join(dirB, p)
+        const hA = hashFile(fA)
+        const hB = hashFile(fB)
+
+        if (!hA && hB) added.push(p)
+        else if (hA && !hB) removed.push(p)
+        else if (hA !== hB) modified.push(p)
+        else identical.push(p)
+      }
+
+      return {
+        tenantA: tA.slug,
+        tenantB: tB.slug,
+        summary: {
+          added: added.length,
+          removed: removed.length,
+          modified: modified.length,
+          identical: identical.length,
+          totalCompared: paths.length
+        },
+        added,
+        removed,
+        modified,
+        identical: identical.slice(0, 50)
       }
     }
     case 'genplus_get_db_connection': {
