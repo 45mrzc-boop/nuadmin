@@ -102,7 +102,7 @@ async function resolveTenant(args = {}) {
 async function resolveModule(args = {}) {
   let modId = args.moduleId
   if (modId) return { id: Number(modId) }
-  const modKey = args.moduleKey || args.key
+  const modKey = args.moduleKey || args.key || args.module || args.name
   if (!modKey) return null
   let tid = args.tenantId
   if (!tid && args.slug) {
@@ -112,20 +112,28 @@ async function resolveModule(args = {}) {
   if (!tid) return null
   const mListRaw = await api(`/api/module?tenantId=${tid}`).catch(() => [])
   const mList = Array.isArray(mListRaw) ? mListRaw : (mListRaw?.list || [])
-  const found = mList.find(m => m.key === modKey || m.tableName === modKey || m.table === modKey || m.name === modKey)
+  const found = mList.find(m =>
+    m.key === modKey ||
+    m.tableName === modKey ||
+    m.table === modKey ||
+    m.name === modKey ||
+    m.res_key === modKey ||
+    m.table_name === modKey ||
+    m.resKey === modKey
+  )
   return found || null
 }
 
 async function resolveField(args = {}) {
   let fid = args.fieldId
   if (fid) return { id: Number(fid) }
-  const colKey = args.colKey || args.key
+  const colKey = args.colKey || args.key || args.col_key || args.name
   if (!colKey) return null
   const mod = await resolveModule(args)
   if (!mod?.id) return null
   const fListRaw = await api(`/api/module/${mod.id}`).catch(() => null)
   const fields = fListRaw?.fields || []
-  const found = fields.find(f => f.colKey === colKey || f.key === colKey || f.name === colKey)
+  const found = fields.find(f => f.colKey === colKey || f.key === colKey || f.col_key === colKey || f.name === colKey)
   return found || null
 }
 
@@ -1690,13 +1698,17 @@ async function handleToolCall(name, args) {
         })
       }
       if (Array.isArray(args.moduleActions)) {
+        const unresolved = []
         for (const ma of args.moduleActions) {
           let modId = ma.moduleId
           if (!modId && ma.moduleKey) {
             const mod = await resolveModule({ tenantId: args.tenantId, moduleKey: ma.moduleKey })
             if (mod?.id) modId = mod.id
           }
-          if (!modId) continue
+          if (!modId) {
+            unresolved.push(ma.moduleKey ?? ma.moduleId ?? '(未提供)')
+            continue
+          }
 
           const designPatch = {
             list: {
@@ -1717,6 +1729,13 @@ async function handleToolCall(name, args) {
             method: 'PATCH',
             body: { design: designPatch }
           })
+        }
+        if (unresolved.length) {
+          return {
+            success: false,
+            _errors: unresolved.map(k => `模块未解析：${k}`),
+            message: `有 ${unresolved.length} 个模块未找到，动作矩阵未生效`
+          }
         }
       }
       return { success: true, message: '设计矩阵与动作上限已持久化' }

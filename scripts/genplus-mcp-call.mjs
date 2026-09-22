@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { randomBytes } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -89,6 +89,15 @@ class McpClient {
       try { this.child.kill() } catch {}
       this.child = null
     }
+  }
+}
+
+async function callTool(toolName, args = {}) {
+  const client = new McpClient()
+  try {
+    return await client.callTool(toolName, args)
+  } finally {
+    client.close()
   }
 }
 
@@ -222,34 +231,50 @@ async function startDaemon(port = 0) {
   })
 }
 
-// CLI Arg Parsing
-const args = process.argv.slice(2)
-if (args.includes('--stop')) {
-  stopDaemon()
-} else if (args.includes('--serve')) {
-  const portIdx = args.indexOf('--port')
-  const port = portIdx >= 0 && args[portIdx + 1] ? Number(args[portIdx + 1]) : 0
-  startDaemon(port)
-} else if (args.includes('--file')) {
-  const fileIdx = args.indexOf('--file')
-  const file = args[fileIdx + 1]
-  if (!file) {
-    console.error('Usage: --file <path>')
-    process.exit(1)
-  }
-  runBatchFile(file)
-} else if (args.includes('--tool')) {
-  const toolIdx = args.indexOf('--tool')
-  const tool = args[toolIdx + 1]
-  const argsIdx = args.indexOf('--args')
-  const toolArgs = argsIdx >= 0 && args[argsIdx + 1] ? JSON.parse(args[argsIdx + 1]) : {}
-  runSingleCall(tool, toolArgs)
-} else {
-  console.log(`GenPlus MCP Invoker & Daemon
+export {
+  McpClient,
+  callTool,
+  runSingleCall,
+  runBatchFile,
+  startDaemon,
+  stopDaemon
+}
+
+// CLI Arg Parsing (only when executed directly)
+const isDirectCli = process.argv[1] && (
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href ||
+  import.meta.url === pathToFileURL(process.argv[1]).href
+)
+
+if (isDirectCli) {
+  const args = process.argv.slice(2)
+  if (args.includes('--stop')) {
+    stopDaemon()
+  } else if (args.includes('--serve')) {
+    const portIdx = args.indexOf('--port')
+    const port = portIdx >= 0 && args[portIdx + 1] ? Number(args[portIdx + 1]) : 0
+    startDaemon(port)
+  } else if (args.includes('--file')) {
+    const fileIdx = args.indexOf('--file')
+    const file = args[fileIdx + 1]
+    if (!file) {
+      console.error('Usage: --file <path>')
+      process.exit(1)
+    }
+    runBatchFile(file)
+  } else if (args.includes('--tool')) {
+    const toolIdx = args.indexOf('--tool')
+    const tool = args[toolIdx + 1]
+    const argsIdx = args.indexOf('--args')
+    const toolArgs = argsIdx >= 0 && args[argsIdx + 1] ? JSON.parse(args[argsIdx + 1]) : {}
+    runSingleCall(tool, toolArgs)
+  } else {
+    console.log(`GenPlus MCP Invoker & Daemon
 Usage:
   node scripts/genplus-mcp-call.mjs --tool <name> [--args '<json>']
   node scripts/genplus-mcp-call.mjs --file <batch.json>
   node scripts/genplus-mcp-call.mjs --serve [--port <port>]
   node scripts/genplus-mcp-call.mjs --stop
 `)
+  }
 }

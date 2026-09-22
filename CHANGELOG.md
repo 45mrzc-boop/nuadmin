@@ -17,11 +17,13 @@
 - **AI 专属 Loopback HTTP 守护进程 & 统一调用器**：
   - 新增 [`scripts/genplus-mcp-call.mjs`](./scripts/genplus-mcp-call.mjs)；
   - 支持单次命令行调用 (`--tool <name> --args '<json>'`) 与批量文件调用 (`--file <path>`)；
+  - 导出可编程接口（`callTool`, `McpClient`, `startDaemon`, `stopDaemon`），便于外部自动化与编排脚本直接驱动；
   - 支持后台守护进程模式 (`--serve --port <port>`)，绑定 127.0.0.1 本地回环地址，配备 32 字节高强度 Token 认证、PID 文件追踪与 15 分钟空闲自动安全休眠；
   - 支持 `--stop` 优雅终止守护进程。
 - **双层健康探针与就绪检测**：
   - 控制面 [`main-admin/server/api/health.get.ts`](./main-admin/server/api/health.get.ts) 升级为 K8s/AI 标准就绪探针，动态读取工程版本，集成 MySQL `SELECT 1` 数据库探活与错误脱敏；
-  - 子后台生成的 `server/utils/db.ts` 补充 `isDbReady()` 状态探针，生成的 `/api/health.get.ts` 无需 Casbin 鉴权，支持直观判断 DB 及初始化状态。
+  - 子后台生成的 `server/utils/db.ts` 补充 `isDbReady()` 状态探针，生成的 `/api/health.get.ts` 无需 Casbin 鉴权，支持直观判断 DB 及初始化状态；
+  - 修复 `genplus_verify` 中 `dict` 用例计数口径（S12），支持 `Record<string, any[]>` 分组对象统计，准确回报真实字典条目总数。
 
 ### 2. 🛡️ 企业级端口注册中心与双重冲突防范机制 (Port Convention & Registry)
 - **主从端口规范**：
@@ -42,11 +44,12 @@
 ### 4. 🌐 跨平台与零硬编码全面落地
 - **废除所有平台与路径硬编码**：
   - 全工程路径改用 `import.meta.url` 与相对路径动态解析，彻底清除 `/config/nuadmin` 容器绝对路径假设；
-  - MCP 工具增强模块与字段名称容错解析（`resolveModule`, `resolveField`），并统一返回 `_errors: [...]` 结构化诊断数组；
+  - MCP 工具增强模块与字段名称容错解析（`resolveModule`, `resolveField`，补全 `res_key` / `table_name` 匹配，S11），`genplus_configure_design` 坚决拒绝静默跳过未解析模块，确保两级能力天花板与动作矩阵彻底生效；
+  - 字典中文显示名下发至租户库 `sys_dict_type.dict_name`（S13），并在二次生成时具备自愈修正能力；
   - 全部 25 个 MCP 工具标注标准 `annotations` 属性（`readOnlyHint`、`destructiveHint`、`idempotentHint`）。
 
 ### 5. 🧪 工业级验证与自动化测试
-- **生成器单测 100% 通过**：[`main-admin/test/generator.test.mjs`](./main-admin/test/generator.test.mjs) 新增 Test 13，全量 13 项单元测试全部 PASS；
+- **生成器单测 100% 通过**：[`main-admin/test/generator.test.mjs`](./main-admin/test/generator.test.mjs) 包含 14 项完整测试用例（含 S11~S13 回归测试），全量通过；
 - **生产构建成功**：`main-admin` 顺利通过 `npm run build` 编译打包。
 
 ---

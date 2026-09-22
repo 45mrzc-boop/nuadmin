@@ -378,7 +378,10 @@ async function runCapabilityProbe(
       case 'dict': {
         const res = await fetch(at('api/dict/list'), { headers: authHeader }).then(r => r.json()).catch(e => ({ error: String(e) })) as any
         if (res && (res.code === 0 || Array.isArray(res.data) || Array.isArray(res))) {
-          const count = Array.isArray(res.data) ? res.data.length : (Array.isArray(res) ? res.length : 0)
+          const d = res.data ?? res
+          const count = Array.isArray(d)
+            ? d.length
+            : Object.values(d ?? {}).reduce((n: number, v: any) => n + (Array.isArray(v) ? v.length : 1), 0)
           return { status: 'pass', detail: `GET /api/dict/list 正常返回 200，包含 ${count} 项字典` }
         }
         return { status: 'fail', detail: `GET /api/dict/list 响应异常: ${JSON.stringify(res).slice(0, 200)}` }

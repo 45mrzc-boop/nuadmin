@@ -107,6 +107,8 @@ export interface TenantPlan {
   caps: Record<string, { version: string; config: Record<string, unknown> }>
   /** 控制面字典定义。生成期的唯一来源，未定义的 enum 字段不再有假值。 */
   dicts: Record<string, Array<{ label: string; value: string; color?: string }>>
+  /** 控制面字典中文显示名（dict_key -> dict_name），播种时使用。 */
+  dictNames?: Record<string, string>
   version: number
 }
 

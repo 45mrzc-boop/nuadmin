@@ -604,6 +604,36 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(mcpCode.includes("name: 'genplus_diff_tenant'"), 'MCP must contain genplus_diff_tenant tool')
     assert.ok(mcpCode.includes("rel.startsWith('..') || isAbsolute(rel)"), 'inspect_output must enforce path traversal security check')
   })
+
+  it('14. Regression test for S11, S12, S13 (moduleKey resolution, dict count in verify, and dict_name localization)', async () => {
+    // S11: MCP resolveModule regex matches res_key and table_name, configure_design returns _errors
+    const mcpCode = readFileSync(resolve(root, '../bin/genplus-mcp.mjs'), 'utf-8')
+    assert.ok(mcpCode.includes('m.res_key === modKey'), 'resolveModule must match m.res_key')
+    assert.ok(mcpCode.includes('m.table_name === modKey'), 'resolveModule must match m.table_name')
+    assert.ok(mcpCode.includes('m.resKey === modKey'), 'resolveModule must match m.resKey')
+    assert.ok(mcpCode.includes('_errors: unresolved.map'), 'configure_design must report unresolved modules in _errors')
+
+    // S12: verify.ts dict count calculation handles Record<string, any[]>
+    const verifyCode = readFileSync(resolve(root, 'server/utils/gen/verify.ts'), 'utf-8')
+    assert.ok(verifyCode.includes('Object.values(d ?? {}).reduce'), 'verify.ts dict count must reduce object values')
+
+    // S13: server.ts exports DICT_NAMES and seedDicts uses Chinese dict_name
+    const srv = serverFiles({
+      ...mockPlan,
+      dictNames: {
+        order_status: '订单状态',
+        status: '状态'
+      }
+    })
+    const schemaTs = srv['server/utils/schema.ts']
+    assert.ok(schemaTs.includes('export const DICT_NAMES'), 'schema.ts must export DICT_NAMES')
+    assert.ok(schemaTs.includes('订单状态'), 'schema.ts must contain Chinese dict_name')
+
+    const initPlugin = srv['server/plugins/init.ts']
+    assert.ok(initPlugin.includes('DICT_NAMES'), 'init.ts must import DICT_NAMES')
+    assert.ok(initPlugin.includes('seedDicts(DICTS, DICT_NAMES)'), 'init.ts must call seedDicts with DICT_NAMES')
+    assert.ok(initPlugin.includes('UPDATE sys_dict_type SET dict_name='), 'seedDicts must self-heal dict_name if previously set to key')
+  })
 })
 
 

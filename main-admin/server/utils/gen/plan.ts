@@ -76,6 +76,18 @@ export async function buildPlan(tenantId: number): Promise<TenantPlan> {
     `SELECT cap_key, version, config_json FROM tenant_capability WHERE tenant_id=? AND status='installed'`, [tenantId])
 
   // 字典定义只认控制面这一份；enabled=0 的条目不下发，子后台下拉里不该出现被停用的值。
+  const typeRows = await q<any>(`SELECT dict_key, name FROM dict_type WHERE tenant_id=?`, [tenantId])
+  const dictNames: Record<string, string> = {
+    status: '状态',
+    file_kind: '文件类型',
+    job_status: '任务状态',
+    msg_kind: '消息类型',
+    flow_status: '审批状态'
+  }
+  for (const tr of typeRows) {
+    if (tr.name) dictNames[tr.dict_key] = tr.name
+  }
+
   const dictRows = await q<any>(
     `SELECT t.dict_key, i.label, i.value, i.color
      FROM dict_type t JOIN dict_item i ON i.type_id=t.id
@@ -103,7 +115,8 @@ export async function buildPlan(tenantId: number): Promise<TenantPlan> {
     })),
     models: modules,
     caps: Object.fromEntries(caps.map(c => [c.cap_key, { version: c.version, config: j<Record<string, unknown>>(c.config_json, {}) }])),
-    dicts
+    dicts,
+    dictNames
   }
 }
 

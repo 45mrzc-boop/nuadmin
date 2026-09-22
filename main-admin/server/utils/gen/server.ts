@@ -311,6 +311,7 @@ export const MENUS = ${JSON.stringify(bs.menus, null, 2)}
 export const PERMS = ${JSON.stringify(bs.perms, null, 2)}
 
 export const DICTS = ${JSON.stringify(dictSeed, null, 2)}
+export const DICT_NAMES: Record<string, string> = ${JSON.stringify(p.dictNames ?? {}, null, 2)}
 
 /** Capability-injected columns that a pre-existing table may still be missing. */
 export const MIGRATIONS = ${JSON.stringify(migrationSql(p), null, 2)}
@@ -734,7 +735,7 @@ const hasCol = (t: TableDef, key: string) => t.fields.some(f => f.key === key)
 `,
 
     'server/plugins/init.ts': `import mysql from 'mysql2/promise'
-import { DDL, MENUS, PERMS, DICTS, MIGRATIONS, MEMBERS, ROLES } from '../utils/schema'
+import { DDL, MENUS, PERMS, DICTS, DICT_NAMES, MIGRATIONS, MEMBERS, ROLES } from '../utils/schema'
 import { hashPassword } from '../utils/auth'
 import { invalidateCasbin } from '../utils/auth'
 
@@ -849,7 +850,7 @@ export default defineNitroPlugin(async () => {
     }
   }
   invalidateCasbin()
-  ${has(p, 'dict') ? `await seedDicts(DICTS)` : `void DICTS`}
+  ${has(p, 'dict') ? `await seedDicts(DICTS, DICT_NAMES)` : `void DICTS; void DICT_NAMES`}
   await seedBusiness()
   markDbReady()
   console.log('[${p.slug}] sub-admin ready · db=' + cfg.name)
@@ -874,10 +875,20 @@ async function applyMigrations() {
   if (added) console.log('[' + database + '] 补齐能力注入列 ' + added + ' 个')
 }
 
-async function seedDicts(dicts: Record<string, Array<{ label: string, value: string, color?: string }>>) {
+async function seedDicts(
+  dicts: Record<string, Array<{ label: string, value: string, color?: string }>>,
+  names: Record<string, string> = {}
+) {
   for (const [key, items] of Object.entries(dicts)) {
-    if (await one('SELECT id FROM sys_dict_type WHERE dict_key=?', [key])) continue
-    await exec('INSERT INTO sys_dict_type (dict_key,dict_name) VALUES (?,?)', [key, key])
+    const existing = await one<any>('SELECT id, dict_name FROM sys_dict_type WHERE dict_key=?', [key])
+    const dictName = names[key] || key
+    if (existing) {
+      if (dictName !== key && existing.dict_name === key) {
+        await exec('UPDATE sys_dict_type SET dict_name=? WHERE id=?', [dictName, existing.id])
+      }
+      continue
+    }
+    await exec('INSERT INTO sys_dict_type (dict_key,dict_name) VALUES (?,?)', [key, dictName])
     let i = 0
     for (const it of items) {
       await exec('INSERT INTO sys_dict_data (dict_key,label,value,color,sort) VALUES (?,?,?,?,?)',
