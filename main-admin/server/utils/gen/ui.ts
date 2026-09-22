@@ -1041,6 +1041,7 @@ const BRAND_ICON = ${lit(uiIconName(p.groups[0]?.icon ?? '🧩'))}
 const defaultMode = ${lit(p.theme.collapseMode || 'icon')} as 'icon' | 'hidden'
 const collapseMode = useCookie<'icon' | 'hidden'>('collapse_mode_${p.slug}', { default: () => defaultMode })
 const isHiddenMode = computed(() => collapseMode.value === 'hidden')
+const isSidebarCollapsed = ref(false)
 
 function toggleCollapseMode() {
   collapseMode.value = collapseMode.value === 'hidden' ? 'icon' : 'hidden'
@@ -1051,13 +1052,19 @@ onMounted(() => {
   loadUser()
 })
 
-const items = computed<NavigationMenuItem[][]>(() =>
+const groupedItems = computed<NavigationMenuItem[][]>(() =>
   groups.value
     .filter(g => g.items.length)
     .map(g => [
       { label: g.name, type: 'label' } as NavigationMenuItem,
       ...g.items.map(i => ({ label: i.name, icon: uiIcon(i.icon), to: i.path }))
     ]))
+
+const flatItems = computed<NavigationMenuItem[][]>(() => [
+  groups.value.flatMap(g =>
+    g.items.map(i => ({ label: i.name, icon: uiIcon(i.icon), to: i.path }))
+  )
+])
 
 const userRoleLabel = computed(() => {
   if (me.value.username === '持门者' || (me.value as any).authMode === 'simple') {
@@ -1081,16 +1088,17 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
 
 <template>
   <UDashboardSidebar
+    v-model:collapsed="isSidebarCollapsed"
     data-gen="sidebar"
     id="main"
     collapsible
     resizable
     class="skin-side"
-    :class="{ 'mode-hidden': isHiddenMode }"
+    :class="{ 'mode-hidden': isHiddenMode, '!min-w-[240px]': !isSidebarCollapsed }"
     :data-collapse-mode="collapseMode"
-    :default-size="16"
-    :min-size="13"
-    :max-size="26"
+    :default-size="19"
+    :min-size="16"
+    :max-size="28"
     :collapsed-size="isHiddenMode ? 0 : 4"
   >
     <template #header="{ collapsed, collapse }">
@@ -1122,7 +1130,7 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
       <UNavigationMenu
         v-else
         :collapsed="collapsed"
-        :items="items"
+        :items="collapsed ? flatItems : groupedItems"
         orientation="vertical"
         tooltip
         link
@@ -1140,7 +1148,6 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
             :block="!collapsed"
             :square="collapsed"
             :leading="false"
-            :icon="collapsed ? 'i-lucide-ellipsis' : undefined"
             :trailing-icon="collapsed ? undefined : 'i-lucide-chevrons-up-down'"
             :class="collapsed ? 'mx-auto' : ''"
             :aria-label="collapsed ? '账号与折叠模式设置' : undefined"
@@ -1149,6 +1156,7 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
               <UAvatar :src="me.avatar || undefined" :alt="initials" size="xs" />
               <span class="truncate text-xs">{{ display }}</span>
             </span>
+            <UAvatar v-else :src="me.avatar || undefined" :alt="initials" size="xs" />
           </UButton>
         </UDropdownMenu>
         <div class="flex items-center pt-0.5" :class="collapsed ? 'justify-center' : 'justify-between'">
@@ -1494,7 +1502,7 @@ onMounted(() => {
       :size="size"
       :step="field.type === 'int' ? 1 : 0.01"
       :format-options="field.type === 'money' ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : undefined"
-      class="w-full"
+      class="w-full min-w-0"
       @update:model-value="set"
     />
 
@@ -1939,18 +1947,28 @@ async function load() {
 /* ------------------------------ 单元格 ------------------------------ */
 
 function headLabel(x: UiField) {
-  if (!x.sortable || mode.value !== 'list') return h('span', { class: 'text-xs' }, x.name)
+  const isCenter = x.pk || x.key === 'id' || x.type === 'id' || x.type === 'bool' || x.component === 'switch' || x.key === 'status' || !!x.dict || x.component === 'select' || x.component === 'date'
+  const isRight = x.type === 'int' || x.type === 'money'
+  const alignClass = isCenter ? 'justify-center text-center' : isRight ? 'justify-end text-right' : 'justify-start text-left'
+
+  if (!x.sortable || mode.value !== 'list') {
+    return h('div', { class: 'w-full flex items-center ' + alignClass }, [
+      h('span', { class: 'text-xs' }, x.name)
+    ])
+  }
   const active = sortKey.value === x.key
-  return h('button', {
-    type: 'button',
-    class: 'inline-flex items-center gap-1 text-xs hover:text-primary',
-    onClick: () => toggleSort(x)
-  }, [
-    x.name,
-    h(UIcon, {
-      name: active ? (sortOrder.value === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down') : 'i-lucide-arrow-up-down',
-      class: active ? 'size-3.5 shrink-0 text-primary' : 'size-3.5 shrink-0 text-dimmed'
-    })
+  return h('div', { class: 'w-full flex items-center ' + alignClass }, [
+    h('button', {
+      type: 'button',
+      class: 'inline-flex items-center gap-1 text-xs hover:text-primary',
+      onClick: () => toggleSort(x)
+    }, [
+      x.name,
+      h(UIcon, {
+        name: active ? (sortOrder.value === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down') : 'i-lucide-arrow-up-down',
+        class: active ? 'size-3.5 shrink-0 text-primary' : 'size-3.5 shrink-0 text-dimmed'
+      })
+    ])
   ])
 }
 
@@ -1999,12 +2017,19 @@ function cellOf(x: UiField, row: Row): any {
     ])
   }
   if (isBlank(raw)) return h('span', { class: 'text-dimmed' }, DASH)
+  if (x.pk || x.key === 'id' || x.type === 'id') {
+    return h('div', { class: 'text-center font-mono text-xs w-full' }, String(raw ?? DASH))
+  }
   if (x.component === 'switch') {
-    return h(UBadge, { label: truthy(raw) ? '是' : '否', color: truthy(raw) ? 'success' : 'neutral', variant: 'subtle', size: 'xs' })
+    return h('div', { class: 'flex items-center justify-center w-full' }, [
+      h(UBadge, { label: truthy(raw) ? '是' : '否', color: truthy(raw) ? 'success' : 'neutral', variant: 'subtle', size: 'xs' })
+    ])
   }
   if (x.dict) {
     const b = dict.badge(x.dict, raw)
-    return h(UBadge, { label: b.label, color: b.color, variant: 'subtle', size: 'xs' })
+    return h('div', { class: 'flex items-center justify-center w-full' }, [
+      h(UBadge, { label: b.label, color: b.color, variant: 'subtle', size: 'xs' })
+    ])
   }
   if (x.component === 'image') {
     return h('img', { src: fileUrl(raw), alt: x.name, loading: 'lazy', class: 'size-9 rounded-xs border border-muted object-cover' })
@@ -2035,6 +2060,10 @@ function treeCell(x: UiField, row: Row) {
 
 const selectColumn = {
   id: '__select',
+  meta: {
+    class: { th: 'w-12 min-w-12 max-w-12 text-center col-select', td: 'w-12 min-w-12 max-w-12 text-center col-select' },
+    style: { th: { width: '48px', textAlign: 'center' }, td: { width: '48px', textAlign: 'center' } }
+  },
   header: ({ table }: any) => h(UCheckbox, {
     modelValue: table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
     'onUpdate:modelValue': (v: any) => table.toggleAllPageRowsSelected(!!v),
@@ -2047,13 +2076,86 @@ const selectColumn = {
   })
 }
 
+function colClass(x: any): string {
+  if (x.pk || x.key === 'id' || x.type === 'id') return 'col-id w-[76px] min-w-[72px] max-w-[80px] text-center'
+  if (x.type === 'bool' || x.component === 'switch' || x.key === 'status') return 'col-status w-[104px] min-w-[100px] max-w-[110px] text-center'
+  if (x.dict || x.component === 'select') return 'col-status w-[104px] min-w-[100px] max-w-[110px] text-center'
+  if (x.component === 'date') return 'w-[110px] text-center'
+  if (x.component === 'datetime') return 'w-[160px] text-center'
+  if (x.type === 'int' || x.type === 'money') return 'w-[90px] text-right'
+  return 'min-w-[150px] col-grow'
+}
+
+function colMeta(x: any) {
+  if (x.pk || x.key === 'id' || x.type === 'id') {
+    return {
+      class: {
+        th: 'w-[76px] min-w-[72px] max-w-[80px] text-center col-id',
+        td: 'w-[76px] min-w-[72px] max-w-[80px] text-center font-mono col-id'
+      },
+      style: {
+        th: { width: '76px', minWidth: '72px', maxWidth: '80px', textAlign: 'center' },
+        td: { width: '76px', minWidth: '72px', maxWidth: '80px', textAlign: 'center' }
+      }
+    }
+  }
+  if (x.type === 'bool' || x.component === 'switch' || x.key === 'status') {
+    return {
+      class: {
+        th: 'w-[104px] min-w-[100px] max-w-[110px] text-center col-status',
+        td: 'w-[104px] min-w-[100px] max-w-[110px] text-center col-status'
+      },
+      style: {
+        th: { width: '104px', minWidth: '100px', maxWidth: '110px', textAlign: 'center' },
+        td: { width: '104px', minWidth: '100px', maxWidth: '110px', textAlign: 'center' }
+      }
+    }
+  }
+  if (x.dict || x.component === 'select') {
+    return {
+      class: {
+        th: 'w-[104px] min-w-[100px] max-w-[110px] text-center col-status',
+        td: 'w-[104px] min-w-[100px] max-w-[110px] text-center col-status'
+      },
+      style: {
+        th: { width: '104px', minWidth: '100px', maxWidth: '110px', textAlign: 'center' },
+        td: { width: '104px', minWidth: '100px', maxWidth: '110px', textAlign: 'center' }
+      }
+    }
+  }
+  if (x.component === 'date') {
+    return {
+      class: { th: 'w-[110px] text-center', td: 'w-[110px] text-center' },
+      style: { th: { width: '110px', textAlign: 'center' }, td: { width: '110px', textAlign: 'center' } }
+    }
+  }
+  if (x.component === 'datetime') {
+    return {
+      class: { th: 'w-[160px] text-center', td: 'w-[160px] text-center' },
+      style: { th: { width: '160px', textAlign: 'center' }, td: { width: '160px', textAlign: 'center' } }
+    }
+  }
+  if (x.type === 'int' || x.type === 'money') {
+    return {
+      class: { th: 'w-[90px] text-right', td: 'w-[90px] text-right font-mono' },
+      style: { th: { width: '90px', textAlign: 'right' }, td: { width: '90px', textAlign: 'right' } }
+    }
+  }
+  return {
+    class: { th: 'min-w-[150px] col-grow', td: 'min-w-[150px] col-grow' },
+    style: { th: { minWidth: '150px' }, td: { minWidth: '150px' } }
+  }
+}
+
 const columns = computed<any[]>(() => {
   const cols: any[] = []
-  if (selectable.value) cols.push(selectColumn)
+  if (selectable.value) cols.push({ ...selectColumn })
   const list = shownColumns.value
   list.forEach((x, i) => {
     cols.push({
       accessorKey: x.key,
+      class: colClass(x),
+      meta: colMeta(x),
       header: () => headLabel(x),
       cell: ({ row }: any) => (mode.value === 'tree' && i === 0 ? treeCell(x, row.original) : cellOf(x, row.original))
     })
@@ -2061,8 +2163,13 @@ const columns = computed<any[]>(() => {
   if (hasActions.value) {
     cols.push({
       id: '__actions',
-      header: () => h('span', { class: 'text-xs' }, '操作'),
-      cell: ({ row }: any) => h('div', { class: 'flex flex-wrap items-center gap-1' }, actionsOf(row.original))
+      class: 'col-actions w-[150px] min-w-[140px] max-w-[160px] text-right',
+      meta: {
+        class: { th: 'w-[150px] min-w-[140px] max-w-[160px] text-right col-actions', td: 'w-[150px] min-w-[140px] max-w-[160px] text-right col-actions' },
+        style: { th: { width: '150px', minWidth: '140px', maxWidth: '160px', textAlign: 'right' }, td: { width: '150px', minWidth: '140px', maxWidth: '160px', textAlign: 'right' } }
+      },
+      header: () => h('div', { class: 'w-full text-right' }, [h('span', { class: 'text-xs' }, '操作')]),
+      cell: ({ row }: any) => h('div', { class: 'flex flex-wrap items-center justify-end gap-1' }, actionsOf(row.original))
     })
   }
   return cols
@@ -2297,33 +2404,35 @@ onMounted(async () => {
     </div>
 
     <div data-gen="search" v-if="searchPairs.length" class="rounded-xl border border-muted bg-elevated/60 p-3.5 shadow-xs">
-      <div class="flex flex-wrap items-end gap-3">
+      <div class="flex flex-wrap items-end gap-x-4 gap-y-3">
         <div
           data-gen="field"
           v-for="pair in searchPairs"
           :key="pair.key"
           :class="[
-            pair.field.component === 'datetime' ? 'w-56 sm:w-60' :
-            pair.field.component === 'date' ? 'w-48 sm:w-52' :
-            'w-44 sm:w-48',
-            'shrink-0 flex flex-col gap-1.5'
+            pair.field.component === 'datetime' ? 'w-56 sm:w-64 min-w-[220px]' :
+            pair.field.component === 'date' ? 'w-48 sm:w-56 min-w-[190px]' :
+            pair.field.component === 'number' || pair.field.type === 'int' ? 'w-56 sm:w-64 min-w-[210px]' :
+            'w-48 sm:w-56 min-w-[190px]',
+            'min-w-0 flex flex-col gap-1.5'
           ]"
         >
           <label class="text-xs font-medium text-muted truncate select-none" :title="pair.label">
             {{ pair.label }}
           </label>
-          <div class="h-8 flex items-center">
+          <div class="h-8 flex items-center min-w-0">
             <FieldInput
               :field="pair.field"
               :res="schema.res"
               :label-key="schema.labelKey"
               size="sm"
+              class="min-w-0 w-full"
               :model-value="cond[pair.key]"
               @update:model-value="(v: any) => cond[pair.key] = v"
             />
           </div>
         </div>
-        <div class="flex items-center gap-2 pb-0.5">
+        <div data-gen="search-actions" class="flex items-center gap-2 pb-0.5 ml-auto sm:ml-0 shrink-0">
           <UButton label="查询" icon="i-lucide-search" size="sm" color="primary" :loading="loading" @click="search" />
           <UButton label="重置" icon="i-lucide-rotate-ccw" size="sm" color="neutral" variant="outline" @click="reset" />
         </div>
@@ -4886,7 +4995,10 @@ function landingFormPage(p: TenantPlan): string {
   const formTitle = JSON.stringify(String(capCfg(p, 'landing_form', 'formTitle', '在线业务申请登记')))
   const submitText = JSON.stringify(String(capCfg(p, 'landing_form', 'submitText', '立即提交')))
   const successMsg = JSON.stringify(String(capCfg(p, 'landing_form', 'successMsg', '登记成功！我们将尽快与您联系。')))
-  const targetModel = JSON.stringify(String(capCfg(p, 'landing_form', 'targetModel', '')))
+  let rawTarget = String(capCfg(p, 'landing_form', 'targetModel', ''))
+  const allModels = (p.models && p.models.length > 0) ? p.models : (p.groups || []).flatMap(g => g.modules || [])
+  const targetMod = allModels.find(m => m.key === rawTarget || m.table === rawTarget) || allModels[0]
+  const targetModel = JSON.stringify(targetMod ? targetMod.key : (rawTarget || 'inquiry'))
 
   return `<script setup lang="ts">
 import { ref, reactive } from 'vue'
@@ -4991,8 +5103,14 @@ function resetForm() {
 
 function landingPortalPage(p: TenantPlan): string {
   const portalTitle = JSON.stringify(String(capCfg(p, 'landing_portal', 'portalTitle', '服务咨询门户')))
-  const listModel = JSON.stringify(String(capCfg(p, 'landing_portal', 'listModel', '')))
-  const submitModel = JSON.stringify(String(capCfg(p, 'landing_portal', 'submitModel', '')))
+  const allModels = (p.models && p.models.length > 0) ? p.models : (p.groups || []).flatMap(g => g.modules || [])
+  let rawList = String(capCfg(p, 'landing_portal', 'listModel', ''))
+  const matchedList = allModels.find(m => m.key === rawList || m.table === rawList) || allModels[0]
+  const listModel = JSON.stringify(matchedList ? matchedList.key : (rawList || ''))
+
+  let rawSubmit = String(capCfg(p, 'landing_portal', 'submitModel', ''))
+  const matchedSubmit = allModels.find(m => m.key === rawSubmit || m.table === rawSubmit)
+  const submitModel = JSON.stringify(matchedSubmit ? matchedSubmit.key : (rawSubmit || ''))
 
   return `<script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'

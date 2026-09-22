@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 import readline from 'node:readline'
 import { spawn } from 'node:child_process'
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
 import net from 'node:net'
 import { createRequire } from 'node:module'
 
-const require = createRequire('/config/nuadmin/main-admin/package.json')
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const require = createRequire(join(ROOT, 'main-admin/package.json'))
 let mysql = null
 try {
   mysql = require('mysql2/promise')
@@ -40,21 +43,34 @@ async function api(path, opts = {}) {
   const token = await getAdminToken()
   const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) }
   if (token) headers.Authorization = `Bearer ${token}`
-  const res = await fetch(`${MAIN_URL}${path}`, {
-    ...opts,
-    headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  })
-  const text = await res.text()
+  const timeoutMs = opts.timeout || 30_000
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const json = JSON.parse(text)
-    if (!res.ok || json.code !== 0) {
-      throw new Error(`API ${path} failed (${res.status}): ${json.message || text}`)
+    const res = await fetch(`${MAIN_URL}${path}`, {
+      ...opts,
+      signal: controller.signal,
+      headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    })
+    const text = await res.text()
+    try {
+      const json = JSON.parse(text)
+      if (!res.ok || json.code !== 0) {
+        throw new Error(`API ${path} failed (${res.status}): ${json.message || text}`)
+      }
+      return json.data
+    } catch (e) {
+      if (e.message.startsWith('API ')) throw e
+      throw new Error(`API ${path} invalid JSON (${res.status}): ${text.slice(0, 300)}`)
     }
-    return json.data
   } catch (e) {
-    if (e.message.startsWith('API ')) throw e
-    throw new Error(`API ${path} invalid JSON (${res.status}): ${text.slice(0, 300)}`)
+    if (e.name === 'AbortError') {
+      throw new Error(`控制面请求超时 (${timeoutMs}ms): ${MAIN_URL}${path}，请检查 main-admin 是否存活（GET /api/health）`)
+    }
+    throw e
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -83,7 +99,7 @@ async function resolveTenant(args = {}) {
 }
 
 function loadMainAdminDbConfig() {
-  const envPath = '/config/nuadmin/main-admin/.env'
+  const envPath = process.env.MAIN_ADMIN_ENV || join(ROOT, 'main-admin/.env')
   const config = {
     host: process.env.DB_HOST || '127.0.0.1',
     port: Number(process.env.DB_PORT) || 3306,
@@ -123,7 +139,7 @@ function getTenantDbConfig(slug) {
   let database = slug ? `nuadmin_t_${slug}` : base.database
 
   if (slug) {
-    const envPath = `/config/nuadmin/tenants/${slug}/.env`
+    const envPath = join(ROOT, 'tenants', slug, '.env')
     if (existsSync(envPath)) {
       const raw = readFileSync(envPath, 'utf-8')
       for (const line of raw.split('\n')) {
@@ -215,11 +231,39 @@ function getFreePort() {
   })
 }
 
+function resolveBrowser() {
+  const fromEnv = process.env.CHROME_PATH || process.env.CHROMIUM_PATH
+  if (fromEnv && existsSync(fromEnv)) return fromEnv
+
+  const win = process.platform === 'win32'
+  const names = win
+    ? ['chrome.exe', 'msedge.exe', 'chromium.exe']
+    : ['chromium', 'chromium-browser', 'google-chrome', 'google-chrome-stable']
+
+  const dirs = String(process.env.PATH || '').split(win ? ';' : ':').filter(Boolean)
+  for (const name of names) {
+    for (const dir of dirs) {
+      const p = join(dir, name)
+      if (existsSync(p)) return p
+    }
+  }
+  if (win) {
+    for (const p of [
+      'C:/Program Files/Google/Chrome/Application/chrome.exe',
+      'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+      join(process.env.LOCALAPPDATA || '', 'Google/Chrome/Application/chrome.exe'),
+      'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+      'C:/Program Files/Microsoft/Edge/Application/msedge.exe'
+    ]) if (p && existsSync(p)) return p
+  }
+  return ''
+}
+
 async function takeTenantScreenshot(opts = {}) {
   const tenant = await resolveTenant(opts)
   const slug = tenant.slug
-  const relPath = opts.path || '/admin'
-  const autoLogin = opts.autoLogin !== false && !relPath.startsWith('/login')
+  const relPath = opts.path || '/'
+  const autoLogin = opts.autoLogin !== false
   const width = Number(opts.width) || 1280
   const height = Number(opts.height) || 800
   const waitMs = Math.min(Number(opts.waitMs) || 12000, 30000)
@@ -250,19 +294,35 @@ async function takeTenantScreenshot(opts = {}) {
     } catch (e) {}
   }
 
+  const browser = resolveBrowser()
+  if (!browser) throw new Error('未找到 Chromium 内核浏览器，请安装或用 CHROME_PATH 指定')
+
+  const udd = mkdtempSync(join(tmpdir(), 'genplus-shot-'))
   const cdpPort = await getFreePort()
-  const chrome = spawn('chromium', [
+  const chromeArgs = [
     '--headless',
     '--no-sandbox',
     '--disable-gpu',
+    '--disable-dev-shm-usage',
     `--remote-debugging-port=${cdpPort}`,
     `--window-size=${width},${height}`,
-    '--hide-scrollbars'
-  ])
+    '--hide-scrollbars',
+    `--user-data-dir=${udd}`
+  ]
+  if (process.getuid && process.getuid() === 0) {
+    chromeArgs.push('--no-zygote')
+  }
+
+  const chrome = spawn(browser, chromeArgs)
+  let chromeErr = null
+  chrome.on('error', (e) => {
+    chromeErr = e
+  })
 
   try {
     let wsUrl = null
     for (let i = 0; i < 30; i++) {
+      if (chromeErr) break
       try {
         const v = await fetch(`http://127.0.0.1:${cdpPort}/json/version`).then(r => r.json())
         if (v.webSocketDebuggerUrl) {
@@ -273,7 +333,8 @@ async function takeTenantScreenshot(opts = {}) {
       } catch (e) {}
       await new Promise(r => setTimeout(r, 100))
     }
-    if (!wsUrl) throw new Error('无法连接到 Chromium CDP 调试端口')
+    if (chromeErr) throw new Error(`浏览器启动失败（${browser}）：${chromeErr.message}`)
+    if (!wsUrl) throw new Error(`无法连接到 Chromium CDP 调试端口（浏览器: ${browser}）`)
 
     const ws = new WebSocket(wsUrl)
     await new Promise((resolve, reject) => {
@@ -300,12 +361,15 @@ async function takeTenantScreenshot(opts = {}) {
     await sendCDP('Network.enable')
 
     if (token) {
-      await sendCDP('Network.setCookie', {
+      const ck = await sendCDP('Network.setCookie', {
         name: `auth_${slug}`,
         value: token,
         domain: '127.0.0.1',
         path: '/'
       })
+      if (!ck?.success) {
+        console.warn(`[genplus_take_screenshot] 凭证注入提示: Network.setCookie 返回 success: false`)
+      }
       await sendCDP('Page.addScriptToEvaluateOnNewDocument', {
         source: `
           document.cookie = "auth_${slug}=${token}; path=/";
@@ -360,15 +424,15 @@ async function takeTenantScreenshot(opts = {}) {
 
     const cleanPath = normPath.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/^_+|_+$/g, '') || 'root'
     const fileName = `${slug}_${cleanPath}_${Date.now()}.png`
-    const shotDir = '/config/nuadmin/screenshots'
+    const shotDir = join(ROOT, 'screenshots')
     if (!existsSync(shotDir)) mkdirSync(shotDir, { recursive: true })
     const filePath = join(shotDir, fileName)
     writeFileSync(filePath, buf)
 
     // Also copy to assistant brain artifacts directory if present
-    const brainDir = '/config/.gemini/antigravity-cli/brain/5c8932bf-159b-4c7d-8660-96e65c907ee2'
+    const brainDir = process.env.BRAIN_DIR || ''
     let artifactPath = null
-    if (existsSync(brainDir)) {
+    if (brainDir && existsSync(brainDir)) {
       artifactPath = join(brainDir, fileName)
       try {
         writeFileSync(artifactPath, buf)
@@ -401,14 +465,23 @@ async function takeTenantScreenshot(opts = {}) {
       waitedMs: Date.now() - startTime
     }
   } finally {
-    chrome.kill()
+    try {
+      chrome.kill()
+      if (process.platform === 'win32') {
+        const { execFile } = await import('node:child_process')
+        await new Promise(r => execFile('taskkill', ['/PID', String(chrome.pid), '/T', '/F'], () => r()))
+      }
+    } catch (e) {}
+    try {
+      rmSync(udd, { recursive: true, force: true })
+    } catch (e) {}
   }
 }
 
 async function createPublicLanding(opts = {}) {
   const tenant = await resolveTenant(opts)
   const slug = tenant.slug
-  const tenantDir = join('/config/nuadmin/tenants', slug)
+  const tenantDir = join(ROOT, 'tenants', slug)
   if (!existsSync(tenantDir)) {
     throw new Error(`租户目录不存在: ${tenantDir}`)
   }
@@ -424,7 +497,7 @@ async function createPublicLanding(opts = {}) {
     const nmTenantQrcode = join(tenantDir, 'node_modules', 'qrcode')
     if (!existsSync(nmTenantQrcode)) {
       const nmTenant = join(tenantDir, 'node_modules')
-      const nmMain = join('/config/nuadmin/main-admin/node_modules')
+      const nmMain = join(ROOT, 'main-admin/node_modules')
       if (!existsSync(nmTenant)) {
         try {
           const fs = await import('node:fs')
@@ -842,11 +915,34 @@ const TOOLS = [
       type: 'object',
       properties: {
         name: { type: 'string', description: '项目/系统名称，例如：智能仓储管理系统' },
+        app_title: { type: 'string', description: '浏览器标题/品牌标题（可选）' },
         description: { type: 'string', description: '系统简介与定位' },
+        auth_mode: { type: 'string', enum: ['open', 'users', 'rbac', 'custom'], default: 'rbac', description: '门禁模式：rbac(角色权限)/users(账号密码)/open(公开免密)' },
+        auth_config: { type: 'object', description: '门禁明细配置（可选）' },
         login_tpl: { type: 'string', enum: ['split', 'center', 'simple'], default: 'split', description: '登录页模板' },
         layout: { type: 'string', enum: ['side', 'top', 'mix'], default: 'side', description: '主后台布局风格' }
       },
       required: ['name']
+    }
+  },
+  {
+    name: 'genplus_update_tenant',
+    description: '更新租户级设置（支持设置应用标题 app_title、系统名称 name、门禁模式 auth_mode (rbac/users/open)、门禁配置 auth_config、登录页模板 login_tpl、布局风格 layout、主题 theme 等）。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantId: { type: 'number', description: '租户 ID' },
+        name: { type: 'string', description: '系统名称' },
+        app_title: { type: 'string', description: '浏览器标题/品牌标题' },
+        description: { type: 'string', description: '系统描述' },
+        auth_mode: { type: 'string', enum: ['open', 'users', 'rbac', 'custom'], description: '门禁模式' },
+        auth_config: { type: 'object', description: '门禁明细配置' },
+        login_tpl: { type: 'string', enum: ['split', 'center', 'simple'], description: '登录页模板' },
+        layout: { type: 'string', enum: ['side', 'top', 'mix'], description: '主后台布局风格' },
+        theme: { type: 'object', description: '主题配置，如 { palette: "emerald", skin: "macos-modern" }' },
+        status: { type: 'string', enum: ['draft', 'generated', 'running', 'stopped', 'failed'], description: '状态' }
+      },
+      required: ['tenantId']
     }
   },
   {
@@ -922,7 +1018,7 @@ const TOOLS = [
             properties: {
               name: { type: 'string', description: '字段名称，如 仓库编号' },
               colKey: { type: 'string', description: '数据库列名，如 wh_code' },
-              type: { type: 'string', enum: ['varchar', 'int', 'decimal', 'money', 'enum', 'date', 'datetime', 'text', 'switch', 'fk'], description: '字段类型' },
+              type: { type: 'string', enum: ['id', 'varchar', 'text', 'richtext', 'int', 'decimal', 'money', 'date', 'datetime', 'bool', 'enum', 'json', 'fk', 'file', 'image'], description: '字段类型: id, varchar, text, richtext, int, decimal, money, date, datetime, bool (布尔开关), enum (字典枚举), json, fk (外键), file (附件), image (图片)' },
               length: { type: 'number', description: '字符长度' },
               required: { type: 'boolean', description: '是否必填' },
               query: { type: 'string', enum: ['none', 'eq', 'like', 'range'], description: '查询检索模式' },
@@ -953,7 +1049,7 @@ const TOOLS = [
         fieldId: { type: 'number', description: '字段 ID' },
         name: { type: 'string', description: '字段名称' },
         colKey: { type: 'string', description: '数据库列名' },
-        type: { type: 'string', enum: ['varchar', 'int', 'decimal', 'money', 'enum', 'date', 'datetime', 'text', 'switch', 'fk'], description: '字段类型' },
+        type: { type: 'string', enum: ['id', 'varchar', 'text', 'richtext', 'int', 'decimal', 'money', 'date', 'datetime', 'bool', 'enum', 'json', 'fk', 'file', 'image'], description: '字段类型: id, varchar, text, richtext, int, decimal, money, date, datetime, bool (布尔开关), enum (字典枚举), json, fk (外键), file (附件), image (图片)' },
         length: { type: 'number', description: '字符长度' },
         required: { type: 'boolean', description: '是否必填' },
         query: { type: 'string', enum: ['none', 'eq', 'like', 'range'], description: '查询检索模式' },
@@ -1333,6 +1429,24 @@ async function handleToolCall(name, args) {
           layout: args.layout || 'side'
         }
       })
+      if (res && res.id && (args.auth_mode || args.auth_config || args.app_title)) {
+        await api(`/api/tenant/${res.id}`, {
+          method: 'PATCH',
+          body: {
+            auth_mode: args.auth_mode,
+            auth_config: args.auth_config,
+            app_title: args.app_title
+          }
+        }).catch(() => null)
+      }
+      return { success: true, tenant: res }
+    }
+    case 'genplus_update_tenant': {
+      const { tenantId, ...body } = args
+      const res = await api(`/api/tenant/${tenantId}`, {
+        method: 'PATCH',
+        body
+      })
       return { success: true, tenant: res }
     }
     case 'genplus_save_dict': {
@@ -1515,7 +1629,9 @@ async function handleToolCall(name, args) {
         scope: isMain ? 'main_admin' : 'tenant',
         tenantId: tenant ? tenant.id : null,
         slug: tenant ? tenant.slug : null,
-        envPath: isMain ? '/config/nuadmin/main-admin/.env' : `/config/nuadmin/tenants/${slug}/.env`,
+        platform: process.platform,
+        root: ROOT,
+        envPath: isMain ? (process.env.MAIN_ADMIN_ENV || join(ROOT, 'main-admin/.env')) : join(ROOT, 'tenants', slug, '.env'),
         host: cfg.host,
         port: cfg.port,
         user: cfg.user,

@@ -106,7 +106,6 @@ export async function gitRollback(root: string, commit: string): Promise<boolean
  */
 export async function missingDeps(root: string): Promise<string[]> {
   try {
-    const { readFile } = await import('node:fs/promises')
     const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
     const deps = Object.keys(pkg.dependencies ?? {})
     const out: string[] = []
@@ -126,7 +125,6 @@ export async function missingDeps(root: string): Promise<string[]> {
  */
 export async function undeclaredImports(root: string): Promise<string[]> {
   try {
-    const { readFile } = await import('node:fs/promises')
     const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
     const declared = new Set([...Object.keys(pkg.dependencies ?? {}), ...Object.keys(pkg.devDependencies ?? {})])
     const found = new Set<string>()
@@ -264,11 +262,20 @@ function childEnv(port: number, extra: Record<string, string> = {}) {
   return { ...env, PORT: String(port), HOST: '0.0.0.0', ...extra }
 }
 
+function npmSpawnTarget(): [string, boolean] {
+  return process.platform === 'win32' ? ['npm.cmd', true] : ['npm', false]
+}
+
 export async function spawnDev(root: string, port: number, extra: Record<string, string> = {}) {
   const { spawn } = await import('node:child_process')
-  const child = spawn('npm', ['run', 'dev'], {
+  const [cmd, shell] = npmSpawnTarget()
+  const child = spawn(cmd, ['run', 'dev'], {
     cwd: root, detached: true, stdio: ['ignore', 'ignore', 'ignore'],
-    env: childEnv(port, extra)
+    env: childEnv(port, extra),
+    shell
+  })
+  child.on('error', (e) => {
+    console.error(`[spawnDev] 启动失败 (${cmd} in ${root}):`, e.message)
   })
   child.unref()
   return child.pid ?? 0
@@ -276,10 +283,28 @@ export async function spawnDev(root: string, port: number, extra: Record<string,
 
 export async function killPort(port: number): Promise<number> {
   try {
-    const { stdout } = await run1('bash', ['-c', `ss -lptn 'sport = :${port}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u`])
-    const pids = stdout.split('\n').map(s => Number(s.trim())).filter(Boolean)
-    for (const pid of pids) { try { process.kill(-pid, 'SIGTERM') } catch { try { process.kill(pid, 'SIGTERM') } catch { /* gone */ } } }
-    return pids.length
+    if (process.platform === 'win32') {
+      const { stdout } = await run1('cmd', ['/c', `netstat -ano | findstr LISTENING | findstr :${port}`])
+      const pids = [...new Set(
+        stdout.split('\n')
+          .map(l => l.trim().split(/\s+/).pop() ?? '')
+          .filter(p => /^\d+$/.test(p))
+          .map(Number)
+      )]
+      for (const pid of pids) {
+        try { await run1('taskkill', ['/PID', String(pid), '/T', '/F']) } catch { /* gone */ }
+      }
+      return pids.length
+    } else {
+      const { stdout } = await run1('bash', ['-c', `ss -lptn 'sport = :${port}' 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u`])
+      const pids = stdout.split('\n').map(s => Number(s.trim())).filter(Boolean)
+      for (const pid of pids) {
+        try { process.kill(-pid, 'SIGTERM') } catch {
+          try { process.kill(pid, 'SIGTERM') } catch { /* gone */ }
+        }
+      }
+      return pids.length
+    }
   } catch {
     return 0
   }

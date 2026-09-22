@@ -25,3 +25,4 @@ scripts/*
 # local agent scratch
 .qwen/
 .env
+screenshots/

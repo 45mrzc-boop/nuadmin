@@ -11,19 +11,33 @@ description: >-
 
 ---
 
-## 阶段 0：动态确认与探活 MySQL 数据库连接（强制前置门禁）
+## 阶段 0：环境感知与前置探活（跨平台动态检测与数据库门禁）
 
 > [!CRITICAL]
-> **严禁在维护脚本与排查命令中硬编码 MySQL 凭证！**
-> 在执行任何维护、数据库排查（`genplus_db_query`）、迁移变更或种子数据修正前，大模型**必须首先动态确认当前的 MySQL 数据库真实连接信息**：
-> 1. **执行连接握手探活**：
->    - 运行探活脚本：`node /config/nuadmin/scripts/check-db-connection.mjs`；
->    - 或调用 MCP 工具 `genplus_get_db_connection`（不传参探活主库，或传入 `tenantId`/`slug` 探活目标租户库）；
-> 2. **确认环境连接配置**：
->    - 自动从 `/config/nuadmin/main-admin/.env` 中读取并确认 `DB_HOST`、`DB_PORT`、`DB_USER`、`DB_PASS`、`DB_NAME`；
->    - 确保返回 `ok: true`，确认 MySQL 服务可用；
-> 3. **配置动态继承**：
->    - 所有的 SQL 执行、结构比对和临时排查脚本，必须动态引用上述环境变量，严禁硬编码！
+> **跨平台感知与零硬编码铁律：**
+> 严禁假定用户处于特定操作系统（如仅限 Linux 容器）或特定绝对路径（如 `/config/nuadmin`）！
+> 在执行任何维护、数据库排查（`genplus_db_query`）、迁移变更或种子数据修正前，大模型**必须首先执行两步前置检查**：
+>
+> 1. **步骤一：检测操作系统与工作区根目录 (OS & RepoRoot Detection)**：
+>    - **操作系统检测**：明确当前运行环境是 Windows (`win32`)、macOS (`darwin`) 还是 Linux (`linux`)。
+>      * 可通过环境上下文或快速探测：`node -e "console.log(process.platform)"`。
+>      * **跨平台执行适配**：
+>        - Windows 环境：使用 `cmd.exe /c` 或 PowerShell，路径分隔符使用 `\` 或 Node 兼容的 `/`，npm 命令使用 `npm.cmd` 或通过 `{ shell: true }`，杀死进程树使用 `taskkill /PID <pid> /T /F`；
+>        - Linux / macOS 环境：使用标准 bash / sh，杀死进程组使用 `process.kill(-pid)` 或 `lsof`/`ss`。
+>    - **仓库根目录 `<repoRoot>` 检测**：动态获取当前工作区根目录（例如容器内 `/config/nuadmin`，Windows 下如 `J:\code\nuadmin` 或当前 workspace 根路径）。
+>      * 后续所有脚本路径、环境配置文件与依赖目录，**一律以 `<repoRoot>` 动态拼接**（如 `<repoRoot>/scripts/check-db-connection.mjs`、`<repoRoot>/main-admin/.env`）。
+>
+> 2. **步骤二：动态探活与继承 MySQL 数据库连接**：
+>    - **连接握手探活**：
+>      * 运行探活脚本：`node <repoRoot>/scripts/check-db-connection.mjs`（脚本已内置跨平台与动态根目录自适应，回传当前 `platform`、`root` 与数据库在线状态）；
+>      * 或调用 MCP 工具 `genplus_get_db_connection`（不传参探活主库，或传入 `tenantId`/`slug` 探活目标租户库）；
+>    - **确认环境连接配置**：
+>      * 自动从 `<repoRoot>/main-admin/.env` 中读取并确认 `DB_HOST`、`DB_PORT`、`DB_USER`、`DB_PASS`、`DB_NAME`；
+>      * 确保返回 `ok: true`，确认 MySQL 服务可用；
+>    - **配置动态继承**：
+>      * 所有的 SQL 执行、结构比对和临时排查脚本，必须动态引用上述环境变量，严禁硬编码！
+> 3. **主控生成器源码与编译纪律（严禁擅改 .output 产物）**：
+>    - 若维护中涉及主后台生成器（`server/utils/gen/*` 或 `shared/*`），严禁直接手改 `.output` 临时产物！必须在 `<repoRoot>/main-admin` 根目录执行 `npm run build` 重新编译，再重启主后台，保持产物幂等可重现。
 
 ---
 
@@ -80,6 +94,9 @@ description: >-
    * 调用 `genplus_db_query` 确认数据表结构、新字段或变更行是否正常落库；
    * 验证更新后的页面或接口是否正常返回数据；
    * 若涉及权限变更，使用对应角色的 Token 进行权限放行与拦截断言；
-2. **视觉回归截图与交付**：
+   * 若涉及导航或 UI 布局变更，必须执行【侧边栏双态可用性断言】（展开态最小 240px 宽度且中文无省略号截断；折叠态展开按钮必须存在且可点击还原）；
+   * 若涉及数据表格与搜索栏，必须执行【UI 人体工学断言】（主键 ID 列宽度不超过 80px 紧凑居中；搜索框组件间距合理无重叠碰撞）；
+2. **真机截图与多模态视觉质检自愈闭环 (Visual QA Loop)**：
    * 调用 `genplus_take_screenshot` 截取变更后的模块页面，断言页面未被重定向至登录页且数据渲染完整；
-   * 交付变更清单（新增字段/变更模块/修改策略）与最新截图。
+   * **严禁交差式甩图**：必须自主审视截图，断言侧边栏、搜索栏、表格列宽符合人体工学常识。发现任何瑕疵必须就地自愈修正并重测，合格后方可交付。
+   * 交付变更清单（新增字段/变更模块/修改策略）与最新真机截图。

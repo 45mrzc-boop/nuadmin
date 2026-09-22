@@ -452,7 +452,11 @@ export function landingPosterFiles(p: TenantPlan): Record<string, string> {
 
 /** 动态线索收集表单：免鉴权提交接口，基于 Schema 严格校验并写入数据库 */
 export function landingFormFiles(p: TenantPlan): Record<string, string> {
-  const targetModel = String(p.caps.landing_form?.config?.targetModel ?? '')
+  let targetModel = String(p.caps.landing_form?.config?.targetModel ?? '')
+  const allModels = (p.models && p.models.length > 0) ? p.models : (p.groups || []).flatMap(g => g.modules || [])
+  const matchedMod = allModels.find(m => m.key === targetModel || m.table === targetModel)
+  if (matchedMod) targetModel = matchedMod.key
+  else if (!targetModel && allModels.length > 0) targetModel = allModels[0].key
 
   return {
     'server/api/public/submit/[res].post.ts': `export default defineEventHandler(async (event) => {
@@ -467,8 +471,36 @@ export function landingFormFiles(p: TenantPlan): Record<string, string> {
   const placeholders: string[] = []
 
   for (const f of t.fields) {
-    if (f.pk || f.key === 'created_at' || f.key === 'updated_at') continue
-    const val = body[f.key]
+    if (f.pk || f.key === 'created_at' || f.key === 'updated_at' || f.key === 'deleted_at') continue
+    let val = body[f.key]
+
+    // 智能别名容错：若前端传 name/phone/remark 但模型中是 patient_name/mobile 等
+    if ((val === undefined || val === null || val === '') && f.key.includes('name') && body.name) {
+      val = body.name
+    }
+    if ((val === undefined || val === null || val === '') && (f.key.includes('phone') || f.key.includes('mobile') || f.key.includes('tel')) && (body.phone || body.mobile || body.tel)) {
+      val = body.phone || body.mobile || body.tel
+    }
+    if ((val === undefined || val === null || val === '') && (f.key.includes('remark') || f.key.includes('desc') || f.key.includes('content') || f.key.includes('note')) && (body.remark || body.note || body.description)) {
+      val = body.remark || body.note || body.description
+    }
+
+    // 自动为业务单号/流水号（如 appt_no, order_no, sn）生成唯一编号
+    if ((val === undefined || val === null || val === '') && (f.key.endsWith('_no') || f.key.endsWith('_sn') || f.key.endsWith('_code') || f.key === 'sn' || f.key === 'no')) {
+      const prefix = f.key.replace(/_?(no|sn|code)$/, '').toUpperCase() || 'NO'
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+      const rand = Math.floor(1000 + Math.random() * 9000)
+      val = \`\${prefix}\${dateStr}\${rand}\`
+    }
+
+    // 默认状态与来源兜底
+    if ((val === undefined || val === null || val === '') && f.key === 'status') {
+      val = 'pending'
+    }
+    if ((val === undefined || val === null || val === '') && f.key === 'source') {
+      val = 'h5'
+    }
+
     if (f.required && (val === undefined || val === null || val === '')) {
       throw createError({ statusCode: 400, message: '请填写【' + f.name + '】' })
     }
@@ -494,12 +526,17 @@ export function landingFormFiles(p: TenantPlan): Record<string, string> {
 
 /** 前台复合门户：免鉴权列表查询与单条详情读取接口 */
 export function landingPortalFiles(p: TenantPlan): Record<string, string> {
-  const listModel = String(p.caps.landing_portal?.config?.listModel ?? '')
+  let listModel = String(p.caps.landing_portal?.config?.listModel ?? '')
+  const allModels = (p.models && p.models.length > 0) ? p.models : (p.groups || []).flatMap(g => g.modules || [])
+  const matchedMod = allModels.find(m => m.key === listModel || m.table === listModel)
+  if (matchedMod) listModel = matchedMod.key
+  else if (!listModel && allModels.length > 0) listModel = allModels[0].key
 
   return {
     'server/api/public/portal/list.get.ts': `export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const res = String(query.res || ${JSON.stringify(listModel)} || Object.keys(TABLES)[0] || '')
+  const defaultRes = ${JSON.stringify(listModel)} || Object.keys(TABLES)[0] || ''
+  const res = String(query.res || defaultRes)
   if (!res) return ok({ list: [], total: 0, page: 1, pageSize: 10 })
 
   const t = tableOf(res)
@@ -529,7 +566,8 @@ export function landingPortalFiles(p: TenantPlan): Record<string, string> {
     'server/api/public/portal/[id].get.ts': `export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
   const query = getQuery(event)
-  const res = String(query.res || ${JSON.stringify(listModel)} || Object.keys(TABLES)[0] || '')
+  const defaultRes = ${JSON.stringify(listModel)} || Object.keys(TABLES)[0] || ''
+  const res = String(query.res || defaultRes)
   if (!res || !id) throw createError({ statusCode: 400, message: '参数无效' })
 
   const t = tableOf(res)

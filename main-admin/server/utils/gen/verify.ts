@@ -189,12 +189,17 @@ async function parseCheck(root: string, files: string[]): Promise<string[]> {
   const fallback = join(process.cwd(), 'node_modules', '.bin', 'esbuild')
   const exe = existsSync(bin) ? bin : (existsSync(fallback) ? fallback : '')
   if (!exe) return ['esbuild 不可用，跳过解析']
+  const { mkdtempSync, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const outdir = mkdtempSync(join(tmpdir(), 'nuadmin-parse-'))
   try {
-    await run1(exe, ['--log-level=error', '--format=esm', '--outdir=/tmp/nuadmin-parse', ...files], { cwd: root })
+    await run1(exe, ['--log-level=error', '--format=esm', `--outdir=${outdir}`, ...files], { cwd: root })
     return []
   } catch (e: any) {
     const err = String(e?.stderr ?? e?.message ?? e)
     return err.split('\n').filter(l => l.includes('.ts:') || l.includes('error')).slice(0, 20)
+  } finally {
+    try { rmSync(outdir, { recursive: true, force: true }) } catch {}
   }
 }
 
@@ -233,7 +238,18 @@ async function bootCheck(root: string, port: number, reuse = false, base = '/'):
   const { spawn } = await import('node:child_process')
   // reuse=true 表示端口上已有实例（预览已启动）：再 spawn 一个只会撞端口，
   // 而且 finally 会去 SIGTERM 一个根本没起来的进程组。
-  const child = reuse ? null : spawn('npm', ['run', 'dev'], { cwd: root, detached: true, stdio: ['ignore', 'ignore', 'ignore'] })
+  const [cmd, shell] = process.platform === 'win32' ? ['npm.cmd', true] : ['npm', false]
+  const child = reuse ? null : spawn(cmd, ['run', 'dev'], {
+    cwd: root,
+    detached: true,
+    stdio: ['ignore', 'ignore', 'ignore'],
+    shell
+  })
+  if (child) {
+    child.on('error', (e) => {
+      console.error(`[bootCheck] 子进程启动失败 (${cmd} in ${root}):`, e.message)
+    })
+  }
   try {
     const up = reuse || await waitPort(port, 120_000)
     if (!up) return ['fail', `${port} 端口 120s 内未就绪`, started]
@@ -267,7 +283,19 @@ async function bootCheck(root: string, port: number, reuse = false, base = '/'):
     }
     return ['pass', `登录出 JWT，且入口脚本以 JS 正常返回（${entry.split('/').pop()}）`, started]
   } finally {
-    if (child) { try { process.kill(-(child.pid ?? 0), 'SIGTERM') } catch { /* already gone */ } }
+    if (child?.pid) {
+      if (process.platform === 'win32') {
+        try {
+          const { execFile } = await import('node:child_process')
+          await new Promise<void>(res =>
+            execFile('taskkill', ['/PID', String(child.pid), '/T', '/F'], () => res()))
+        } catch { /* already gone */ }
+      } else {
+        try { process.kill(-child.pid, 'SIGTERM') } catch {
+          try { process.kill(child.pid, 'SIGTERM') } catch { /* already gone */ }
+        }
+      }
+    }
   }
 }
 

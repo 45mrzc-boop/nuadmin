@@ -1,8 +1,19 @@
 #!/usr/bin/env node
 import { readFileSync, existsSync } from 'node:fs';
-import mysql from '/config/nuadmin/main-admin/node_modules/mysql2/promise.js';
+import { fileURLToPath } from 'node:url';
+import { dirname, join, resolve } from 'node:path';
+import { createRequire } from 'node:module';
 
-const ENV_PATH = '/config/nuadmin/main-admin/.env';
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ENV_PATH = process.env.MAIN_ADMIN_ENV || join(ROOT, 'main-admin/.env');
+
+const require = createRequire(join(ROOT, 'main-admin/package.json'));
+let mysql = null;
+try {
+  mysql = require('mysql2/promise');
+} catch (e) {
+  // lazy loaded below if needed
+}
 
 export function loadMainAdminEnv() {
   if (!existsSync(ENV_PATH)) {
@@ -36,6 +47,19 @@ export async function checkConnection(customDb = null) {
   const start = Date.now();
 
   try {
+    if (!mysql) {
+      try {
+        mysql = require('mysql2/promise');
+      } catch (e) {
+        const directPath = join(ROOT, 'main-admin/node_modules/mysql2/promise.js');
+        if (existsSync(directPath)) {
+          const mod = await import(directPath);
+          mysql = mod.default || mod;
+        } else {
+          throw e;
+        }
+      }
+    }
     const conn = await mysql.createConnection({
       host: config.host,
       port: config.port,
@@ -55,6 +79,8 @@ export async function checkConnection(customDb = null) {
 
     return {
       ok: true,
+      platform: process.platform,
+      root: ROOT,
       envPath: config.envPath,
       host: config.host,
       port: config.port,
@@ -69,6 +95,8 @@ export async function checkConnection(customDb = null) {
   } catch (err) {
     return {
       ok: false,
+      platform: process.platform,
+      root: ROOT,
       envPath: config.envPath,
       host: config.host,
       port: config.port,

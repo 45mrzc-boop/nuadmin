@@ -311,7 +311,7 @@ export const ROLES = ${JSON.stringify(p.authConfig.roles ?? [])}
 export const TABLES: Record<string, TableDef> = ${JSON.stringify(tablesDef(p), null, 2)}
 
 export function tableOf(resKey: string): TableDef {
-  const t = TABLES[resKey]
+  const t = TABLES[resKey] || Object.values(TABLES).find(t => t.table === resKey)
   if (!t) throw createError({ statusCode: 404, message: '未知资源: ' + resKey })
   return t
 }

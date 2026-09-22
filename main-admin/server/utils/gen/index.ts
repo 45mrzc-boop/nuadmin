@@ -1,4 +1,5 @@
-import { join } from 'node:path'
+import { join, dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import mysql from 'mysql2/promise'
 import type { TenantPlan } from './types'
 import { undefinedDictKeys } from './types'
@@ -23,15 +24,15 @@ export async function generate(tenantId: number): Promise<{
   if (!plan.authMode) plan.authMode = 'users'
   if (!IMPLEMENTED.includes(plan.authMode)) plan.authMode = 'users'
   // The build being produced is version plan.version + 1; bump up-front so the
-  // package.json, git commit, job row and tenant row all report one number.
-  plan.version += 1
+  // generated package.json, footer, and job record agree.
+  plan.version = (plan.version ?? 0) + 1
   const root = join(useRuntimeConfig().gen.tenantsRoot, plan.slug)
+  const lines: string[] = []
 
   const job = await run(
     `INSERT INTO gen_job (tenant_id,version,kind,status,message) VALUES (?,?,?,?,?)`,
     [tenantId, plan.version, 'generate', 'running', `${plan.groups.reduce((n, g) => n + g.modules.length, 0)} 模块 / ${Object.keys(plan.caps).length} 能力`])
 
-  const lines: string[] = []
   try {
     lines.push(`[${new Date().toISOString()}] plan ${plan.slug} v${plan.version}`)
     lines.push(`  groups=${plan.groups.length} modules=${plan.groups.reduce((n, g) => n + g.modules.length, 0)} caps=${Object.keys(plan.caps).join(',') || 'none'}`)
@@ -60,11 +61,13 @@ export async function generate(tenantId: number): Promise<{
     try {
       const { existsSync, symlinkSync } = await import('node:fs')
       const targetNm = join(root, 'node_modules')
+      const adminRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
+      const adminNm = join(adminRoot, 'node_modules')
       const sharedNm = existsSync(join(process.cwd(), 'node_modules'))
         ? join(process.cwd(), 'node_modules')
-        : '/config/nuadmin/main-admin/node_modules'
-      if (!existsSync(targetNm) && existsSync(sharedNm)) {
-        symlinkSync(sharedNm, targetNm)
+        : (existsSync(adminNm) ? adminNm : '')
+      if (!existsSync(targetNm) && sharedNm && existsSync(sharedNm)) {
+        symlinkSync(sharedNm, targetNm, 'junction')
         lines.push(`  symlinked shared node_modules -> ${targetNm}`)
       }
     } catch {}

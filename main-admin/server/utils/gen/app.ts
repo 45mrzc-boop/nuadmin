@@ -1,3 +1,4 @@
+import { readFileSync, existsSync } from 'node:fs'
 import type { TenantPlan } from './types'
 import { allModules } from './types'
 import { findPalette, skinCss } from '#shared/skins'
@@ -7,6 +8,35 @@ export const capSpec = (key: string) =>
   CAPABILITY_CATALOG.find(c => c.cap_key === key)?.spec
 
 const has = (p: TenantPlan, k: string) => !!p.caps[k]
+
+function getControlPlaneDbConfig() {
+  const envPath = '/config/nuadmin/main-admin/.env'
+  const out = {
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: process.env.DB_PORT || '3306',
+    user: process.env.DB_USER || 'root',
+    pass: process.env.DB_PASS || ''
+  }
+  try {
+    if (existsSync(envPath)) {
+      const content = readFileSync(envPath, 'utf-8')
+      for (const line of content.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith('#')) continue
+        const idx = trimmed.indexOf('=')
+        if (idx > 0) {
+          const k = trimmed.slice(0, idx).trim()
+          const v = trimmed.slice(idx + 1).trim()
+          if (k === 'DB_HOST') out.host = v
+          if (k === 'DB_PORT') out.port = v
+          if (k === 'DB_USER') out.user = v
+          if (k === 'DB_PASS') out.pass = v
+        }
+      }
+    }
+  } catch {}
+  return out
+}
 
 /**
  * Project shell of a generated sub-admin: build config, entry, theme, client
@@ -86,16 +116,19 @@ export default defineNuxtConfig({
 }
 `,
 
-    '.env': `# ${p.title} — 独立数据库、独立密钥，与主后台无任何运行时耦合
-DB_HOST=${process.env.DB_HOST ?? '127.0.0.1'}
-DB_PORT=${process.env.DB_PORT ?? '3306'}
-DB_USER=${process.env.DB_USER ?? 'root'}
-DB_PASS=${process.env.DB_PASS ?? ''}
+    '.env': (() => {
+      const db = getControlPlaneDbConfig()
+      return `# ${p.title} — 独立数据库、独立密钥，与主后台无任何运行时耦合
+DB_HOST=${db.host}
+DB_PORT=${db.port}
+DB_USER=${db.user}
+DB_PASS=${db.pass}
 DB_NAME=${p.dbName}
 JWT_SECRET=${p.jwtSecret}
 PORT=${p.port}
 HOST=0.0.0.0
-`,
+`
+    })(),
 
     '.gitignore': `node_modules
 .nuxt

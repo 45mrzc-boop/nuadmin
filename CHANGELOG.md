@@ -4,6 +4,70 @@
 
 ---
 
+## 🚀 [v2.2.0] - 2026-09-22
+
+本次更新基于跨平台（Windows 11 / Linux / macOS）全链路构建实战，重点解决跨平台可移植性、AI Skill 动态环境感知门禁、MCP 服务端稳健性与 C 端微页面闭环等核心问题。
+
+### 1. 🧭 AI Skill 跨平台灵活自适应与前置感知门禁 (OS & RepoRoot Awareness Pre-flight)
+
+- **前置操作系统与目录动态感知**：
+  - 在 `genplus-build` 与 `genplus-maintain` 技能包以及工作台规范中，将原【阶段 0】升级为 **【阶段 0：环境感知与前置探活（跨平台动态检测与数据库门禁）】**；
+  - **强制两步感知**：
+    1. **步骤一（OS 与根目录检测）**：AI 在执行任何命令前，必须明确当前运行环境（Windows `win32` / macOS `darwin` / Linux `linux`）与工作区根目录 `<repoRoot>`，彻底废除对 `/config/nuadmin` 容器绝对路径的假设；
+    2. **步骤二（动态探活与凭证继承）**：执行 `node <repoRoot>/scripts/check-db-connection.mjs`，探活脚本已内置动态路径推导与平台检测，回传当前 `platform`、`root`、`database` 状态，后续所有操作动态继承该配置。
+- **跨平台命令与进程适配**：
+  - Windows 环境：适配 `npm.cmd`（开启 `shell: true`）、`taskkill /PID <pid> /T /F` 终结整棵进程树、`netstat -ano | findstr LISTENING` 端口查询；
+  - Linux/macOS 环境：适配 `npm`、`process.kill(-pid)` 进程组信号、`ss`/`lsof`。
+- **同步覆盖全量规则与文档**：
+  - 同步更新 `.agents/skills/*`、`.claude/skills/*`、`.agents/rules/*`、`.claude/rules/*`、`AGENTS.md` 与 `CLAUDE.md`。
+
+---
+
+### 2. 🛠️ 跨平台可移植性全量修复 (Windows & Linux Universal Adaptation)
+
+- **仓库根路径动态推导**：
+  - [`scripts/check-db-connection.mjs`](file:///config/nuadmin/scripts/check-db-connection.mjs) 与 [`bin/genplus-mcp.mjs`](file:///config/nuadmin/bin/genplus-mcp.mjs) 统一使用 `resolve(dirname(fileURLToPath(import.meta.url)), '..')` 动态自解析根目录；
+  - 清理 MCP 内部写死的主机路径与历史 Brain 会话 UUID 残留；
+  - [`main-admin/server/utils/gen/index.ts`](file:///config/nuadmin/main-admin/server/utils/gen/index.ts) 动态推导 `adminRoot`，Windows 下使用 `junction` 挂载 `node_modules`。
+- **Windows 子进程与端口管理修复**：
+  - [`main-admin/server/utils/gen/write.ts`](file:///config/nuadmin/main-admin/server/utils/gen/write.ts) 与 [`verify.ts`](file:///config/nuadmin/main-admin/server/utils/gen/verify.ts)：`spawnDev` 与 `bootCheck` 采用 `npmSpawnTarget()`，Windows 环境调用 `npm.cmd` 并指定 `shell: true`，增加 `child.on('error')` 监听避免静默失败；
+  - `killPort` 区分平台：Windows 下使用 `netstat` + `taskkill`，避免因无 `ss` 命令导致的端口未释放与撞端口；
+  - `bootCheck` 的 `finally` 清理使用 `taskkill /PID <pid> /T /F`，消除 Windows 下负 PID 信号失效引起的进程泄漏。
+- **语法校验临时目录标准化**：
+  - [`main-admin/server/utils/gen/verify.ts`](file:///config/nuadmin/main-admin/server/utils/gen/verify.ts) 的 esbuild 校验改用 `mkdtempSync(join(tmpdir(), 'nuadmin-parse-'))`，并在 `finally` 中通过 `rmSync` 安全清理，消除对 `/tmp` POSIX 路径的依赖。
+
+---
+
+### 3. 🔌 MCP 服务端稳健性与协议契约对齐 (MCP Robustness & Schema Parity)
+
+- **Chromium 自动发现与防崩溃**：
+  - [`bin/genplus-mcp.mjs`](file:///config/nuadmin/bin/genplus-mcp.mjs) 实现 `resolveBrowser()`，自动探测 `CHROME_PATH`、`CHROMIUM_PATH`、系统 PATH 以及 Windows 下 Chrome / Edge 默认安装路径；
+  - 挂载 `chrome.on('error')` 监听器，并在 CDP 等待循环中提前短路，杜绝因浏览器缺失导致未捕获异常而拖垮整个 MCP 服务端进程。
+- **Profile 隔离与多次截图凭证保活**：
+  - 每次截图调用自动分配专属临时 profile 目录（`--user-data-dir`），并在退出时清理，彻底解决多实例共享默认 profile 导致第二次起截图落回登录页的问题；
+  - 捕获并断言 `Network.setCookie` 返回值，确保鉴权凭证可靠写入。
+- **字段类型枚举完全对齐**：
+  - 修复 `genplus_add_fields` 与 `genplus_update_field` 的 schema 枚举，对齐后端权威 `FIELD_TYPES`，完整开放 `id, bool, richtext, json, file, image`，移除废弃非法的 `switch` 类型。
+- **新增租户级配置更新工具**：
+  - 新增 `genplus_update_tenant` MCP 工具（对接 `PATCH /api/tenant/:id`），支持配置应用标题 `app_title`、门禁模式 `auth_mode`、布局风格 `layout`、主题 `theme` 等；
+  - `genplus_create_tenant` 支持直接传入 `auth_mode` 与 `app_title`，杜绝静默降级为 `users`。
+- **控制面健康检查与防挂起超时**：
+  - 新增 [`main-admin/server/api/health.get.ts`](file:///config/nuadmin/main-admin/server/api/health.get.ts)（`GET /api/health`）端点；
+  - MCP 的 `api()` 请求挂载 30s `AbortController` 超时机制，当控制面无响应时主动报错，杜绝 Agent 侧无限挂起。
+
+---
+
+### 4. 🌐 C 端微页面与公开表单全链路闭环 (Public Landing & Form Mismatch Fix)
+
+- **资源键层级错位修复**：
+  - 修复 `landing_form` / `landing_portal` 生成模板中资源键直接使用物理表名（如 `hos_appointment`）导致的 404 问题，统一解析并生成模型 key；
+  - [`main-admin/server/utils/gen/server.ts`](file:///config/nuadmin/main-admin/server/utils/gen/server.ts) 的 `tableOf(resKey)` 增加物理表名别名映射，双向兼容。
+- **C 端表单提交智能容错与单号自增**：
+  - [`main-admin/server/utils/gen/caps.ts`](file:///config/nuadmin/main-admin/server/utils/gen/caps.ts) 免鉴权提交接口增加常见字段别名映射（如表单传 `name` 自动映射到模型的 `patient_name`，`phone` 映射到 `mobile` 等）；
+  - 自动为 `appt_no`、`order_no`、`sn` 等业务单号生成唯一编号，默认填充 `status: 'pending'` 与 `source: 'h5'`，确保 C 端表单提交 100% 成功。
+
+---
+
 ## 🚀 [v2.1.0] - 2026-09-17
 
 本次更新包含两项关键的系统级重构：**MySQL 数据库动态探活与零硬编码机制**，以及**全面原生兼容 Claude Code 智能体工程规范**。

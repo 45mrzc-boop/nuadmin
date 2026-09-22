@@ -30,15 +30,18 @@
 
 ---
 
-## 2. 强制前置门禁：MySQL 数据库动态确认与零硬编码
+## 2. 强制前置门禁：跨平台自适应与 MySQL 数据库动态确认
 
 > [!CRITICAL]
-> **绝对禁止在任何 Skill、规则、脚本或决策中硬编码 MySQL 凭证（包括主机名、端口、账号、密码）！**
-> 1. **前置探活门禁**：在调用任何 Skill 执行租户建档、表结构迁移、数据播种或 SQL 查询排查前，大模型**必须首先确认真实的 MySQL 数据库连接信息**：
->    * 运行握手命令：`node /config/nuadmin/scripts/check-db-connection.mjs`；
+> **绝对禁止假定特定操作系统或路径，严禁硬编码 MySQL 凭证（包括主机名、端口、账号、密码）！**
+> 1. **操作系统与根目录前置检测**：
+>    * 大模型在调用任何 Skill 或执行脚本前，必须首先动态检测当前运行环境（Windows `win32` / macOS `darwin` / Linux `linux`）与工作区根目录 `<repoRoot>`；
+>    * 严禁硬编码容器路径 `/config/nuadmin`，所有脚本与配置均以 `<repoRoot>` 动态定位；
+> 2. **前置探活门禁**：在调用任何 Skill 执行租户建档、表结构迁移、数据播种或 SQL 查询排查前，大模型**必须首先确认真实的 MySQL 数据库连接信息**：
+>    * 运行握手命令：`node <repoRoot>/scripts/check-db-connection.mjs`；
 >    * 或无参调用 MCP 工具 `genplus_get_db_connection`（自动解析控制面库并实时探活）；
-> 2. **唯一真理来源**：所有数据库凭证必须动态读取自 `/config/nuadmin/main-admin/.env`（`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`）；
-> 3. **上下文动态传递**：后续所有租户独立子库（`nuadmin_t_*`）建库、种子播种与数据查询，必须完全基于动态探活拿到的参数运行，彻底消除环境漂移。
+> 3. **唯一真理来源**：所有数据库凭证必须动态读取自 `<repoRoot>/main-admin/.env`（`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`）；
+> 4. **上下文动态传递**：后续所有租户独立子库（`nuadmin_t_*`）建库、种子播种与数据查询，必须完全基于动态探活拿到的参数运行，彻底消除环境漂移。
 
 ---
 
@@ -46,10 +49,10 @@
 
 工作台提供标准 MCP Server：
 - 配置文件：`.claude/settings.json`、`.claude/mcp.json`、`.agents/mcp_config.json`
-- 可执行服务端：`/config/nuadmin/bin/genplus-mcp.mjs`
+- 可执行服务端：`bin/genplus-mcp.mjs`（可通过 `${workspaceFolder}/bin/genplus-mcp.mjs` 或 `<repoRoot>/bin/genplus-mcp.mjs` 加载）
 - 核心能力：
-  * 租户建档与管理：`genplus_create_tenant`, `genplus_list_tenants`, `genplus_get_tenant_detail`
-  * 字典与建模：`genplus_save_dict`, `genplus_create_model_group`, `genplus_create_module`, `genplus_add_fields`
+  * 租户建档与管理：`genplus_create_tenant`, `genplus_update_tenant`, `genplus_list_tenants`, `genplus_get_tenant_detail`
+  * 字典与建模：`genplus_save_dict`, `genplus_create_model_group`, `genplus_create_module`, `genplus_add_fields`, `genplus_update_field`
   * 设计与能力装配：`genplus_configure_design`, `genplus_install_capability`, `genplus_list_capabilities`
   * 生成与服务启停：`genplus_generate_project`, `genplus_manage_service`
   * 独立数据库直连与排查：`genplus_get_db_connection`, `genplus_db_query`, `genplus_db_execute`
@@ -61,14 +64,14 @@
 ## 4. 常用工程命令
 
 ```bash
-# 1. 数据库动态探活握手
-node /config/nuadmin/scripts/check-db-connection.mjs
+# 1. 数据库动态探活握手（内置跨平台与动态根目录自适应）
+node <repoRoot>/scripts/check-db-connection.mjs
 
 # 2. 启动控制面主后台 (Port 6005)
-cd /config/nuadmin/main-admin && npm run dev
+cd <repoRoot>/main-admin && npm run dev
 
 # 3. 独立子系统构建与部署 (以 app_demo 为例)
-cd /config/nuadmin/tenants/app_demo
+cd <repoRoot>/tenants/app_demo
 npm install
 npm run build
 node .output/server/index.mjs

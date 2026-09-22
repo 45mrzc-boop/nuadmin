@@ -19,7 +19,7 @@
 
 工作台提供标准 MCP Server：
 - 配置文件：[mcp_config.json](file:///config/nuadmin/.agents/mcp_config.json)
-- 可执行服务端：[`/config/nuadmin/bin/genplus-mcp.mjs`](file:///config/nuadmin/bin/genplus-mcp.mjs)
+- 可执行服务端：[`bin/genplus-mcp.mjs`](file:///config/nuadmin/bin/genplus-mcp.mjs)
 - 提供涵盖 7 大站点的全部核心工作台操作能力（租户建档、字典管理、模型分组、实体建模、字段定义、设计矩阵、能力查询与安装 `genplus_list_capabilities` / `genplus_install_capability`、代码生成、服务启停）。
 - 提供独立数据库连接与排查工具（`genplus_get_db_connection`、`genplus_db_query`、`genplus_db_execute`）。
 - 提供对外公开微页面一键脚手架工具（`genplus_create_public_landing`），实现 B+C 双端业务闭环。
@@ -74,16 +74,20 @@
    - MCP 把控制权下沉到每个按钮、字段显隐、排序与表单布局；
    - Skills 则将繁杂的底层细节打包为优雅的业务立项与维护 SOP，既保证宏观不失控，又保证微观极精细。
 
-## 5. MySQL 数据库动态确认与零硬编码准则
+## 5. 跨平台自适应与 MySQL 数据库动态确认准则
 
-**最高铁律：严禁在任何 Skill、规则、脚本或模型推理输出中硬编码 MySQL 连接信息（如 IP、端口、用户、密码）。**
+> **工作区与跨平台约定**：`<repoRoot>` 指当前仓库根目录（容器内部署默认为 `/config/nuadmin`，Windows 本地为项目所在盘符路径，如 `J:\code\nuadmin`）。
+> **最高铁律：严禁在任何 Skill、规则、脚本或模型推理输出中硬编码特定平台路径或 MySQL 连接信息（如 IP、端口、用户、密码）。**
 
-1. **调用 Skill 前的探活握手**：
+1. **前置操作系统与目录感知**：
+   - 在执行任何操作前，Agent 必须明确当前操作系统环境（Windows `win32` / macOS `darwin` / Linux `linux`）与工作区根路径 `<repoRoot>`；
+   - 适配命令执行差异（Windows 下使用 `npm.cmd`、`taskkill /PID <pid> /T /F`、`netstat -ano`；Linux/macOS 下使用 `npm`、`process.kill(-pid)`、`ss`/`lsof`）。
+2. **调用 Skill 前的探活握手**：
    - 在执行任何租户建档、表结构迁移、数据播种或数据库排查前，Agent **必须首先确认真实的数据库连接**；
-   - 方式一：运行命令 `node /config/nuadmin/scripts/check-db-connection.mjs`；
+   - 方式一：运行命令 `node <repoRoot>/scripts/check-db-connection.mjs`；
    - 方式二：无参调用 MCP 工具 `genplus_get_db_connection`，自动探活并校验控制面配置；
-2. **唯一真理来源**：
-   - 所有数据库凭证必须动态读取自 `/config/nuadmin/main-admin/.env`（`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`）；
-3. **动态继承与上下文传递**：
+3. **唯一真理来源**：
+   - 所有数据库凭证必须动态读取自 `<repoRoot>/main-admin/.env`（`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`）；
+4. **动态继承与上下文传递**：
    - 后续所有租户独立子库（`nuadmin_t_*`）建库、种子播种与数据查询，必须完全基于动态探活拿到的参数运行，彻底消除环境漂移。
 
