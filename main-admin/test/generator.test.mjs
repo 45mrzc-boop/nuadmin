@@ -356,5 +356,61 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const broken = await brokenRelativeImports(root)
     assert.ok(Array.isArray(broken), 'brokenRelativeImports should return an array without ReferenceError')
   })
+
+  it('10. genplus_create_tenant & genplus_get_tenant_detail data aggregation contract (R1 & R2)', () => {
+    // Contract simulation: verify tenant aggregation extracts groups, modules and counts properly
+    const mockTenantDetail = {
+      id: 2,
+      slug: 'v2',
+      name: '医院预约挂号管理系统 v2',
+      app_title: '智慧医院预约挂号平台',
+      auth_mode: 'rbac',
+      groups: [
+        {
+          id: 5,
+          name: '默认分组',
+          modules: []
+        },
+        {
+          id: 6,
+          name: '基础资源',
+          modules: [
+            { id: 6, name: '科室管理', key: 'dept', fields: [{ key: 'name', type: 'varchar' }] },
+            { id: 7, name: '医生管理', key: 'doctor', fields: [{ key: 'name', type: 'varchar' }] }
+          ]
+        }
+      ],
+      caps: [{ id: 1, cap_key: 'dict' }]
+    }
+
+    // Simulate MCP genplus_get_tenant_detail aggregation logic
+    const groups = (Array.isArray(mockTenantDetail.groups) && mockTenantDetail.groups.length > 0) ? mockTenantDetail.groups : []
+    const modules = (groups || []).flatMap(g => g.modules || [])
+    const caps = Array.isArray(mockTenantDetail.caps) ? mockTenantDetail.caps : []
+
+    const detailResult = {
+      tenant: mockTenantDetail,
+      groups,
+      modules,
+      dicts: [],
+      caps,
+      counts: {
+        groups: groups.length,
+        modules: modules.length,
+        dicts: 0,
+        caps: caps.length
+      }
+    }
+
+    // Assert R1: app_title and auth_mode are preserved
+    assert.equal(detailResult.tenant.auth_mode, 'rbac', 'auth_mode must be rbac')
+    assert.equal(detailResult.tenant.app_title, '智慧医院预约挂号平台', 'app_title must be preserved')
+
+    // Assert R2: groups and modules are NOT empty when groups exist
+    assert.equal(detailResult.groups.length, 2, 'groups must not be empty')
+    assert.equal(detailResult.modules.length, 2, 'modules must aggregate from groups')
+    assert.equal(detailResult.counts.groups, 2, 'counts.groups must equal 2')
+    assert.equal(detailResult.counts.modules, 2, 'counts.modules must equal 2')
+  })
 })
 

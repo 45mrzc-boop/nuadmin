@@ -1414,32 +1414,52 @@ async function handleToolCall(name, args) {
       }
       if (!tid) throw new Error('必须指定 tenantId 或存在的 slug')
       const t = await api(`/api/tenant/${tid}`)
-      const groups = await api(`/api/model/group?tenantId=${tid}`).catch(() => [])
-      const modules = await api(`/api/module?tenantId=${tid}`).catch(() => [])
-      const dicts = await api(`/api/dict?tenantId=${tid}`).catch(() => [])
-      return { tenant: t, groups, modules, dicts }
+      if (!t) throw new Error(`获取租户 #${tid} 详情失败：未找到租户数据`)
+
+      // GET /api/tenant/:id 已经聚合了 groups (含各 group 的 modules 与 fields)
+      let groups = (Array.isArray(t.groups) && t.groups.length > 0) ? t.groups : null
+      if (!groups) {
+        const gRes = await api(`/api/model/group?tenantId=${tid}`).catch(() => [])
+        groups = Array.isArray(gRes) ? gRes : (gRes?.list || [])
+      }
+      let modules = (groups || []).flatMap(g => g.modules || [])
+      if (!modules.length) {
+        const mRes = await api(`/api/module?tenantId=${tid}`).catch(() => [])
+        modules = Array.isArray(mRes) ? mRes : (mRes?.list || [])
+      }
+      const rawDicts = await api(`/api/dict?tenantId=${tid}`).catch(() => [])
+      const dicts = Array.isArray(rawDicts) ? rawDicts : (rawDicts?.list || [])
+      const caps = Array.isArray(t.caps) ? t.caps : await api(`/api/capability?tenantId=${tid}`).catch(() => [])
+
+      return {
+        tenant: t,
+        groups: groups || [],
+        modules: modules || [],
+        dicts: dicts || [],
+        caps: Array.isArray(caps) ? caps : [],
+        counts: {
+          groups: (groups || []).length,
+          modules: (modules || []).length,
+          dicts: (dicts || []).length,
+          caps: (Array.isArray(caps) ? caps : []).length
+        }
+      }
     }
     case 'genplus_create_tenant': {
       const res = await api('/api/tenant', {
         method: 'POST',
         body: {
           name: args.name,
+          app_title: args.app_title || args.name,
           description: args.description || '',
+          auth_mode: args.auth_mode || 'rbac',
+          auth_config: args.auth_config || null,
           login_tpl: args.login_tpl || 'split',
           layout: args.layout || 'side'
         }
       })
-      if (res && res.id && (args.auth_mode || args.auth_config || args.app_title)) {
-        await api(`/api/tenant/${res.id}`, {
-          method: 'PATCH',
-          body: {
-            auth_mode: args.auth_mode,
-            auth_config: args.auth_config,
-            app_title: args.app_title
-          }
-        }).catch(() => null)
-      }
-      return { success: true, tenant: res }
+      const finalTenant = res?.id ? await api(`/api/tenant/${res.id}`).catch(() => res) : res
+      return { success: true, tenant: finalTenant }
     }
     case 'genplus_update_tenant': {
       const { tenantId, ...body } = args
@@ -1576,7 +1596,8 @@ async function handleToolCall(name, args) {
     case 'genplus_manage_service': {
       if (args.action === 'start') {
         const res = await api(`/api/tenant/${args.tenantId}/start`, { method: 'POST' })
-        return { action: 'start', result: res }
+        const statusRes = await api(`/api/tenant/${args.tenantId}/status`).catch(() => null)
+        return { action: 'start', result: { ...res, ...(statusRes || {}) } }
       } else if (args.action === 'stop') {
         const res = await api(`/api/tenant/${args.tenantId}/stop`, { method: 'POST' })
         return { action: 'stop', result: res }

@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
-import { asText, bodyOf, DEFAULT_LOGIN_TPL, LOGIN_TPLS, nextSlug, str, tenantView } from '../_lib'
+import { asText, AUTH_MODES, bodyOf, DEFAULT_LOGIN_TPL, LOGIN_TPLS, nextSlug, str, tenantView } from '../_lib'
 
 export default defineAuthed(async (event) => {
   await authorize(event, 'main', '/api/tenant/:id', 'write')
@@ -17,13 +17,20 @@ export default defineAuthed(async (event) => {
   const port = await allocatePort()
   const loginTpl = LOGIN_TPLS.includes(str(body.login_tpl)) ? str(body.login_tpl) : DEFAULT_LOGIN_TPL
   const layout = ['side', 'top', 'mix'].includes(str(body.layout)) ? str(body.layout) : 'side'
+  const appTitle = asText(body.app_title, 128) || name
+  const rawAuthMode = str(body.auth_mode)
+  const authMode = rawAuthMode && AUTH_MODES.includes(rawAuthMode as any) ? rawAuthMode : 'rbac'
+  const rawAuthConfig = body.auth_config ?? body.authConfig
+  const authConfig = (rawAuthConfig && typeof rawAuthConfig === 'object' && !Array.isArray(rawAuthConfig))
+    ? JSON.stringify(rawAuthConfig)
+    : null
 
   const r = await run(
-    `INSERT INTO tenant (slug,name,description,db_name,port,jwt_secret,status,app_title,login_tpl,layout,version,project_path)
-     VALUES (?,?,?,?,?,?,'draft',?,?,?,0,?)`,
+    `INSERT INTO tenant (slug,name,description,db_name,port,jwt_secret,status,app_title,login_tpl,layout,auth_mode,auth_config,version,project_path)
+     VALUES (?,?,?,?,?,?,'draft',?,?,?,?,?,0,?)`,
     [
       slug, name, asText(body.description, 512), dbName, port, randomBytes(32).toString('hex'),
-      name, loginTpl, layout, join(cfg.tenantsRoot, slug)
+      appTitle, loginTpl, layout, authMode, authConfig, join(cfg.tenantsRoot, slug)
     ])
 
   // one default branch so the 建模站 always has a group to drop models into
