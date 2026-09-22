@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 
 const env = (k: string, d = '') => process.env[k] ?? d
+const mainPort = Number(env('PORT', '10000'))
 
 export default defineNuxtConfig({
   modules: ['@nuxt/ui'],
@@ -31,13 +32,13 @@ export default defineNuxtConfig({
     gen: {
       tenantsRoot: env('TENANTS_ROOT', fileURLToPath(new URL('../tenants', import.meta.url))),
       dbPrefix: env('DB_TENANT_PREFIX', 'nuadmin_t_'),
-      portFrom: Number(env('TENANT_PORT_FROM', '7100')),
-      portTo: Number(env('TENANT_PORT_TO', '7199'))
+      portFrom: Number(env('TENANT_PORT_FROM', String(mainPort + 1))),
+      portTo: Number(env('TENANT_PORT_TO', String(mainPort + 999)))
     },
     public: {
       appName: 'GenPlus'
     }
   },
   typescript: { strict: true },
-  devServer: { port: Number(env('PORT', '3000')), host: env('HOST', '0.0.0.0') }
+  devServer: { port: mainPort, host: env('HOST', '0.0.0.0') }
 })
