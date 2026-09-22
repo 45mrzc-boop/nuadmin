@@ -634,6 +634,22 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(initPlugin.includes('seedDicts(DICTS, DICT_NAMES)'), 'init.ts must call seedDicts with DICT_NAMES')
     assert.ok(initPlugin.includes('UPDATE sys_dict_type SET dict_name='), 'seedDicts must self-heal dict_name if previously set to key')
   })
+
+  it('15. Regression test for S14 (two-phase atomic configure_design) and N1 batch capability notice', async () => {
+    const mcpCode = readFileSync(resolve(root, '../bin/genplus-mcp.mjs'), 'utf-8')
+
+    // S14: Two-phase validation before writing in configure_design
+    assert.ok(mcpCode.includes('resolved.push({ modId, ma })'), 'configure_design must collect resolved modules in phase 1')
+    assert.ok(mcpCode.includes('本次全部模块均未写入'), 'configure_design failure message must state no modules were written')
+    assert.ok(mcpCode.indexOf('if (unresolved.length)') < mcpCode.indexOf('await api(`/api/design/${modId}`'), 'unresolved check must strictly precede any design write API calls')
+
+    // N1: Actions inputSchema description clarifies batch capability dependency
+    assert.ok(mcpCode.includes('batch 属于能力包级特性，需配合 genplus_install_capability("batch") 生效'), 'actions schema must clarify batch capability requirement')
+
+    // Lifecycle doc in genplus-mcp-call.mjs
+    const invokerCode = readFileSync(resolve(root, '../scripts/genplus-mcp-call.mjs'), 'utf-8')
+    assert.ok(invokerCode.includes('client.close()'), 'genplus-mcp-call must document client.close requirement')
+  })
 })
 
 

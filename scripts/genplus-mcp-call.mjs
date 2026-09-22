@@ -12,7 +12,14 @@ const MCP_SERVER_PATH = join(REPO_ROOT, 'bin/genplus-mcp.mjs')
 const PID_FILE = join(__dirname, '.genplus-serve.pid')
 const IDLE_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutes
 
-/** Spawn and maintain a stdio JSON-RPC client to genplus-mcp.mjs */
+/**
+ * Spawn and maintain a stdio JSON-RPC client to genplus-mcp.mjs.
+ * 
+ * Note: McpClient sends direct JSON-RPC tools/call requests without initialize handshake.
+ * When reusing an McpClient instance across multiple calls, callers MUST explicitly call
+ * `client.close()` when done to terminate the spawned MCP child process and allow the Node
+ * event loop to exit cleanly.
+ */
 class McpClient {
   constructor() {
     this.child = null

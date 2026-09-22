@@ -1149,7 +1149,7 @@ const TOOLS = [
               actions: {
                 type: 'array',
                 items: { type: 'string', enum: ['create', 'edit', 'delete', 'export', 'detail', 'batch', 'print', 'recycle'] },
-                description: '允许的动作按钮集合：create 新增 / edit 编辑 / delete 删除 / export 导出 / detail 详情 / batch 批量 / print 打印 / recycle 回收站'
+                description: '允许的动作按钮集合：create 新增 / edit 编辑 / delete 删除 / export 导出 / detail 详情。注：batch 属于能力包级特性，需配合 genplus_install_capability("batch") 生效'
               },
               pageSize: { type: 'number', default: 10, description: '表格默认每页条数 (1~200)' },
               striped: { type: 'boolean', default: true, description: '表格斑马纹' },
@@ -1688,17 +1688,11 @@ async function handleToolCall(name, args) {
       return { success: true, field: res }
     }
     case 'genplus_configure_design': {
-      const patchTenant = {}
-      if (args.theme) patchTenant.theme = args.theme
-      if (args.auth_mode) patchTenant.auth_mode = args.auth_mode
-      if (Object.keys(patchTenant).length > 0) {
-        await api(`/api/tenant/${args.tenantId}`, {
-          method: 'PATCH',
-          body: patchTenant
-        })
-      }
+      // 1. 如果包含 moduleActions，先执行第一阶段解析预检，确保全部模块均可寻址，实现操作原子性
+      let resolvedActions = null
       if (Array.isArray(args.moduleActions)) {
         const unresolved = []
+        const resolved = []
         for (const ma of args.moduleActions) {
           let modId = ma.moduleId
           if (!modId && ma.moduleKey) {
@@ -1709,7 +1703,32 @@ async function handleToolCall(name, args) {
             unresolved.push(ma.moduleKey ?? ma.moduleId ?? '(未提供)')
             continue
           }
+          resolved.push({ modId, ma })
+        }
+        if (unresolved.length) {
+          return {
+            success: false,
+            _errors: unresolved.map(k => `模块未解析：${k}`),
+            message: `有 ${unresolved.length} 个模块未找到，动作矩阵未生效（本次全部模块均未写入）`
+          }
+        }
+        resolvedActions = resolved
+      }
 
+      // 2. 预检完全通过后，才更新租户级主题与权限配置
+      const patchTenant = {}
+      if (args.theme) patchTenant.theme = args.theme
+      if (args.auth_mode) patchTenant.auth_mode = args.auth_mode
+      if (Object.keys(patchTenant).length > 0) {
+        await api(`/api/tenant/${args.tenantId}`, {
+          method: 'PATCH',
+          body: patchTenant
+        })
+      }
+
+      // 3. 执行已确认全部有效的动作矩阵更新
+      if (resolvedActions) {
+        for (const { modId, ma } of resolvedActions) {
           const designPatch = {
             list: {
               show: ma.show !== false,
@@ -1729,13 +1748,6 @@ async function handleToolCall(name, args) {
             method: 'PATCH',
             body: { design: designPatch }
           })
-        }
-        if (unresolved.length) {
-          return {
-            success: false,
-            _errors: unresolved.map(k => `模块未解析：${k}`),
-            message: `有 ${unresolved.length} 个模块未找到，动作矩阵未生效`
-          }
         }
       }
       return { success: true, message: '设计矩阵与动作上限已持久化' }

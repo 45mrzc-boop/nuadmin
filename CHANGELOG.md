@@ -44,12 +44,14 @@
 ### 4. 🌐 跨平台与零硬编码全面落地
 - **废除所有平台与路径硬编码**：
   - 全工程路径改用 `import.meta.url` 与相对路径动态解析，彻底清除 `/config/nuadmin` 容器绝对路径假设；
-  - MCP 工具增强模块与字段名称容错解析（`resolveModule`, `resolveField`，补全 `res_key` / `table_name` 匹配，S11），`genplus_configure_design` 坚决拒绝静默跳过未解析模块，确保两级能力天花板与动作矩阵彻底生效；
+  - MCP 工具增强模块与字段名称容错解析（`resolveModule`, `resolveField`，补全 `res_key` / `table_name` 匹配，S11）；
+  - `genplus_configure_design` 全面升级为**两段式原子操作（S14）**：前置完成全部模块寻址校验，若有未识别模块则整体拒绝写入，彻底消除“部分写入但回报未生效”的不一致状态；
+  - 完善工具模式描述与说明（N1），明确 `batch` 批量操作属于能力包级特性并由 `p.caps.batch` 门控；
   - 字典中文显示名下发至租户库 `sys_dict_type.dict_name`（S13），并在二次生成时具备自愈修正能力；
   - 全部 25 个 MCP 工具标注标准 `annotations` 属性（`readOnlyHint`、`destructiveHint`、`idempotentHint`）。
 
 ### 5. 🧪 工业级验证与自动化测试
-- **生成器单测 100% 通过**：[`main-admin/test/generator.test.mjs`](./main-admin/test/generator.test.mjs) 包含 14 项完整测试用例（含 S11~S13 回归测试），全量通过；
+- **生成器单测 100% 通过**：[`main-admin/test/generator.test.mjs`](./main-admin/test/generator.test.mjs) 扩充至 15 项完整测试用例（含 S11~S14 回归测试与原子性防护断言），全量通过；
 - **生产构建成功**：`main-admin` 顺利通过 `npm run build` 编译打包。
 
 ---
