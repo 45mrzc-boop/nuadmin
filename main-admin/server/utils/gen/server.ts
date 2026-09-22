@@ -161,6 +161,8 @@ export function tenantBootstrap(p: TenantPlan) {
   }
   for (const k of Object.keys(p.caps)) {
     for (const pg of capSpec(k)?.pages ?? []) {
+      const isPublic = (pg as any).surface === 'public' || pg.route.startsWith('/p/') || pg.route.startsWith('/portal') || (pg.route.startsWith('/cms') && !pg.route.startsWith('/admin'))
+      if (isPublic) continue
       menus.push({ res_key: pg.key, name: pg.name, icon: pg.icon, path: pg.route, grp: '系统管理', perm: pg.key, sort: sort++, hidden: false })
     }
   }
@@ -867,11 +869,12 @@ async function seedDicts(dicts: Record<string, Array<{ label: string, value: str
 /** Idempotent business seed: only fills tables that are still empty. */
 async function seedBusiness() {
   const { TABLES } = await import('../utils/tables')
-  const { randomValue } = await import('../utils/faker')
+  const { randomValue, datetime } = await import('../utils/faker')
   for (const t of Object.values(TABLES) as any[]) {
     const n = Number((await q<any>('SELECT COUNT(*) AS c FROM \`' + t.table + '\`'))[0]?.c ?? 0)
     if (n > 0) continue
     const want = SEED_PLAN[t.table] ?? 0
+    const hasCreatedAt = t.fields.some((f: any) => f.key === 'created_at')
     for (let i = 0; i < want; i++) {
       const cols: string[] = []
       const vals: unknown[] = []
@@ -881,6 +884,12 @@ async function seedBusiness() {
         const v = randomValue(f, i)
         if (v === undefined) continue
         cols.push('\`' + f.key + '\`'); vals.push(v)
+      }
+      if (hasCreatedAt && !cols.includes('\`created_at\`')) {
+        // Distribute created_at across the past 28 days so dashboard trend charts display a realistic curve
+        const offsetDays = Math.floor((i / Math.max(1, want)) * 25) + (i % 3)
+        cols.push('\`created_at\`')
+        vals.push(datetime(offsetDays))
       }
       await exec('INSERT INTO \`' + t.table + '\` (' + cols.map(c => c).join(',') + ') VALUES (' + cols.map(() => '?').join(',') + ')', vals)
     }

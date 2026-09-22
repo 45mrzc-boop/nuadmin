@@ -454,7 +454,7 @@ export function landingPosterFiles(p: TenantPlan): Record<string, string> {
 export function landingFormFiles(p: TenantPlan): Record<string, string> {
   let targetModel = String(p.caps.landing_form?.config?.targetModel ?? '')
   const allModels = (p.models && p.models.length > 0) ? p.models : (p.groups || []).flatMap(g => g.modules || [])
-  const matchedMod = allModels.find(m => m.key === targetModel || m.table === targetModel)
+  const matchedMod = allModels.find(m => m.key === targetModel || m.tableName === targetModel || m.table === targetModel || m.name === targetModel)
   if (matchedMod) targetModel = matchedMod.key
   else if (!targetModel && allModels.length > 0) targetModel = allModels[0].key
 
@@ -528,18 +528,23 @@ export function landingFormFiles(p: TenantPlan): Record<string, string> {
 export function landingPortalFiles(p: TenantPlan): Record<string, string> {
   let listModel = String(p.caps.landing_portal?.config?.listModel ?? '')
   const allModels = (p.models && p.models.length > 0) ? p.models : (p.groups || []).flatMap(g => g.modules || [])
-  const matchedMod = allModels.find(m => m.key === listModel || m.table === listModel)
+  const matchedMod = allModels.find(m => m.key === listModel || m.tableName === listModel || m.table === listModel || m.name === listModel)
   if (matchedMod) listModel = matchedMod.key
   else if (!listModel && allModels.length > 0) listModel = allModels[0].key
 
   return {
     'server/api/public/portal/list.get.ts': `export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const defaultRes = ${JSON.stringify(listModel)} || Object.keys(TABLES)[0] || ''
+  const allowedRes = ${JSON.stringify(listModel)}
+  const defaultRes = allowedRes || Object.keys(TABLES)[0] || ''
   const res = String(query.res || defaultRes)
   if (!res) return ok({ list: [], total: 0, page: 1, pageSize: 10 })
 
   const t = tableOf(res)
+  if (allowedRes && t.key !== allowedRes && t.table !== allowedRes) {
+    throw createError({ statusCode: 403, message: '该业务模型未对外公开' })
+  }
+
   const page = Math.max(1, Number(query.page || 1))
   const pageSize = Math.min(50, Math.max(1, Number(query.pageSize || 10)))
   const offset = (page - 1) * pageSize
@@ -558,7 +563,9 @@ export function landingPortalFiles(p: TenantPlan): Record<string, string> {
   const countRow = await one<{ total: number }>('SELECT COUNT(*) AS total FROM ' + ident(t.table) + ' WHERE ' + where, params)
   const total = Number(countRow?.total ?? 0)
 
-  const list = await q('SELECT * FROM ' + ident(t.table) + ' WHERE ' + where + ' ORDER BY id DESC LIMIT ? OFFSET ?', [...params, pageSize, offset])
+  const SENSITIVE_KEYS = new Set(['password', 'jwt_secret', 'salt', 'token', 'secret', 'id_card', 'deleted_at'])
+  const safeCols = t.fields.filter(f => !SENSITIVE_KEYS.has(f.key)).map(f => ident(f.key)).join(',') || '*'
+  const list = await q('SELECT ' + safeCols + ' FROM ' + ident(t.table) + ' WHERE ' + where + ' ORDER BY id DESC LIMIT ? OFFSET ?', [...params, pageSize, offset])
 
   return ok({ list, total, page, pageSize })
 })
@@ -566,12 +573,19 @@ export function landingPortalFiles(p: TenantPlan): Record<string, string> {
     'server/api/public/portal/[id].get.ts': `export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
   const query = getQuery(event)
-  const defaultRes = ${JSON.stringify(listModel)} || Object.keys(TABLES)[0] || ''
+  const allowedRes = ${JSON.stringify(listModel)}
+  const defaultRes = allowedRes || Object.keys(TABLES)[0] || ''
   const res = String(query.res || defaultRes)
   if (!res || !id) throw createError({ statusCode: 400, message: '参数无效' })
 
   const t = tableOf(res)
-  const item = await one('SELECT * FROM ' + ident(t.table) + ' WHERE id=?', [id])
+  if (allowedRes && t.key !== allowedRes && t.table !== allowedRes) {
+    throw createError({ statusCode: 403, message: '该业务模型未对外公开' })
+  }
+
+  const SENSITIVE_KEYS = new Set(['password', 'jwt_secret', 'salt', 'token', 'secret', 'id_card', 'deleted_at'])
+  const safeCols = t.fields.filter(f => !SENSITIVE_KEYS.has(f.key)).map(f => ident(f.key)).join(',') || '*'
+  const item = await one('SELECT ' + safeCols + ' FROM ' + ident(t.table) + ' WHERE id=?', [id])
   if (!item) throw createError({ statusCode: 404, message: '记录未找到' })
 
   return ok(item)

@@ -4945,28 +4945,28 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans antialiased">
-    <div class="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center text-center space-y-6">
-      <div class="size-16 rounded-2xl bg-primary-600/20 border border-primary-500/30 flex items-center justify-center text-3xl shadow-inner">
+  <div class="min-h-screen bg-default text-default flex flex-col items-center justify-center p-4 sm:p-6 font-sans antialiased">
+    <div class="w-full max-w-md bg-card border border-default rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col items-center text-center space-y-6">
+      <div class="size-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 text-primary-500 flex items-center justify-center text-3xl shadow-inner">
         📱
       </div>
 
       <div class="space-y-2">
-        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-highlighted">
           {{ info.channel?.channel_name || info.title }}
         </h1>
-        <p class="text-sm text-neutral-400">
+        <p class="text-sm text-muted">
           {{ info.channel?.remark || info.subtitle }}
         </p>
       </div>
 
-      <div class="p-4 bg-white rounded-2xl shadow-lg border border-neutral-200">
+      <div class="p-4 bg-white rounded-2xl shadow-md border border-neutral-200">
         <img :src="qrUrl" alt="推广二维码" class="size-52 object-contain" />
       </div>
 
-      <div class="flex items-center gap-2 text-xs text-neutral-400 bg-neutral-800/60 px-4 py-2 rounded-full border border-neutral-700/50">
+      <div class="flex items-center gap-2 text-xs text-muted bg-muted/20 px-4 py-2 rounded-full border border-default">
         <span>已累计访问：</span>
-        <span class="font-bold text-primary-400 tabular-nums">{{ (info.channel?.pv ?? 0) + 1 }}</span>
+        <span class="font-bold text-primary-500 tabular-nums">{{ (info.channel?.pv ?? 0) + 1 }}</span>
         <span>次</span>
       </div>
 
@@ -4982,7 +4982,7 @@ onMounted(async () => {
         </UButton>
       </div>
 
-      <p class="text-[11px] text-neutral-500">
+      <p class="text-[11px] text-muted">
         {{ info.channel?.channel_code ? '渠道标识: ' + info.channel.channel_code : '由 GenPlus 驱动 · 移动端微页面' }}
       </p>
     </div>
@@ -4997,8 +4997,58 @@ function landingFormPage(p: TenantPlan): string {
   const successMsg = JSON.stringify(String(capCfg(p, 'landing_form', 'successMsg', '登记成功！我们将尽快与您联系。')))
   let rawTarget = String(capCfg(p, 'landing_form', 'targetModel', ''))
   const allModels = (p.models && p.models.length > 0) ? p.models : (p.groups || []).flatMap(g => g.modules || [])
-  const targetMod = allModels.find(m => m.key === rawTarget || m.table === rawTarget) || allModels[0]
+  const targetMod = allModels.find(m => m.key === rawTarget || m.tableName === rawTarget || m.table === rawTarget || m.name === rawTarget) || allModels[0]
   const targetModel = JSON.stringify(targetMod ? targetMod.key : (rawTarget || 'inquiry'))
+
+  const rawFields = targetMod?.fields || []
+  const filterKeys = new Set(['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'status', 'source', 'sn', 'appt_no', 'order_no'])
+  const formFields = rawFields.filter(f => !f.pk && !filterKeys.has(f.key))
+
+  const hasCustomFields = formFields.length > 0
+  const initialData: Record<string, any> = hasCustomFields
+    ? Object.fromEntries(formFields.map(f => [f.key, f.type === 'bool' ? false : '']))
+    : { name: '', phone: '', remark: '' }
+
+  const requiredValidation = hasCustomFields
+    ? formFields.filter(f => f.required).map(f => `  if (!formState['${f.key}']) { errorMsg.value = '请填写【${f.name || f.key}】'; return }`).join('\n')
+    : `  if (!formState.name || !formState.phone) { errorMsg.value = '请完整填写姓名与联系电话'; return }`
+
+  const fieldsTemplate = hasCustomFields
+    ? formFields.map(f => {
+        const label = `${f.name || f.key}${f.required ? ' <span class="text-error-400">*</span>' : ''}`
+        let inputEl = `<UInput v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" size="lg" class="w-full" />`
+        if (f.type === 'enum' && f.dict && p.dicts[f.dict]) {
+          inputEl = `<USelect v-model="formState['${f.key}']" :items="dicts['${f.dict}'] || []" placeholder="请选择${f.name || f.key}" size="lg" class="w-full" />`
+        } else if (f.type === 'date') {
+          inputEl = `<UInput v-model="formState['${f.key}']" type="date" placeholder="请选择${f.name || f.key}" size="lg" class="w-full" />`
+        } else if (f.type === 'datetime') {
+          inputEl = `<UInput v-model="formState['${f.key}']" type="datetime-local" placeholder="请选择${f.name || f.key}" size="lg" class="w-full" />`
+        } else if (f.type === 'text' || f.type === 'richtext') {
+          inputEl = `<UTextarea v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" :rows="3" size="lg" class="w-full" />`
+        } else if (f.type === 'int' || f.type === 'decimal' || f.type === 'money') {
+          inputEl = `<UInput v-model="formState['${f.key}']" type="number" placeholder="请输入${f.name || f.key}" size="lg" class="w-full" />`
+        } else if (f.key.includes('phone') || f.key.includes('mobile') || f.key.includes('tel')) {
+          inputEl = `<UInput v-model="formState['${f.key}']" type="tel" placeholder="请输入${f.name || f.key}" size="lg" class="w-full" />`
+        }
+        return `          <div class="space-y-1.5 text-left">
+            <label class="text-xs font-medium text-neutral-300">${label}</label>
+            ${inputEl}
+          </div>`
+      }).join('\n')
+    : `          <div class="space-y-1.5 text-left">
+            <label class="text-xs font-medium text-muted">姓名称呼 <span class="text-error-500">*</span></label>
+            <UInput v-model="formState.name" placeholder="请输入您的姓名" size="lg" class="w-full" />
+          </div>
+
+          <div class="space-y-1.5 text-left">
+            <label class="text-xs font-medium text-muted">联系电话 <span class="text-error-500">*</span></label>
+            <UInput v-model="formState.phone" type="tel" placeholder="请输入手机号码" size="lg" class="w-full" />
+          </div>
+
+          <div class="space-y-1.5 text-left">
+            <label class="text-xs font-medium text-muted">意向留言 / 需求说明</label>
+            <UTextarea v-model="formState.remark" placeholder="请简要描述您的业务诉求（选填）" :rows="3" size="lg" class="w-full" />
+          </div>`
 
   return `<script setup lang="ts">
 import { ref, reactive } from 'vue'
@@ -5006,16 +5056,14 @@ import { ref, reactive } from 'vue'
 definePageMeta({ layout: 'blank' })
 
 const target = ${targetModel}
-const formState = reactive<Record<string, any>>({ name: '', phone: '', remark: '' })
+const dicts = ${JSON.stringify(p.dicts || {})}
+const formState = reactive<Record<string, any>>(${JSON.stringify(initialData)})
 const loading = ref(false)
 const submitted = ref(false)
 const errorMsg = ref('')
 
 async function onSubmit() {
-  if (!formState.name || !formState.phone) {
-    errorMsg.value = '请完整填写姓名与联系电话'
-    return
-  }
+${requiredValidation}
   loading.value = true
   errorMsg.value = ''
   try {
@@ -5037,45 +5085,30 @@ async function onSubmit() {
 }
 
 function resetForm() {
-  formState.name = ''
-  formState.phone = ''
-  formState.remark = ''
+  Object.assign(formState, ${JSON.stringify(initialData)})
   submitted.value = false
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-center p-4 sm:p-6 antialiased">
-    <div class="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+  <div class="min-h-screen bg-default text-default flex flex-col items-center justify-center p-4 sm:p-6 antialiased">
+    <div class="w-full max-w-lg bg-card border border-default rounded-2xl p-6 sm:p-8 shadow-xl">
       <div v-if="!submitted" class="space-y-6">
         <div class="text-center space-y-2">
-          <div class="inline-flex size-14 rounded-2xl bg-primary-600/20 text-primary-400 items-center justify-center text-2xl mb-1">
+          <div class="inline-flex size-14 rounded-2xl bg-primary-500/10 text-primary-500 items-center justify-center text-2xl mb-1">
             📋
           </div>
-          <h1 class="text-2xl font-bold text-white">{{ ${formTitle} }}</h1>
-          <p class="text-xs text-neutral-400">请留下您的真实联系方式，我们的顾问将为您提供专属服务</p>
+          <h1 class="text-2xl font-bold text-highlighted">{{ ${formTitle} }}</h1>
+          <p class="text-xs text-muted">请留下您的真实联系方式，我们的顾问将为您提供专属服务</p>
         </div>
 
-        <div v-if="errorMsg" class="p-3 bg-error-500/10 border border-error-500/20 text-error-400 text-xs rounded-xl flex items-center gap-2">
+        <div v-if="errorMsg" class="p-3 bg-error-500/10 border border-error-500/20 text-error-500 text-xs rounded-xl flex items-center gap-2">
           <UIcon name="i-lucide-alert-circle" class="size-4 shrink-0" />
           <span>{{ errorMsg }}</span>
         </div>
 
         <form @submit.prevent="onSubmit" class="space-y-4">
-          <div class="space-y-1.5 text-left">
-            <label class="text-xs font-medium text-neutral-300">姓名称呼 <span class="text-error-400">*</span></label>
-            <UInput v-model="formState.name" placeholder="请输入您的姓名" size="lg" class="w-full" />
-          </div>
-
-          <div class="space-y-1.5 text-left">
-            <label class="text-xs font-medium text-neutral-300">联系电话 <span class="text-error-400">*</span></label>
-            <UInput v-model="formState.phone" type="tel" placeholder="请输入手机号码" size="lg" class="w-full" />
-          </div>
-
-          <div class="space-y-1.5 text-left">
-            <label class="text-xs font-medium text-neutral-300">意向留言 / 需求说明</label>
-            <UTextarea v-model="formState.remark" placeholder="请简要描述您的业务诉求（选填）" :rows="3" size="lg" class="w-full" />
-          </div>
+${fieldsTemplate}
 
           <UButton type="submit" block size="xl" color="primary" :loading="loading">
             {{ ${submitText} }}
@@ -5084,12 +5117,12 @@ function resetForm() {
       </div>
 
       <div v-else class="text-center py-8 space-y-5">
-        <div class="size-16 mx-auto rounded-full bg-success-500/20 text-success-400 flex items-center justify-center text-3xl">
+        <div class="size-16 mx-auto rounded-full bg-success-500/20 text-success-500 flex items-center justify-center text-3xl">
           <UIcon name="i-lucide-check-circle-2" class="size-10" />
         </div>
         <div class="space-y-2">
-          <h2 class="text-xl font-bold text-white">提交成功</h2>
-          <p class="text-sm text-neutral-400">{{ ${successMsg} }}</p>
+          <h2 class="text-xl font-bold text-highlighted">提交成功</h2>
+          <p class="text-sm text-muted">{{ ${successMsg} }}</p>
         </div>
         <UButton color="neutral" variant="outline" size="md" @click="resetForm">
           返回再次填写
@@ -5105,12 +5138,26 @@ function landingPortalPage(p: TenantPlan): string {
   const portalTitle = JSON.stringify(String(capCfg(p, 'landing_portal', 'portalTitle', '服务咨询门户')))
   const allModels = (p.models && p.models.length > 0) ? p.models : (p.groups || []).flatMap(g => g.modules || [])
   let rawList = String(capCfg(p, 'landing_portal', 'listModel', ''))
-  const matchedList = allModels.find(m => m.key === rawList || m.table === rawList) || allModels[0]
+  const matchedList = allModels.find(m => m.key === rawList || m.tableName === rawList || m.table === rawList || m.name === rawList) || allModels[0]
   const listModel = JSON.stringify(matchedList ? matchedList.key : (rawList || ''))
 
   let rawSubmit = String(capCfg(p, 'landing_portal', 'submitModel', ''))
-  const matchedSubmit = allModels.find(m => m.key === rawSubmit || m.table === rawSubmit)
+  const matchedSubmit = allModels.find(m => m.key === rawSubmit || m.tableName === rawSubmit || m.table === rawSubmit || m.name === rawSubmit)
   const submitModel = JSON.stringify(matchedSubmit ? matchedSubmit.key : (rawSubmit || ''))
+
+  const explicitTitleField = String(capCfg(p, 'landing_portal', 'titleField', '') || '')
+  const explicitDescField = String(capCfg(p, 'landing_portal', 'descField', '') || '')
+  const listFields: Array<{ key: string, name?: string, type?: string }> = matchedList?.fields || []
+
+  // Infer title/label field from fields
+  const inferredTitle = explicitTitleField ||
+    listFields.find(f => /(?:^|_)(?:name|title|no|code)$/i.test(f.key) || /name|title/i.test(f.key) || /name|title/i.test(f.name || ''))?.key ||
+    'name'
+
+  // Infer description field from fields
+  const inferredDesc = explicitDescField ||
+    listFields.find(f => /(?:^|_)(?:intro|description|summary|remark|speciality|content|desc|detail|info)$/i.test(f.key) || /intro|description|summary|remark|speciality|desc/i.test(f.key))?.key ||
+    'description'
 
   return `<script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
@@ -5157,7 +5204,7 @@ async function submitInquiry() {
     const base = (useRuntimeConfig().app.baseURL || '/').replace(/\\/$/, '')
     await $fetch(base + '/api/public/submit/' + (${submitModel} || 'inquiry'), {
       method: 'POST',
-      body: { ...formState, ref_title: selectedItem.value?.name || selectedItem.value?.title || '' }
+      body: { ...formState, ref_title: selectedItem.value?.${inferredTitle} || selectedItem.value?.name || selectedItem.value?.title || '' }
     })
     formSuccess.value = true
     setTimeout(() => {
@@ -5176,12 +5223,12 @@ onMounted(loadData)
 </script>
 
 <template>
-  <div class="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans antialiased">
-    <header class="border-b border-neutral-800 bg-neutral-900/80 backdrop-blur sticky top-0 z-30 px-4 py-3">
+  <div class="min-h-screen bg-default text-default flex flex-col font-sans antialiased">
+    <header class="border-b border-default bg-card/80 backdrop-blur sticky top-0 z-30 px-4 py-3">
       <div class="max-w-5xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-xl">🏛️</span>
-          <h1 class="font-bold text-lg text-white">{{ ${portalTitle} }}</h1>
+          <h1 class="font-bold text-lg text-highlighted">{{ ${portalTitle} }}</h1>
         </div>
         <UButton label="在线咨询 / 申请" icon="i-lucide-send" color="primary" size="sm" @click="formDrawer = true" />
       </div>
@@ -5201,35 +5248,35 @@ onMounted(loadData)
         <div
           v-for="item in items"
           :key="item.id"
-          class="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-5 cursor-pointer transition flex flex-col justify-between space-y-3"
+          class="bg-card border border-default hover:border-primary/50 rounded-2xl p-5 cursor-pointer transition flex flex-col justify-between space-y-3"
           @click="openDetail(item)"
         >
           <div class="space-y-1">
             <div class="flex items-center justify-between">
-              <h3 class="font-semibold text-base text-white truncate">{{ item.name || item.title || '记录 #' + item.id }}</h3>
+              <h3 class="font-semibold text-base text-highlighted truncate">{{ item.${inferredTitle} || item.name || item.title || '记录 #' + item.id }}</h3>
               <UBadge v-if="item.status !== undefined" color="primary" variant="subtle" size="xs">{{ item.status ? '正常' : '暂停' }}</UBadge>
             </div>
-            <p class="text-xs text-neutral-400 line-clamp-2">{{ item.remark || item.description || item.summary || '点击查看完整详情...' }}</p>
+            <p class="text-xs text-muted line-clamp-2">{{ item.${inferredDesc} || item.remark || item.description || item.summary || '点击查看完整详情...' }}</p>
           </div>
-          <div class="flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-800/80">
+          <div class="flex items-center justify-between text-xs text-muted pt-2 border-t border-default">
             <span>ID: {{ item.id }}</span>
-            <span class="text-primary-400 flex items-center gap-1 font-medium">查看详情 <UIcon name="i-lucide-chevron-right" class="size-3.5" /></span>
+            <span class="text-primary-500 flex items-center gap-1 font-medium">查看详情 <UIcon name="i-lucide-chevron-right" class="size-3.5" /></span>
           </div>
         </div>
       </div>
 
-      <div v-else class="text-center py-16 bg-neutral-900/50 rounded-2xl border border-neutral-800 space-y-2">
-        <UIcon name="i-lucide-inbox" class="size-10 text-neutral-600 mx-auto" />
-        <p class="text-sm text-neutral-400">暂无可浏览的公开条目</p>
+      <div v-else class="text-center py-16 bg-muted/10 rounded-2xl border border-default space-y-2">
+        <UIcon name="i-lucide-inbox" class="size-10 text-muted mx-auto" />
+        <p class="text-sm text-muted">暂无可浏览的公开条目</p>
       </div>
     </main>
 
-    <USlideover v-model:open="detailDrawer" :title="selectedItem?.name || selectedItem?.title || '详情信息'">
+    <USlideover v-model:open="detailDrawer" :title="selectedItem?.${inferredTitle} || selectedItem?.name || selectedItem?.title || '详情信息'">
       <template #body>
         <div v-if="selectedItem" class="space-y-3 p-4 text-sm">
-          <div v-for="(v, k) in selectedItem" :key="k" class="flex flex-col py-1.5 border-b border-neutral-800">
-            <span class="text-xs text-neutral-400 uppercase font-mono">{{ k }}</span>
-            <span class="text-sm text-white break-all mt-0.5">{{ v }}</span>
+          <div v-for="(v, k) in selectedItem" :key="k" class="flex flex-col py-1.5 border-b border-default">
+            <span class="text-xs text-muted uppercase font-mono">{{ k }}</span>
+            <span class="text-sm text-highlighted break-all mt-0.5">{{ v }}</span>
           </div>
         </div>
       </template>
@@ -5244,20 +5291,20 @@ onMounted(loadData)
     <USlideover v-model:open="formDrawer" title="在线申请登记" description="请填写业务信息">
       <template #body>
         <div class="space-y-4 p-4">
-          <div v-if="formSuccess" class="p-4 bg-success-500/20 text-success-300 rounded-xl text-center">
+          <div v-if="formSuccess" class="p-4 bg-success-500/10 text-success-500 rounded-xl text-center">
             登记成功！感谢您的参与。
           </div>
           <form v-else @submit.prevent="submitInquiry" class="space-y-4">
             <div class="space-y-1">
-              <label class="text-xs text-neutral-300">姓名 *</label>
+              <label class="text-xs text-muted">姓名 *</label>
               <UInput v-model="formState.name" placeholder="请输入姓名" class="w-full" />
             </div>
             <div class="space-y-1">
-              <label class="text-xs text-neutral-300">电话 *</label>
+              <label class="text-xs text-muted">电话 *</label>
               <UInput v-model="formState.phone" type="tel" placeholder="请输入电话" class="w-full" />
             </div>
             <div class="space-y-1">
-              <label class="text-xs text-neutral-300">留言备注</label>
+              <label class="text-xs text-muted">留言备注</label>
               <UTextarea v-model="formState.remark" placeholder="留言诉求" class="w-full" />
             </div>
             <UButton type="submit" block color="primary" :loading="submitting">立即提交</UButton>

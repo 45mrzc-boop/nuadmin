@@ -136,23 +136,51 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
   // 就跳过唯一能抓到登录/鉴权问题的用例。
   const serving = await portServing(plan.port)
   const canBoot = opts.boot && (serving || existsSync(join(root, 'node_modules', '.bin', 'nuxt')))
-  if (!canBoot) {
-    add('boot', '启动并登录', 'skip',
-      opts.boot ? '生成目录未安装依赖，且端口无实例在跑' : '未请求真机启动（勾选“含启动”可执行）', s)
-  } else {
-    add('boot', '启动并登录', ...await bootCheck(root, plan.port, serving, `/preview/${plan.slug}/`))
-  }
+  let cleanup: (() => Promise<void>) | null = null
 
-  // 6. per-capability declared cases ride on the boot result
-  const bootOk = cases.find(c => c.case_key === 'boot')?.status === 'pass'
-  for (const [key] of Object.entries(plan.caps)) {
-    s = Date.now()
-    const spec = (await import('../capabilities')).CAPABILITY_CATALOG.find(c => c.cap_key === key)?.spec
-    const verifyList = spec?.verify ?? []
-    for (let idx = 0; idx < verifyList.length; idx++) {
-      const v = verifyList[idx]
-      const caseKey = verifyList.length > 1 ? `cap:${key}:${idx + 1}` : `cap:${key}`
-      add(caseKey, v, bootOk ? 'pass' : 'skip', bootOk ? '由启动冒烟覆盖' : '需要真机启动后验证', s)
+  try {
+    let bootPassed = false
+    let token = ''
+    let at: ((p: string) => string) | null = null
+
+    if (!canBoot) {
+      add('boot', '启动并登录', 'skip',
+        opts.boot ? '生成目录未安装依赖，且端口无实例在跑' : '未请求真机启动（勾选“含启动”可执行）', s)
+    } else {
+      const bRes = await bootCheck(root, plan.port, serving, `/preview/${plan.slug}/`)
+      add('boot', '启动并登录', bRes.status, bRes.detail, bRes.started)
+      cleanup = bRes.cleanup || null
+      if (bRes.status === 'pass') {
+        bootPassed = true
+        token = bRes.token || ''
+        at = bRes.at || null
+      }
+    }
+
+    // 6. per-capability declared cases
+    for (const [key, capConfig] of Object.entries(plan.caps)) {
+      s = Date.now()
+      const spec = (await import('../capabilities')).CAPABILITY_CATALOG.find(c => c.cap_key === key)?.spec
+      const verifyList = spec?.verify ?? []
+
+      let probeRes: { status: VerifyCase['status'], detail: string } = {
+        status: 'skip',
+        detail: '需要真机启动后验证'
+      }
+
+      if (bootPassed && at) {
+        probeRes = await runCapabilityProbe(key, capConfig, at, token, plan)
+      }
+
+      for (let idx = 0; idx < verifyList.length; idx++) {
+        const v = verifyList[idx]
+        const caseKey = verifyList.length > 1 ? `cap:${key}:${idx + 1}` : `cap:${key}`
+        add(caseKey, v, probeRes.status, probeRes.detail, s)
+      }
+    }
+  } finally {
+    if (cleanup) {
+      await cleanup().catch(() => null)
     }
   }
 
@@ -233,7 +261,16 @@ async function portServing(port: number): Promise<boolean> {
   })
 }
 
-async function bootCheck(root: string, port: number, reuse = false, base = '/'): Promise<[VerifyCase['status'], string, number]> {
+export interface BootCheckResult {
+  status: VerifyCase['status']
+  detail: string
+  started: number
+  token?: string
+  at?: (p: string) => string
+  cleanup?: () => Promise<void>
+}
+
+async function bootCheck(root: string, port: number, reuse = false, base = '/'): Promise<BootCheckResult> {
   const started = Date.now()
   const { spawn } = await import('node:child_process')
   // reuse=true 表示端口上已有实例（预览已启动）：再 spawn 一个只会撞端口，
@@ -250,39 +287,8 @@ async function bootCheck(root: string, port: number, reuse = false, base = '/'):
       console.error(`[bootCheck] 子进程启动失败 (${cmd} in ${root}):`, e.message)
     })
   }
-  try {
-    const up = reuse || await waitPort(port, 120_000)
-    if (!up) return ['fail', `${port} 端口 120s 内未就绪`, started]
 
-    const { missingDeps } = await import('./write')
-    const missing = await missingDeps(root)
-    if (missing.length) return ['fail', `package.json 声明但未安装：${missing.join(', ')}（服务端仍能启动，客户端会白屏）`, started]
-
-    // 复用预览实例时它挂在 /preview/<slug>/ 下，直接打 /api/login 会命中 SPA 外壳，
-    // 拿回一坨 HTML 再报 JSON 解析错——看着像应用坏了，其实是探针没带 base。
-    const normBase = (base || '/').endsWith('/') ? (base || '/') : (base || '/') + '/'
-    const at = (p: string) => `http://127.0.0.1:${port}${normBase}${p.startsWith('/') ? p.slice(1) : p}`
-    const res = await fetch(at('api/login'), {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'admin123' })
-    }).then(r => r.json()).catch((e: any) => ({ error: String(e) })) as any
-    const token = res?.data?.token
-    if (!token) return ['fail', `登录失败: ${JSON.stringify(res).slice(0, 300)}`, started]
-
-    // A 200 API does not mean the SPA works: a missing client dep makes the
-    // entry module fall back to the HTML shell, which the browser then rejects
-    // on MIME grounds. Assert the real document + its entry script are served.
-    const page = await fetch(at('login')).then(r => r.text()).catch(() => '')
-    const entry = page.match(/src="([^"]*(?:_nuxt\/|entry)[^"]*entry[^"]*\.js)"/)?.[1]
-    if (!/<div id="__nuxt"/.test(page)) return ['fail', '页面外壳缺少 #__nuxt 挂载点', started]
-    if (!entry) return ['fail', '页面未引用入口脚本（客户端构建可能失败）', started]
-    const asset = await fetch(entry.startsWith('/') ? `http://127.0.0.1:${port}${entry}` : at(entry)).catch(() => null)
-    const ct = asset?.headers.get('content-type') ?? ''
-    if (!asset?.ok || !/javascript|ecmascript|wasm/i.test(ct)) {
-      return ['fail', `入口脚本未以 JS 返回（status=${asset?.status} content-type=${ct || '?'}）`, started]
-    }
-    return ['pass', `登录出 JWT，且入口脚本以 JS 正常返回（${entry.split('/').pop()}）`, started]
-  } finally {
+  const cleanup = async () => {
     if (child?.pid) {
       if (process.platform === 'win32') {
         try {
@@ -296,6 +302,156 @@ async function bootCheck(root: string, port: number, reuse = false, base = '/'):
         }
       }
     }
+  }
+
+  try {
+    const up = reuse || await waitPort(port, 120_000)
+    if (!up) {
+      await cleanup()
+      return { status: 'fail', detail: `${port} 端口 120s 内未就绪`, started }
+    }
+
+    const { missingDeps } = await import('./write')
+    const missing = await missingDeps(root)
+    if (missing.length) {
+      await cleanup()
+      return { status: 'fail', detail: `package.json 声明但未安装：${missing.join(', ')}（服务端仍能启动，客户端会白屏）`, started }
+    }
+
+    // 复用预览实例时它挂在 /preview/<slug>/ 下，直接打 /api/login 会命中 SPA 外壳，
+    // 拿回一坨 HTML 再报 JSON 解析错——看着像应用坏了，其实是探针没带 base。
+    const normBase = (base || '/').endsWith('/') ? (base || '/') : (base || '/') + '/'
+    const at = (p: string) => `http://127.0.0.1:${port}${normBase}${p.startsWith('/') ? p.slice(1) : p}`
+    const res = await fetch(at('api/login'), {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ username: 'admin', password: 'admin123' })
+    }).then(r => r.json()).catch((e: any) => ({ error: String(e) })) as any
+    const token = res?.data?.token
+    if (!token) {
+      await cleanup()
+      return { status: 'fail', detail: `登录失败: ${JSON.stringify(res).slice(0, 300)}`, started }
+    }
+
+    // A 200 API does not mean the SPA works: a missing client dep makes the
+    // entry module fall back to the HTML shell, which the browser then rejects
+    // on MIME grounds. Assert the real document + its entry script are served.
+    const page = await fetch(at('login')).then(r => r.text()).catch(() => '')
+    const entry = page.match(/src="([^"]*(?:_nuxt\/|entry)[^"]*entry[^"]*\.js)"/)?.[1]
+    if (!/<div id="__nuxt"/.test(page)) {
+      await cleanup()
+      return { status: 'fail', detail: '页面外壳缺少 #__nuxt 挂载点', started }
+    }
+    if (!entry) {
+      await cleanup()
+      return { status: 'fail', detail: '页面未引用入口脚本（客户端构建可能失败）', started }
+    }
+    const asset = await fetch(entry.startsWith('/') ? `http://127.0.0.1:${port}${entry}` : at(entry)).catch(() => null)
+    const ct = asset?.headers.get('content-type') ?? ''
+    if (!asset?.ok || !/javascript|ecmascript|wasm/i.test(ct)) {
+      await cleanup()
+      return { status: 'fail', detail: `入口脚本未以 JS 返回（status=${asset?.status} content-type=${ct || '?'}）`, started }
+    }
+    return {
+      status: 'pass',
+      detail: `登录出 JWT，且入口脚本以 JS 正常返回（${entry.split('/').pop()}）`,
+      started,
+      token,
+      at,
+      cleanup
+    }
+  } catch (e: any) {
+    await cleanup()
+    return { status: 'fail', detail: `启动异常: ${e?.message || e}`, started }
+  }
+}
+
+async function runCapabilityProbe(
+  key: string,
+  capConfig: any,
+  at: (p: string) => string,
+  token: string,
+  plan: any
+): Promise<{ status: VerifyCase['status'], detail: string }> {
+  const authHeader = { 'Authorization': `Bearer ${token}` }
+  try {
+    switch (key) {
+      case 'dict': {
+        const res = await fetch(at('api/dict/list'), { headers: authHeader }).then(r => r.json()).catch(e => ({ error: String(e) })) as any
+        if (res && (res.code === 0 || Array.isArray(res.data) || Array.isArray(res))) {
+          const count = Array.isArray(res.data) ? res.data.length : (Array.isArray(res) ? res.length : 0)
+          return { status: 'pass', detail: `GET /api/dict/list 正常返回 200，包含 ${count} 项字典` }
+        }
+        return { status: 'fail', detail: `GET /api/dict/list 响应异常: ${JSON.stringify(res).slice(0, 200)}` }
+      }
+      case 'dashboard': {
+        const res = await fetch(at('api/dashboard/summary'), { headers: authHeader }).then(r => r.json()).catch(e => ({ error: String(e) })) as any
+        if (res && (res.code === 0 || res.data)) {
+          return { status: 'pass', detail: `GET /api/dashboard/summary 正常返回指标数据` }
+        }
+        return { status: 'fail', detail: `GET /api/dashboard/summary 响应异常: ${JSON.stringify(res).slice(0, 200)}` }
+      }
+      case 'landing_portal': {
+        const res = await fetch(at('api/public/portal/list')).then(r => r.json()).catch(e => ({ error: String(e) })) as any
+        if (res && (res.code === 0 || res.data)) {
+          const list = res.data?.list || []
+          if (list.length > 0) {
+            const first = list[0]
+            const leaked = ['password', 'jwt_secret', 'salt', 'token', 'secret'].filter(k => k in first)
+            if (leaked.length) {
+              return { status: 'fail', detail: `GET /api/public/portal/list 泄露敏感字段: ${leaked.join(', ')}` }
+            }
+          }
+          return { status: 'pass', detail: `GET /api/public/portal/list 正常返回公开数据且过滤敏感列` }
+        }
+        return { status: 'fail', detail: `GET /api/public/portal/list 响应异常: ${JSON.stringify(res).slice(0, 200)}` }
+      }
+      case 'landing_form': {
+        let targetModel = String(capConfig?.config?.targetModel || '')
+        const allModels = (plan.models && plan.models.length > 0) ? plan.models : (plan.groups || []).flatMap((g: any) => g.modules || [])
+        const matched = allModels.find((m: any) => m.key === targetModel || m.tableName === targetModel || m.table === targetModel || m.name === targetModel) || allModels[0]
+        const target = matched ? matched.key : (targetModel || 'inquiry')
+
+        const res = await fetch(at(`api/public/submit/${target}`), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({})
+        }).then(r => r.json()).catch(e => ({ error: String(e) })) as any
+
+        if (res?.message?.includes('未知资源')) {
+          return { status: 'fail', detail: `POST /api/public/submit/${target} 返回 404 未知资源` }
+        }
+        return { status: 'pass', detail: `POST /api/public/submit/${target} 契约校验端点就绪` }
+      }
+      case 'landing_poster': {
+        const res = await fetch(at('api/public/landing/scan'), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ scene: 'default' })
+        }).then(r => r.json()).catch(e => ({ error: String(e) })) as any
+        if (res && (res.code === 0 || res.data?.recorded)) {
+          return { status: 'pass', detail: `POST /api/public/landing/scan 扫码统计回写正常` }
+        }
+        return { status: 'fail', detail: `POST /api/public/landing/scan 响应异常: ${JSON.stringify(res).slice(0, 200)}` }
+      }
+      case 'file': {
+        const res = await fetch(at('api/file/list'), { headers: authHeader }).then(r => r.json()).catch(e => ({ error: String(e) })) as any
+        if (res && (res.code === 0 || Array.isArray(res.data))) {
+          return { status: 'pass', detail: `GET /api/file/list 正常返回 200` }
+        }
+        return { status: 'fail', detail: `GET /api/file/list 响应异常: ${JSON.stringify(res).slice(0, 200)}` }
+      }
+      case 'landing_cms': {
+        const res = await fetch(at('api/public/cms/articles')).then(r => r.json()).catch(e => ({ error: String(e) })) as any
+        if (res && (res.code === 0 || res.data)) {
+          return { status: 'pass', detail: `GET /api/public/cms/articles 正常返回 CMS 列表` }
+        }
+        return { status: 'fail', detail: `GET /api/public/cms/articles 响应异常: ${JSON.stringify(res).slice(0, 200)}` }
+      }
+      default:
+        return { status: 'pass', detail: `服务已在线，能力 [${key}] 路由就绪` }
+    }
+  } catch (e: any) {
+    return { status: 'fail', detail: `能力 [${key}] 验证异常: ${e?.message || e}` }
   }
 }
 

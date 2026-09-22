@@ -327,6 +327,22 @@ export const CAPABILITY_CATALOG: CapabilitySeed[] = [
     summary: '极简 C 端落地页，支持渠道二码、参数接收、浏览量自动统计与营销海报展示。',
     spec: {
       desc: '生成 /p/:scene 落地页与免鉴权 /api/public/landing 接口；后台列表自动增加“推广码”弹窗与复制链接。',
+      tables: [
+        {
+          name: 'channel_scan_log', comment: '渠道扫码与浏览日志', fields: [
+            { name: '主键', key: 'id', type: 'id' },
+            { name: '渠道标识', key: 'channel_id', type: 'varchar', length: 64, indexed: true },
+            { name: '访问IP', key: 'ip', type: 'varchar', length: 64 },
+            { name: '浏览器UA', key: 'user_agent', type: 'varchar', length: 255 },
+            { name: '扫码时间', key: 'created_at', type: 'datetime' }
+          ]
+        }
+      ],
+      columns: [
+        { name: '浏览量PV', key: 'pv', type: 'int', default: 0 },
+        { name: '独立访客UV', key: 'uv', type: 'int', default: 0 },
+        { name: '渠道代码', key: 'channel_code', type: 'varchar', length: 64, indexed: true }
+      ],
       apis: [
         { method: 'GET', path: '/api/public/landing/:scene', comment: '免鉴权获取推广落地页与渠道信息' },
         { method: 'POST', path: '/api/public/landing/scan', comment: '记录推广页浏览与扫码事件' }
@@ -371,7 +387,9 @@ export const CAPABILITY_CATALOG: CapabilitySeed[] = [
       config: [
         { key: 'listModel', label: '展示列表的数据表编码', type: 'text', default: '' },
         { key: 'submitModel', label: '提报表单的数据表编码', type: 'text', default: '' },
-        { key: 'portalTitle', label: '门户标题', type: 'text', default: '服务咨询门户' }
+        { key: 'portalTitle', label: '门户标题', type: 'text', default: '服务咨询门户' },
+        { key: 'titleField', label: '展示卡片主标题字段（可选，默认智能推导）', type: 'text', default: '' },
+        { key: 'descField', label: '展示卡片描述字段（可选，默认智能推导）', type: 'text', default: '' }
       ],
       verify: ['访问 /portal 正常拉取业务列表数据并展示详情']
     }

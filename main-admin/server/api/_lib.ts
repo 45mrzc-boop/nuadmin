@@ -960,9 +960,15 @@ export function asciiTree(paths: string[]): string {
 }
 
 /**
+ * Re-export ok from ../utils/db as a fail-safe for any API route importing it.
+ */
+export { ok } from '../utils/db'
+
+/**
  * 本文件是共享模块，不是路由。nitro 会把 server/api/** 下的每个 .ts 都登记成
  * 懒加载路由，所以这里显式拒绝，避免误访问时抛「Invalid lazy handler result」。
  */
 export default defineEventHandler(() => {
   throw createError({ statusCode: 405, message: '内部共享模块，不提供 HTTP 访问' })
 })
+

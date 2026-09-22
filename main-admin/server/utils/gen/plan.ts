@@ -31,7 +31,7 @@ export function rowToModule(r: any, fields: FieldDef[], groupName: string, group
   const design = j<Partial<DesignDef>>(r.design_json, {})
   const base = emptyDesign({ icon: r.icon })
   return {
-    id: Number(r.id), name: r.name, key: r.res_key, tableName: r.table_name,
+    id: Number(r.id), name: r.name, key: r.res_key, tableName: r.table_name, table: r.table_name,
     icon: r.icon ?? '📄', comment: r.comment ?? '', group: groupName, groupIcon,
     fields: [...fields].sort((a, b) => (fields.indexOf(a) - fields.indexOf(b))),
     design: {
@@ -73,7 +73,7 @@ export async function buildPlan(tenantId: number): Promise<TenantPlan> {
   })
 
   const caps = await q<any>(
-    `SELECT cap_key, version, config_json FROM tenant_capability WHERE tenant_id=?`, [tenantId])
+    `SELECT cap_key, version, config_json FROM tenant_capability WHERE tenant_id=? AND status='installed'`, [tenantId])
 
   // 字典定义只认控制面这一份；enabled=0 的条目不下发，子后台下拉里不该出现被停用的值。
   const dictRows = await q<any>(
@@ -101,6 +101,7 @@ export async function buildPlan(tenantId: number): Promise<TenantPlan> {
       name: g.name, icon: g.icon,
       modules: modules.filter(m => m.group === g.name)
     })),
+    models: modules,
     caps: Object.fromEntries(caps.map(c => [c.cap_key, { version: c.version, config: j<Record<string, unknown>>(c.config_json, {}) }])),
     dicts
   }

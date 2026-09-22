@@ -305,7 +305,10 @@ function ramp(base: string): string[] {
 /** Brand tokens become real Tailwind v4 theme variables, not runtime CSS vars. */
 function mainCss(p: TenantPlan) {
   const t = p.theme
-  const radius = Math.max(0, Math.min(24, Number(t.radius ?? 12)))
+  const rawRadius = Number(t.radius ?? 12)
+  const isPill = rawRadius >= 999
+  const radius = isPill ? 16 : Math.max(0, Math.min(24, rawRadius))
+  const uiRadius = isPill ? '9999px' : `${radius}px`
   // 配色优先于手填主色：设计站选皮肤+配色后，accent 就是主色，
   // 保证「画廊里看到的」和「生成出来的」是同一个值。
   const pal = findPalette(t.skin, t.palette)
@@ -332,7 +335,7 @@ ${shades.map((s, i) => `  --color-primary-${names[i]}: ${s};`).join('\n')}
 
 /* Nuxt UI resolves its own corner radii through --ui-radius, not --radius-*. */
 :root {
-  --ui-radius: ${radius}px;
+  --ui-radius: ${uiRadius};
   --ui-primary: var(--color-primary-500, #4f7dff);
   --ui-color-primary: var(--color-primary-500, #4f7dff);
 }

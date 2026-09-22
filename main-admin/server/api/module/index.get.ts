@@ -1,4 +1,4 @@
-import { fieldsOf, moduleView, numArg, ok } from '../_lib'
+import { fieldsOf, moduleView, numArg } from '../_lib'
 
 /**
  * 获取指定租户的全部模块列表（包含字段与设计配置）。

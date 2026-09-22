@@ -31,6 +31,7 @@ export interface ModuleDef {
   name: string
   key: string
   tableName: string
+  table?: string
   icon: string
   comment: string
   group: string
@@ -74,9 +75,8 @@ export interface CapSpec {
 
 export interface AuthConfig {
   password?: string
-  changeOnFirstLogin?: boolean
-  ipAllowlist?: string
-  loginLimit?: boolean
+  baseline?: Record<string, unknown>
+  users?: Array<{ name?: string, username?: string, role?: string, password?: string }>
   members?: Array<{ name?: string, username?: string, role?: string }>
   roles?: Array<{ name?: string, perms?: Record<string, boolean> }>
 }
@@ -103,6 +103,7 @@ export interface TenantPlan {
   /** 门禁明细：simple 存密码与安全基线，users/rbac 存成员与角色矩阵。 */
   authConfig: AuthConfig
   groups: Array<{ name: string; icon: string; modules: ModuleDef[] }>
+  models?: ModuleDef[]
   caps: Record<string, { version: string; config: Record<string, unknown> }>
   /** 控制面字典定义。生成期的唯一来源，未定义的 enum 字段不再有假值。 */
   dicts: Record<string, Array<{ label: string; value: string; color?: string }>>

@@ -1,4 +1,4 @@
-import { groupView, numArg, ok } from '../../_lib'
+import { groupView, numArg } from '../../_lib'
 
 /**
  * 获取指定租户的模型分组列表。

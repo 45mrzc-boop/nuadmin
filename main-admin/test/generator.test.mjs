@@ -412,5 +412,161 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.equal(detailResult.counts.groups, 2, 'counts.groups must equal 2')
     assert.equal(detailResult.counts.modules, 2, 'counts.modules must equal 2')
   })
+
+  it('11. landing_portal title/desc smart inference (S2) & seed created_at distribution (S3)', () => {
+    // Plan with hospital-style doctor module where fields are doctor_name and speciality (no "name" or "title")
+    const hospitalPlan = {
+      ...mockPlan,
+      models: [
+        {
+          id: 10,
+          name: '医生管理',
+          key: 'hos_doctor',
+          table: 'hos_doctor',
+          fields: [
+            { key: 'id', type: 'id' },
+            { key: 'doctor_name', name: '医生姓名', type: 'varchar' },
+            { key: 'speciality', name: '擅长专长', type: 'text' },
+            { key: 'status', name: '状态', type: 'enum' },
+            { key: 'created_at', name: '创建时间', type: 'datetime' }
+          ]
+        }
+      ],
+      caps: {
+        ...mockPlan.caps,
+        landing_portal: {
+          version: '1.0.0',
+          config: { portalTitle: '智慧医院专家门户', listModel: 'hos_doctor' }
+        }
+      }
+    }
+
+    const ui = uiFiles(hospitalPlan)
+    const portalPage = ui['app/pages/portal/index.vue']
+    assert.ok(portalPage, 'portal page must be generated')
+
+    // S2: portal card title must infer doctor_name and speciality, avoiding fallback to '记录 #'
+    assert.ok(
+      portalPage.includes('item.doctor_name'),
+      'portal page must infer item.doctor_name as card title field'
+    )
+    assert.ok(
+      portalPage.includes('item.speciality'),
+      'portal page must infer item.speciality as card description field'
+    )
+    assert.ok(
+      portalPage.includes('selectedItem?.doctor_name'),
+      'detail drawer title must use inferred title field'
+    )
+
+    // S3: server init plugin must distribute seed created_at
+    const srv = serverFiles(hospitalPlan)
+    const initPlugin = srv['server/plugins/init.ts']
+    assert.ok(initPlugin, 'server/plugins/init.ts must be generated')
+    assert.ok(
+      initPlugin.includes("cols.push('`created_at`')") && initPlugin.includes('datetime(offsetDays)'),
+      'seed business logic must distribute created_at with datetime(offsetDays)'
+    )
+  })
+
+  it('12. Design Review v2.2.1 fixes (D2, D3, D4, D6, D7, D8, D10, D12)', async () => {
+    // 1. D3 & D2: targetModel resolution and schema-driven form generation
+    const testAppointmentPlan = {
+      ...mockPlan,
+      models: [
+        {
+          id: 20,
+          name: '预约挂号',
+          key: 'hos_appointment',
+          table: 'hos_appointment',
+          tableName: 'hos_appointment',
+          fields: [
+            { key: 'id', type: 'id', pk: true },
+            { key: 'patient_name', name: '患者姓名', type: 'varchar', required: true },
+            { key: 'phone', name: '联系电话', type: 'varchar', required: true },
+            { key: 'visit_date', name: '就诊日期', type: 'date', required: true },
+            { key: 'period', name: '时段', type: 'enum', dict: 'period_enum', required: true },
+            { key: 'remark', name: '病情描述', type: 'text' }
+          ]
+        }
+      ],
+      dicts: {
+        period_enum: [
+          { label: '上午', value: 'morning' },
+          { label: '下午', value: 'afternoon' }
+        ]
+      },
+      caps: {
+        landing_form: {
+          version: '1.0.0',
+          config: { formTitle: '在线预约挂号', targetModel: 'hos_appointment' }
+        },
+        landing_portal: {
+          version: '1.0.0',
+          config: { portalTitle: '服务门户', listModel: 'hos_appointment' }
+        },
+        landing_poster: {
+          version: '1.0.0',
+          config: { heroTitle: '推广海报' }
+        }
+      },
+      theme: { primary: 'teal', radius: 999, mode: 'light', density: 'normal' }
+    }
+
+    const ui = uiFiles(testAppointmentPlan)
+    const srv = serverFiles(testAppointmentPlan)
+    const app = appFiles(testAppointmentPlan)
+
+    // D2 & D3: Form page generated with schema-driven fields for hos_appointment
+    const formPage = ui['app/pages/p/form.vue']
+    assert.ok(formPage, 'landing form page must be generated')
+    assert.ok(formPage.includes('const target = "hos_appointment"'), 'targetModel must resolve to hos_appointment')
+    assert.ok(formPage.includes("formState['patient_name']"), 'formState must contain patient_name')
+    assert.ok(formPage.includes("formState['visit_date']"), 'formState must contain visit_date')
+    assert.ok(formPage.includes("formState['period']"), 'formState must contain period')
+    assert.ok(formPage.includes('type="date"'), 'visit_date must render as date input')
+    assert.ok(formPage.includes('USelect'), 'period must render as USelect')
+
+    // D7: C-End landing pages use semantic tokens
+    assert.ok(formPage.includes('bg-default text-default'), 'form page must use semantic bg-default and text-default')
+    assert.ok(formPage.includes('bg-card border border-default'), 'form card must use semantic bg-card and border-default')
+    assert.ok(!formPage.includes('bg-neutral-950'), 'form page must not hardcode bg-neutral-950')
+
+    const portalPage = ui['app/pages/portal/index.vue']
+    assert.ok(portalPage.includes('bg-default text-default'), 'portal page must use semantic bg-default and text-default')
+    assert.ok(!portalPage.includes('bg-neutral-950'), 'portal page must not hardcode bg-neutral-950')
+
+    // D4: Public portal endpoint locks model and filters sensitive columns
+    const portalListApi = srv['server/api/public/portal/list.get.ts']
+    assert.ok(portalListApi, 'portal list API must exist')
+    assert.ok(portalListApi.includes('allowedRes'), 'portal list API must check allowedRes')
+    assert.ok(portalListApi.includes('safeCols'), 'portal list API must filter safeCols')
+
+    const portalDetailApi = srv['server/api/public/portal/[id].get.ts']
+    assert.ok(portalDetailApi, 'portal detail API must exist')
+    assert.ok(portalDetailApi.includes('allowedRes'), 'portal detail API must check allowedRes')
+    assert.ok(portalDetailApi.includes('safeCols'), 'portal detail API must filter safeCols')
+
+    // D8: Public landing pages excluded from admin menus
+    const bootstrapContent = srv['server/utils/schema.ts']
+    assert.ok(bootstrapContent, 'server/utils/schema.ts must exist')
+    assert.ok(!bootstrapContent.includes('"path": "/p/form"'), 'public /p/form route must not be in admin MENUS')
+    assert.ok(!bootstrapContent.includes('"path": "/portal"'), 'public /portal route must not be in admin MENUS')
+
+    // D6: Pill radius styling maintains container geometry
+    const mainCss = app['app/assets/css/main.css']
+    assert.ok(mainCss, 'main.css must exist')
+    assert.ok(mainCss.includes('--ui-radius: 9999px;'), 'pill radius preset must set --ui-radius: 9999px')
+    assert.ok(mainCss.includes('--radius-lg: 16px;'), 'container radius-lg must be capped to prevent card distortion')
+
+    // D10: landing_poster declares channel_scan_log table and pv/uv columns
+    const { CAPABILITY_CATALOG } = await jiti.import(resolve(root, 'server/utils/capabilities.ts'))
+    const posterCap = CAPABILITY_CATALOG.find(c => c.cap_key === 'landing_poster')
+    assert.ok(posterCap, 'landing_poster must be in catalog')
+    assert.ok(posterCap.spec.tables?.some(t => t.name === 'channel_scan_log'), 'landing_poster must declare channel_scan_log table')
+    assert.ok(posterCap.spec.columns?.some(col => col.key === 'pv'), 'landing_poster must declare pv column')
+    assert.ok(posterCap.spec.columns?.some(col => col.key === 'uv'), 'landing_poster must declare uv column')
+  })
 })
+
 
