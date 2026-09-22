@@ -35,10 +35,12 @@
 
 ---
 
-## 📢 最新版本更新说明 (v2.1.0 - 2026-09-17)
+## 📢 最新版本更新说明 (v2.3.0 - 2026-09-22)
 
-- 🛡️ **MySQL 数据库动态探活与零硬编码**：全工程废除写死数据库凭证，新增 [`scripts/check-db-connection.mjs`](scripts/check-db-connection.mjs) 握手探活工具，唯一真理来源收敛至 [`main-admin/.env`](main-admin/.env)。大模型在调用任何构建与维护技能前**强制执行探活门禁**。
-- 🤖 **全面原生适配 Claude Code 规范**：新增根目录 [`CLAUDE.md`](CLAUDE.md)、`.claude/skills/` 技能库与 `.claude/settings.json` MCP 配置，实现 Claude Code 智能体环境下无感开箱即用。
+- 🤖 **AI 自测通道与守护进程闭环 (AI Self-Test Channel & Daemon)**：新增 `scripts/genplus-mcp-call.mjs` 专属 Loopback HTTP 守护进程（32 字节 Token 鉴权、15 分钟空闲自动休眠），扩充 4 个全新 MCP 自测与诊断工具（`genplus_health`、`genplus_verify`、`genplus_inspect_output`、`genplus_diff_tenant`），MCP 工具全矩阵扩充至 **25 项**。
+- 🛡️ **双层就绪探针与数据库探活**：控制面与子后台均配备高精度健康探针（`/api/health` 与 `isDbReady()`），支持直观区分进程存活与初始化就绪状态。
+- 🚪 **企业级主从端口注册与双向端口协商**：主控制台默认 10000 端口，子后台默认从 10001 起自增分配，支持用户指定端口并具备端口动态探活与双重防冲突门禁。
+- 🔐 **C 端微页面权限隔离与安全治理**：公开微页面归入专属 `前台运营` 菜单分组，排除非 admin 角色默认授权；补齐 admin 角色全量菜单映射与能力库 Portal 守卫。
 - 📘 详细更新记录请阅读 [**完整更新日志 (CHANGELOG.md)**](CHANGELOG.md)。
 
 ---

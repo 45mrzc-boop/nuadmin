@@ -4,6 +4,53 @@
 
 ---
 
+## 🚀 [v2.3.0] - 2026-09-22
+
+本次更新是 GenPlus (NuAdmin) 的重要次版本升级！标志着系统正式构建了完整的 **“AI 自测通道 + 守护进程 (Daemon) + 25 项全矩阵 MCP 工具 + 企业级端口注册与安全防线”** 的智能体自治研发闭环，并在多平台（Linux / Windows / macOS）下全面实现零硬编码与无缝协同。
+
+### 1. 🤖 AI 自测通道与自动化验证闭环 (AI Self-Test Channel & Daemon)
+- **全新 MCP 诊断与自测工具矩阵（扩充至 25 个工具）**：
+  - `genplus_health`：实现控制面与子后台双层探针探测，精准区分进程存活与初始化就绪状态；
+  - `genplus_verify`：直接触发租户全量静态/动态校验门禁，结构化汇总 `pass/fail/skip` 并判定 `PASSED` / `FAILED` / `PARTIAL` 门禁状态；
+  - `genplus_inspect_output`：在安全沙箱环境下实时读取子后台生成的源码与配置文件，具备严格防目录穿越防护；
+  - `genplus_diff_tenant`：支持快速对比两个租户工程的文件树与代码差异。
+- **AI 专属 Loopback HTTP 守护进程 & 统一调用器**：
+  - 新增 [`scripts/genplus-mcp-call.mjs`](./scripts/genplus-mcp-call.mjs)；
+  - 支持单次命令行调用 (`--tool <name> --args '<json>'`) 与批量文件调用 (`--file <path>`)；
+  - 支持后台守护进程模式 (`--serve --port <port>`)，绑定 127.0.0.1 本地回环地址，配备 32 字节高强度 Token 认证、PID 文件追踪与 15 分钟空闲自动安全休眠；
+  - 支持 `--stop` 优雅终止守护进程。
+- **双层健康探针与就绪检测**：
+  - 控制面 [`main-admin/server/api/health.get.ts`](./main-admin/server/api/health.get.ts) 升级为 K8s/AI 标准就绪探针，动态读取工程版本，集成 MySQL `SELECT 1` 数据库探活与错误脱敏；
+  - 子后台生成的 `server/utils/db.ts` 补充 `isDbReady()` 状态探针，生成的 `/api/health.get.ts` 无需 Casbin 鉴权，支持直观判断 DB 及初始化状态。
+
+### 2. 🛡️ 企业级端口注册中心与双重冲突防范机制 (Port Convention & Registry)
+- **主从端口规范**：
+  - 主控制台（Main Admin）默认固定于 `10000` 端口；
+  - 子后台（Sub Admin）默认从 `10001` 起按创建顺序自动递增分配空闲端口（`10001`, `10002`, `10003`...）；
+- **用户自主指定与双向端口协商**：
+  - AI 在立项对齐时，在方案概要中明确展示默认端口，并提示用户可自主指定（如“端口用 10086”）；
+  - 系统底层提供端口合法范围（1024~65535）、主控制台防冲突、租户库防重与宿主机端口动态探活双重门禁保障。
+
+### 3. 🔐 C 端微页面权限隔离与安全治理
+- **前台微页面独立菜单分组**：
+  - 将生成的 C 端公开落地页归入专属 `前台运营` 菜单分组，排除在非 admin 角色（如 viewer / editor）的自动授权范围之外；
+- **内置 Admin 角色菜单映射补齐**：
+  - 生成器自动为 `admin` 角色补充全部菜单的 `sys_role_menu` 记录，彻底杜绝权限拦截或菜单白名单缺失；
+- **能力库 Portal 守卫修复**：
+  - 修复 `caps.ts` 中 D4 守卫表名比对逻辑，增强前台门户安全性与稳定性。
+
+### 4. 🌐 跨平台与零硬编码全面落地
+- **废除所有平台与路径硬编码**：
+  - 全工程路径改用 `import.meta.url` 与相对路径动态解析，彻底清除 `/config/nuadmin` 容器绝对路径假设；
+  - MCP 工具增强模块与字段名称容错解析（`resolveModule`, `resolveField`），并统一返回 `_errors: [...]` 结构化诊断数组；
+  - 全部 25 个 MCP 工具标注标准 `annotations` 属性（`readOnlyHint`、`destructiveHint`、`idempotentHint`）。
+
+### 5. 🧪 工业级验证与自动化测试
+- **生成器单测 100% 通过**：[`main-admin/test/generator.test.mjs`](./main-admin/test/generator.test.mjs) 新增 Test 13，全量 13 项单元测试全部 PASS；
+- **生产构建成功**：`main-admin` 顺利通过 `npm run build` 编译打包。
+
+---
+
 ## 🚀 [v2.2.1] - 2026-09-22
 
 本次更新基于 Windows 实测复测报告（`BUGREPORT-v2.2.0-residual.md`），重点修复了建档参数落库、租户架构档案聚合读取、文档相对路径以及跨平台 lockfile 保护等残余缺陷。
