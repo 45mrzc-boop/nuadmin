@@ -208,13 +208,25 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
         || (/--grad:\s*linear-gradient/.test(darkBlock) && /--btn-grad:\s*linear-gradient/.test(darkBlock))
 
       // 通用模式敏感色令牌覆盖度：除尺寸与跨模式稳定令牌外，浅色块声明的颜色令牌暗色块必须全量覆盖
-      const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--inset', '--blur'])
+      // 仅保留可证与模式无关的四项：
+      //   --accent / --accent-fg 由调色板在皮肤变量之后注入，两端同值；
+      //   --blur 为 <filter-function>，不承载颜色；
+      //   --shadow 在暗色下加深面板层叠仍有效（参见审计 §4.3）。
+      const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--blur'])
+      // 颜色型装饰令牌：值不是 none 时属浅色构造，暗色块必须接管（与 --grad 同类的值域判据）。
+      // 值为 none 时（4/5 皮肤）视为无着色，直接放行，避免假阳性。
+      const DECOR_TOKENS = ['--inset']
       const NEUTRAL_TOKENS = /^--(r|r-md|r-sm|r-pill|pad|row-h|fs|gap|frame-r)$/
       const toks = (css: string) => [...css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]*)/g)].map(m => m[1])
       const isNativeDark = isNativeDarkSkin(lightBlock)
       const darkTokenSet = new Set(toks(darkBlock))
+      const unmanagedDecor = DECOR_TOKENS.filter(p => {
+        const v = lastDecl(lightBlock, p.slice(2))
+        return v && v.trim() !== 'none' && !darkTokenSet.has(p)
+      })
       const missingDarkTokens = (!isNativeDark && lightBlock)
-        ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !darkTokenSet.has(k))
+        ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !DECOR_TOKENS.includes(k) && !darkTokenSet.has(k))
+          .concat(unmanagedDecor)
         : []
 
       // 基于租户真实配色与统一暗底 (DARK_SURFACE_HEX) 动态计算对比度 < 4.5 的不达标色阶

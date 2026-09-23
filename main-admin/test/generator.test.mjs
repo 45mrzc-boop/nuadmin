@@ -1439,15 +1439,18 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('designDefects.join'), 'verify.ts Case 4.7 must aggregate all design defects into single comprehensive report')
     assert.ok(verifySrc.includes('missingDarkTokens'), 'verify.ts Case 4.7 must check missingDarkTokens coverage')
     assert.ok(verifySrc.includes('MODE_STABLE'), 'verify.ts Case 4.7 must define MODE_STABLE whitelist')
+    assert.ok(verifySrc.includes('DECOR_TOKENS'), 'verify.ts Case 4.7 must define DECOR_TOKENS value-guard')
+    assert.ok(verifySrc.includes('unmanagedDecor'), 'verify.ts Case 4.7 must check unmanagedDecor')
     assert.ok(verifySrc.includes('isNativeDarkSkin'), 'verify.ts Case 4.7 must invoke exported isNativeDarkSkin')
     assert.ok(verifySrc.includes('parseWhiteLiteral'), 'verify.ts Case 4.7 must implement parseWhiteLiteral')
     assert.ok(verifySrc.includes('lastDecl'), 'verify.ts Case 4.7 must implement lastDecl')
 
     // 5. Design system dark tokens: skins.ts exports DEFAULT_DARK_BG, DARK_SURFACE_HEX equals #0f172a (calibrated with real Nuxt UI slate-900)
-    const { DEFAULT_DARK_BG, SKIN_DARK_BASE_VARS, SKIN_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
+    const { DEFAULT_DARK_BG, SKIN_DARK_BASE_VARS, SKIN_DARK_VARS, SKIN_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
     assert.strictEqual(DEFAULT_DARK_BG, '#0f172a', 'DEFAULT_DARK_BG must equal #0f172a')
     assert.ok(SKIN_DARK_BASE_VARS.includes('--grad: linear-gradient'), 'SKIN_DARK_BASE_VARS must include dark safe --grad token')
     assert.ok(SKIN_DARK_BASE_VARS.includes('--btn-grad: linear-gradient'), 'SKIN_DARK_BASE_VARS must include dark safe --btn-grad token')
+    assert.ok(SKIN_DARK_VARS['macos-retro'].includes('--inset: inset 1px 1px 0 rgba(255,255,255,.10)'), 'SKIN_DARK_VARS must provide dark takeover for macos-retro --inset')
     const { DARK_SURFACE_HEX } = await jiti.import(resolve(root, 'server/utils/gen/app.ts'))
     assert.strictEqual(DARK_SURFACE_HEX, '#0f172a', 'DARK_SURFACE_HEX must equal #0f172a')
     const genApp = appFiles(mockPlan)
@@ -1469,6 +1472,13 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(/--grad:\s*linear-gradient\(180deg, rgba\(255,255,255,\.06\)/.test(darkSlice), 'droplet dark block must contain dark gradient')
     assert.ok(!/--grad:\s*linear-gradient\(180deg,rgba\(255,255,255,\.85\)/.test(darkSlice), 'droplet dark block must not retain white panel gradient')
 
+    // Retro skin dark mode overrides (prevents light --inset highlight regression on panel / btn)
+    const retroPlan = { ...mockPlan, theme: { ...mockPlan.theme, skin: 'macos-retro' } }
+    const retroCss = appFiles(retroPlan)['app/assets/css/main.css']
+    const iRetroDark = retroCss.lastIndexOf('.dark {')
+    const retroDarkSlice = retroCss.slice(iRetroDark)
+    assert.ok(retroDarkSlice.includes('--inset: inset 1px 1px 0 rgba(255,255,255,.10)'), 'retro dark block must contain dark safe --inset')
+
     // Glass skin verification (native dark skin, no linear gradient, darkBlock requires no gradient override)
     const glassPlan = { ...mockPlan, theme: { ...mockPlan.theme, skin: 'glass' } }
     const glassCss = appFiles(glassPlan)['app/assets/css/main.css']
@@ -1477,7 +1487,8 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
 
     // 5.1 Mode-sensitive color token coverage matrix across all 6 skins
     // (Note: This loop guards the design-system theme skin data invariants; gatekeeper code presence is guarded in step 4 above)
-    const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--inset', '--blur'])
+    const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--blur'])
+    const DECOR_TOKENS = ['--inset']
     const NEUTRAL_TOKENS = /^--(r|r-md|r-sm|r-pill|pad|row-h|fs|gap|frame-r)$/
     const toks = (css) => [...css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]*)/g)].map(m => m[1])
 
@@ -1488,18 +1499,48 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       const darkBlock = skinGeneratedCss.includes('.dark {') ? skinGeneratedCss.slice(skinGeneratedCss.lastIndexOf('.dark {')) : ''
       const isNativeDark = isNativeDarkSkin(lightBlock)
       const darkTokenSet = new Set(toks(darkBlock))
+      const unmanagedDecor = DECOR_TOKENS.filter(p => {
+        const v = lastDecl(lightBlock, p.slice(2))
+        return v && v.trim() !== 'none' && !darkTokenSet.has(p)
+      })
       const missing = (!isNativeDark && lightBlock)
-        ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !darkTokenSet.has(k))
+        ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !DECOR_TOKENS.includes(k) && !darkTokenSet.has(k))
+          .concat(unmanagedDecor)
         : []
       assert.strictEqual(missing.length, 0, `Skin ${skinId} must have complete dark token coverage, missing: ${missing.join(', ')}`)
     }
 
-    // Adversarial verification: simulate missing dark token (e.g. --panel removed from dark block)
+    // Adversarial verification 1: simulate missing dark token (e.g. --panel removed from dark block)
     const forgedDroplet = dropletCss.slice(0, iDark) + dropletCss.slice(iDark).replace(/--panel:\s*[^;]+;/, '')
     const forgedDarkBlock = forgedDroplet.slice(forgedDroplet.lastIndexOf('.dark {'))
     const forgedMissing = [...new Set(toks(dropletCss.slice(dropletCss.indexOf('/* 皮肤：'), iDark)))]
-      .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !new Set(toks(forgedDarkBlock)).has(k))
+      .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !DECOR_TOKENS.includes(k) && !new Set(toks(forgedDarkBlock)).has(k))
     assert.deepStrictEqual(forgedMissing, ['--panel'], 'Adversarial check: missing --panel in dark block must be detected')
+
+    // Adversarial verification 2: simulate unmanaged --inset in macos-retro (stripped from dark block)
+    const retroLightBlock = retroCss.slice(retroCss.indexOf('/* 皮肤：'), iRetroDark)
+    const forgedRetroDarkBlock = retroCss.slice(iRetroDark).replace(/--inset:\s*[^;]+;/, '')
+    const forgedRetroDarkSet = new Set(toks(forgedRetroDarkBlock))
+    const forgedRetroDecor = DECOR_TOKENS.filter(p => {
+      const v = lastDecl(retroLightBlock, p.slice(2))
+      return v && v.trim() !== 'none' && !forgedRetroDarkSet.has(p)
+    })
+    const forgedRetroMissing = [...new Set(toks(retroLightBlock))]
+      .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !DECOR_TOKENS.includes(k) && !forgedRetroDarkSet.has(k))
+      .concat(forgedRetroDecor)
+    assert.deepStrictEqual(forgedRetroMissing, ['--inset'], 'Adversarial check: stripped --inset from macos-retro dark block must be detected')
+
+    // Non-retro skin with --inset: none (e.g. macos-arranged) must NOT be flagged even if absent from dark block
+    const arrangedPlan = { ...mockPlan, theme: { ...mockPlan.theme, skin: 'macos-arranged' } }
+    const arrangedCss = appFiles(arrangedPlan)['app/assets/css/main.css']
+    const iArrangedDark = arrangedCss.lastIndexOf('.dark {')
+    const arrangedLightBlock = arrangedCss.slice(arrangedCss.indexOf('/* 皮肤：'), iArrangedDark)
+    const arrangedDarkSet = new Set(toks(arrangedCss.slice(iArrangedDark)))
+    const arrangedDecor = DECOR_TOKENS.filter(p => {
+      const v = lastDecl(arrangedLightBlock, p.slice(2))
+      return v && v.trim() !== 'none' && !arrangedDarkSet.has(p)
+    })
+    assert.deepStrictEqual(arrangedDecor, [], 'Non-retro skin with --inset: none must not be flagged as unmanaged decor')
 
     // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing; authoritative length asserted below)
     const nativeDarkTable = [

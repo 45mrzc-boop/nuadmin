@@ -110,8 +110,13 @@ export const SKIN_BASE_VARS = "--r: 10px; --r-md: 8px; --r-sm: 7px; --r-pill: 99
 
 /** 暗色基座变量：暗色模式下接管浅色面板/侧栏/文本/边框/渐变 */
 export const SKIN_DARK_BASE_VARS = "--bg: #0b1220; --bg-dark: #0f172a; --panel: rgba(30,41,59,.93); --side: rgba(15,23,42,.72); --line: rgba(255,255,255,.12); --line-strong: rgba(255,255,255,.20); --text: #e2e8f0; --muted: #94a3b8; --side-fg: var(--text); --side-muted: var(--muted); --grad: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); --btn-grad: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02)); --ui-bg: var(--bg-dark, #0f172a);"
- 
- /** 各皮肤覆盖的变量，逐条来自画廊的 .skin-frame[data-skin=x] 块。 */
+
+/** 各皮肤专属的暗色覆盖变量（如 macos-retro 的拟物内阴影需由浅色的纯白微光转换为暗底适配的低透明度微光与强化暗边） */
+export const SKIN_DARK_VARS: Record<string, string> = {
+  'macos-retro': '--inset: inset 1px 1px 0 rgba(255,255,255,.10), inset -1px -1px 0 rgba(0,0,0,.45);'
+}
+
+/** 各皮肤覆盖的变量，逐条来自画廊的 .skin-frame[data-skin=x] 块。 */
  export const SKIN_VARS: Record<string, string> = {
    "macos-arranged": "--r: 5px; --r-md: 4px; --r-sm: 4px; --bg: #fbfbfd; --side: #f2f2f4; --line: rgba(0,0,0,.07); --line-strong: rgba(0,0,0,.16); --shadow: none; --blur: none; --pad: 10px; --row-h: 32px; --fs: 12px; --gap: 6px;",
    "macos-droplet": "--r: 26px; --r-md: 14px; --r-sm: 999px; --bg: linear-gradient(160deg,#eef4ff,#f7efff 55%,#eafaf6); --panel: rgba(255,255,255,.93); --side: rgba(255,255,255,.62); --line: rgba(120,120,160,.16); --line-strong: rgba(120,120,160,.22); --accent: #4f7dff; --shadow: 0 10px 30px rgba(80,110,220,.16); --blur: saturate(180%) blur(26px); --pad: 20px; --row-h: 52px; --gap: 14px; --grad: linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.25)); --btn-grad: linear-gradient(180deg,#7ba4ff,#3f6df0);",
@@ -223,7 +228,8 @@ function skinAdapter(): string {
  */
 export function skinCss(skin: unknown, p?: { theme?: { palette?: string } }): string {
   const id = (isSkin(skin) ? skin : DEFAULT_SKIN) as SkinId
-  const darkBlock = id === 'glass' ? '--ui-bg: var(--bg-dark, #121526);' : SKIN_DARK_BASE_VARS
+  const darkSpecific = SKIN_DARK_VARS[id] ? ' ' + SKIN_DARK_VARS[id] : ''
+  const darkBlock = id === 'glass' ? '--ui-bg: var(--bg-dark, #121526);' : `${SKIN_DARK_BASE_VARS}${darkSpecific}`
   const rules = (ROLE_GENERIC + '\n\n' + (ROLE_OWN[id] ?? ''))
     .replace(/\.skin-frame\[data-skin='[a-z-]+'\]/g, '')
     .replace(/\[data-skin='[a-z-]+'\]/g, '')
@@ -250,8 +256,13 @@ export function galleryCss(): string {
     const one = sel.split(',').map(x => scopeOne(x.trim())).join(', ')
     return one + ' {'
   })
+  const darkSpecificRules = Object.entries(SKIN_DARK_VARS)
+    .map(([k, v]) => `.dark .skin-frame[data-skin='${k}'], .skin-frame.dark[data-skin='${k}'] { ${v} }`)
+    .join('\n')
   const vars = `.skin-frame { ${SKIN_BASE_VARS} }\n`
     + Object.entries(SKIN_VARS).map(([k, v]) => `.skin-frame[data-skin='${k}'] { ${v} }`).join('\n')
-    + `\n.dark .skin-frame:not([data-skin='glass']), .skin-frame.dark:not([data-skin='glass']) { ${SKIN_DARK_BASE_VARS} }\n.dark .skin-frame[data-skin='glass'], .skin-frame.dark[data-skin='glass'] { --ui-bg: var(--bg-dark, #121526); }\n`
+    + `\n.dark .skin-frame:not([data-skin='glass']), .skin-frame.dark:not([data-skin='glass']) { ${SKIN_DARK_BASE_VARS} }\n`
+    + (darkSpecificRules ? `${darkSpecificRules}\n` : '')
+    + `.dark .skin-frame[data-skin='glass'], .skin-frame.dark[data-skin='glass'] { --ui-bg: var(--bg-dark, #121526); }\n`
   return vars + '\n' + scoped(ROLE_GENERIC) + '\n' + scoped(Object.values(ROLE_OWN).join('\n'))
 }
