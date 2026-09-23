@@ -67,7 +67,7 @@ export function parseWhiteLiteral(raw: string): { white: boolean; alpha: number 
 
 /** 提取属性最后一次声明的值（支持 CSS 层叠后值覆盖前值，如皮肤覆盖基座变量） */
 export function lastDecl(block: string, prop: string): string | null {
-  const re = new RegExp('(?:^|;)\\s*--' + prop + ':\\s*([^;]+)', 'g')
+  const re = new RegExp('(?:^|[{;])\\s*--' + prop + ':\\s*([^;]+)', 'g')
   let m: RegExpExecArray | null, last: string | null = null
   while ((m = re.exec(block))) last = m[1]
   return last
@@ -75,8 +75,8 @@ export function lastDecl(block: string, prop: string): string | null {
 
 /**
  * 原生暗色皮肤物理双特征判定（按值精确解析）：
- * 1. 浅色块主文本最后声明必须为 100% 不透明白（alpha === 1）
- * 2. 次要文本最后声明必须为半透明白（0 < alpha < 1）
+ * 1. 浅色块主文本与次要文本最后声明均为白色
+ * 2. 主文本比次要文本更不透明且次要文本透明度大于 0（pt.alpha > pu.alpha && pu.alpha > 0）
  * 满足双特征即视为原生暗色皮肤，天然无需暗色色板重写。
  */
 export function isNativeDarkSkin(lightBlock: string): boolean {
@@ -85,7 +85,7 @@ export function isNativeDarkSkin(lightBlock: string): boolean {
   if (!t || !u) return false
   const pt = parseWhiteLiteral(t), pu = parseWhiteLiteral(u)
   if (!pt || !pu || !pt.white || !pu.white) return false
-  return pt.alpha === 1 && pu.alpha > 0 && pu.alpha < 1
+  return pt.alpha > pu.alpha && pu.alpha > 0
 }
 
 /**
