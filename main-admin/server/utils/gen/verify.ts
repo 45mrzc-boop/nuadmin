@@ -25,6 +25,15 @@ const REQUIRED = [
 ]
 
 /**
+ * 原生暗色皮肤物理双特征判定：浅色块文本为白且次要文本为白（支持 rgba 或 hex-alpha），天然无需暗色色板重写
+ */
+export function isNativeDarkSkin(lightBlock: string): boolean {
+  if (!lightBlock) return false
+  return /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock)
+    && /--muted:\s*(?:rgba\(255,\s*255,\s*255|#(?:fff|ffffff)[0-9a-f]{2})/i.test(lightBlock)
+}
+
+/**
  * Smoke-verify a generated sub-admin. `fs`/`required`/`syntax`/`ddl` are real
  * checks; `boot` only runs when the project's dependencies are installed.
  */
@@ -143,8 +152,7 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--inset', '--blur'])
       const NEUTRAL_TOKENS = /^--(r|r-md|r-sm|r-pill|pad|row-h|fs|gap|frame-r)$/
       const toks = (css: string) => [...css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]*)/g)].map(m => m[1])
-      // 原生暗色皮肤物理双特征：浅色块文本为白色且次要文本为半透明白，天然无需暗色色板重写
-      const isNativeDark = /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock) && /--muted:\s*rgba\(255,\s*255,\s*255/i.test(lightBlock)
+      const isNativeDark = isNativeDarkSkin(lightBlock)
       const darkTokenSet = new Set(toks(darkBlock))
       const missingDarkTokens = (!isNativeDark && lightBlock)
         ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !darkTokenSet.has(k))

@@ -1386,12 +1386,14 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(customFormPage.includes(':ui="{ select: \'text-[length:var(--fs,14px)]\' }"'), 'USelect must pass :ui select font size prop')
 
     // 6. Verify smoke gate: includes WCAG AA contrast check
-    const { verify } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
+    const { verify, isNativeDarkSkin } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
     assert.ok(typeof verify === 'function', 'verify function must be exported')
+    assert.ok(typeof isNativeDarkSkin === 'function', 'isNativeDarkSkin helper must be exported')
   })
 
   it('25. UI Audit v2.3.8 verification (P0 CTA contrast typo eliminated, 100% solver token consumption, deepened Case 4.7 smoke gate)', async () => {
     const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
+    const { isNativeDarkSkin } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
     const materials = tmagicMaterialFiles()
     const allMaterialsCode = Object.values(materials).join('\n')
 
@@ -1435,6 +1437,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('designDefects.join'), 'verify.ts Case 4.7 must aggregate all design defects into single comprehensive report')
     assert.ok(verifySrc.includes('missingDarkTokens'), 'verify.ts Case 4.7 must check missingDarkTokens coverage')
     assert.ok(verifySrc.includes('MODE_STABLE'), 'verify.ts Case 4.7 must define MODE_STABLE whitelist')
+    assert.ok(verifySrc.includes('isNativeDarkSkin'), 'verify.ts Case 4.7 must invoke exported isNativeDarkSkin')
 
     // 5. Design system dark tokens: skins.ts exports DEFAULT_DARK_BG, DARK_SURFACE_HEX equals #0f172a (calibrated with real Nuxt UI slate-900)
     const { DEFAULT_DARK_BG, SKIN_DARK_BASE_VARS, SKIN_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
@@ -1479,7 +1482,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       const skinStart = skinGeneratedCss.indexOf('/* 皮肤：')
       const lightBlock = skinStart >= 0 ? skinGeneratedCss.slice(skinStart, skinGeneratedCss.lastIndexOf('.dark {')) : ''
       const darkBlock = skinGeneratedCss.includes('.dark {') ? skinGeneratedCss.slice(skinGeneratedCss.lastIndexOf('.dark {')) : ''
-      const isNativeDark = /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock) && /--muted:\s*rgba\(255,\s*255,\s*255/i.test(lightBlock)
+      const isNativeDark = isNativeDarkSkin(lightBlock)
       const darkTokenSet = new Set(toks(darkBlock))
       const missing = (!isNativeDark && lightBlock)
         ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !darkTokenSet.has(k))
