@@ -426,6 +426,23 @@ export const CAPABILITY_CATALOG: CapabilitySeed[] = [
       config: [
         { key: 'siteName', label: '官网品牌名称', type: 'text' },
         { key: 'siteSlogan', label: '品牌口号/标语', type: 'text' },
+        { key: 'heroVariant', label: '首屏英雄区视觉变体', type: 'select', options: [
+          { label: '居中大屏 (centered)', value: 'centered' },
+          { label: '左右分栏 (split)', value: 'split' },
+          { label: '指标带高光 (statBand)', value: 'statBand' },
+          { label: '质感居中卡片 (mediaBg)', value: 'mediaBg' }
+        ] },
+        { key: 'featureVariant', label: '特色服务卡片变体', type: 'select', options: [
+          { label: '标准卡片网格 (cards)', value: 'cards' },
+          { label: '沉稳边框卡片 (bordered)', value: 'bordered' },
+          { label: '序号标识卡片 (numbered)', value: 'numbered' },
+          { label: '左置图标卡片 (iconLeft)', value: 'iconLeft' }
+        ] },
+        { key: 'ctaVariant', label: '行动呼吁卡片变体', type: 'select', options: [
+          { label: '通栏色带 (band)', value: 'band' },
+          { label: '圆角立体卡片 (card)', value: 'card' },
+          { label: '左右分栏 (split)', value: 'split' }
+        ] },
         { key: 'contactPhone', label: '客服咨询热线', type: 'text', default: '400-888-9999' },
         { key: 'contactEmail', label: '商务联系邮箱', type: 'text', default: 'service@example.com' },
         { key: 'address', label: '办公或院区地址', type: 'text', default: '高新科技产业园区数智创新大厦 18 层' },

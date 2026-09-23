@@ -92,36 +92,48 @@ export function buildCmsSiteIntent(p: TenantPlan): SiteIntent {
     { label: '稳定运行', value: '99.9%' }
   ]
 
+  // 变体生产者：根据租户行业特征与配置动态装配变体（医疗场景：左右分栏+边框矩阵+卡片CTA；通用/科技场景：居中大屏+卡片网格+横条CTA）
+  const heroVariant = (capCfg(p, 'landing_cms', 'heroVariant', isMedical ? 'split' : 'centered') as any) || (isMedical ? 'split' : 'centered')
+  const headerVariant = (capCfg(p, 'landing_cms', 'headerVariant', 'bar') as any) || 'bar'
+  const featureVariant = (capCfg(p, 'landing_cms', 'featureVariant', isMedical ? 'bordered' : 'cards') as any) || (isMedical ? 'bordered' : 'cards')
+  const ctaVariant = (capCfg(p, 'landing_cms', 'ctaVariant', isMedical ? 'card' : 'band') as any) || (isMedical ? 'card' : 'band')
+
   const homeBlocks: PageBlock[] = [
     {
       kind: 'header',
+      variant: headerVariant,
       brand: { name: siteName, title: siteSlogan },
       links: [
         { label: '首页', action: { kind: 'navigate', page: '/cms' } },
         { label: '资讯动态', action: { kind: 'navigate', page: '/cms' } },
         { label: '后台管理', action: { kind: 'navigate', page: '/admin' } }
       ],
-      action: { label: '在线咨询', action: { kind: 'openForm', form: 'inquiry' } }
+      action: { label: isMedical ? '就医咨询' : '在线咨询', action: { kind: 'openForm', form: 'inquiry' } }
     },
     {
       kind: 'hero',
+      variant: heroVariant,
+      density: 'normal',
       eyebrow: isMedical ? '精医厚德 · 守护健康' : '科技赋能 · 智领未来',
       title: siteName,
       text: siteSlogan,
       stats,
-      action: { label: '立即咨询', action: { kind: 'openForm', form: 'inquiry' } }
+      action: { label: isMedical ? '立即挂号咨询' : '立即咨询', action: { kind: 'openForm', form: 'inquiry' } }
     },
     {
       kind: 'section',
+      density: 'normal',
       title: isMedical ? '特色医疗服务' : '核心服务矩阵',
       subtitle: isMedical ? '全方位、全周期的优质医疗保障体系' : '全链路数智化解决方案与专业服务支持',
       body: {
         kind: 'featureGrid',
+        variant: featureVariant,
         features
       }
     },
     {
       kind: 'section',
+      density: 'normal',
       title: '最新资讯动态',
       subtitle: '权威资讯、重要公告与行业深度动态',
       body: {
@@ -131,9 +143,10 @@ export function buildCmsSiteIntent(p: TenantPlan): SiteIntent {
     },
     {
       kind: 'cta',
+      variant: ctaVariant,
       title: isMedical ? '需要专业的健康指导或预约咨询？' : '开启您的数字化转型新征程',
       text: '我们的专业团队随时准备为您提供全方位的支持与解答。',
-      action: { label: '即刻联系我们', action: { kind: 'openForm', form: 'inquiry' } }
+      action: { label: isMedical ? '预约就医服务' : '即刻联系我们', action: { kind: 'openForm', form: 'inquiry' } }
     },
     {
       kind: 'overlayForm',

@@ -961,6 +961,89 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(tmagicHeroCode.includes('lg:grid-cols-12'), 'TmagicHero split variant must implement 12-col grid')
     assert.ok(tmagicSectionCode.includes("node.body.variant === 'bordered'"), 'TmagicSection must support bordered variant')
   })
+
+  it('19. Foundry v2.3.2 verification (N1, N2, 17/17 variants & producer)', async () => {
+    const { MATERIAL_VARIANTS } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
+    const {
+      VALID_HERO_VARIANTS,
+      VALID_FEATURE_VARIANTS,
+      VALID_HEADER_VARIANTS,
+      VALID_CTA_VARIANTS,
+      VALID_DENSITIES
+    } = await jiti.import(resolve(root, 'shared/intent.ts'))
+    const { getFoundry } = await jiti.import(resolve(root, 'server/utils/gen/foundry/index.ts'))
+    const { buildCmsSiteIntent } = await jiti.import(resolve(root, 'server/utils/gen/cms-intent.ts'))
+
+    // 1. N2 Verification: TmagicFooter has ZERO neutral-* hardcoded palette classes
+    const ui = uiFiles({
+      ...mockPlan,
+      caps: { ...mockPlan.caps, landing_cms: { version: '2.0.0' } }
+    })
+    const footerCode = ui['app/components/tmagic/TmagicFooter.vue']
+    const neutralMatches = footerCode.match(/neutral-\d+/g)
+    assert.strictEqual(neutralMatches, null, 'TmagicFooter must have 0 neutral-* hardcoded classes')
+    assert.ok(footerCode.includes('bg-inverted'), 'TmagicFooter must use bg-inverted')
+    assert.ok(footerCode.includes('text-inverted'), 'TmagicFooter must use text-inverted')
+    assert.ok(footerCode.includes('border-inverted/10'), 'TmagicFooter must use border-inverted/10')
+
+    // 2. N1 & U3 Verification: All 17 variants in MATERIAL_VARIANTS match intent vocabulary 1:1 and exist in templates
+    assert.deepStrictEqual(Array.from(VALID_HERO_VARIANTS).sort(), [...MATERIAL_VARIANTS.hero].sort())
+    assert.deepStrictEqual(Array.from(VALID_FEATURE_VARIANTS).sort(), [...MATERIAL_VARIANTS.featureGrid].sort())
+    assert.deepStrictEqual(Array.from(VALID_HEADER_VARIANTS).sort(), [...MATERIAL_VARIANTS.header].sort())
+    assert.deepStrictEqual(Array.from(VALID_CTA_VARIANTS).sort(), [...MATERIAL_VARIANTS.cta].sort())
+    assert.deepStrictEqual(Array.from(VALID_DENSITIES).sort(), [...MATERIAL_VARIANTS.density].sort())
+
+    // All 5 newly completed variants exist in material templates
+    const heroCode = ui['app/components/tmagic/TmagicHero.vue']
+    const ctaCode = ui['app/components/tmagic/TmagicCta.vue']
+    const sectionCode = ui['app/components/tmagic/TmagicSection.vue']
+    assert.ok(heroCode.includes("node.variant === 'statBand'"), 'TmagicHero must implement statBand')
+    assert.ok(heroCode.includes("node.variant === 'mediaBg'"), 'TmagicHero must implement mediaBg')
+    assert.ok(ctaCode.includes("node.variant === 'split'"), 'TmagicCta must implement split')
+    assert.ok(sectionCode.includes("node.body.variant === 'numbered'"), 'TmagicSection must implement numbered')
+    assert.ok(sectionCode.includes("node.body.variant === 'iconLeft'"), 'TmagicSection must implement iconLeft')
+
+    // 3. Compiler rejects unsupported variants (eliminates silent fallback)
+    const foundry = getFoundry('tmagic')
+    assert.throws(() => {
+      foundry.compilePage({
+        id: 'bad-hero',
+        name: 'Bad Hero',
+        blocks: [{ kind: 'hero', variant: 'unsupportedVariant', title: 'T', text: 'D' }]
+      })
+    }, /不在标准变体词表|不支持变体/)
+
+    // 4. Producer Verification: buildCmsSiteIntent dynamically produces real variants for medical vs tech
+    const medicalPlan = {
+      id: 11,
+      name: '智慧医院预约挂号系统',
+      title: '智慧医院预约挂号平台 v11',
+      description: '全流程便民就医与分时预约挂号',
+      caps: { landing_cms: { version: '2.0.0' } }
+    }
+    const medIntent = buildCmsSiteIntent(medicalPlan)
+    const medHero = medIntent.pages[0].blocks.find(b => b.kind === 'hero')
+    const medFeature = medIntent.pages[0].blocks.find(b => b.kind === 'section' && b.body?.kind === 'featureGrid')
+    const medCta = medIntent.pages[0].blocks.find(b => b.kind === 'cta')
+    assert.strictEqual(medHero.variant, 'split', 'Medical tenant hero variant must be split')
+    assert.strictEqual(medFeature.body.variant, 'bordered', 'Medical tenant featureGrid variant must be bordered')
+    assert.strictEqual(medCta.variant, 'card', 'Medical tenant CTA variant must be card')
+
+    const techPlan = {
+      id: 12,
+      name: '云原生协同开发中台',
+      title: '数智协同开发平台',
+      description: '企业级云原生DevOps与中台生成器',
+      caps: { landing_cms: { version: '2.0.0' } }
+    }
+    const techIntent = buildCmsSiteIntent(techPlan)
+    const techHero = techIntent.pages[0].blocks.find(b => b.kind === 'hero')
+    const techFeature = techIntent.pages[0].blocks.find(b => b.kind === 'section' && b.body?.kind === 'featureGrid')
+    const techCta = techIntent.pages[0].blocks.find(b => b.kind === 'cta')
+    assert.strictEqual(techHero.variant, 'centered', 'Tech tenant hero variant must be centered')
+    assert.strictEqual(techFeature.body.variant, 'cards', 'Tech tenant featureGrid variant must be cards')
+    assert.strictEqual(techCta.variant, 'band', 'Tech tenant CTA variant must be band')
+  })
 })
 
 

@@ -1,6 +1,7 @@
 import type { PageIntent, PageBlock } from '../../../../../shared/intent'
 import { validateIntent } from '../../../../../shared/intent'
 import type { TenantPlan } from '../../types'
+import { MATERIAL_VARIANTS } from './materials'
 
 export interface TmagicNode {
   id: string
@@ -21,7 +22,7 @@ export interface TmagicPageDsl {
  * Foundry A (Tmagic) 页面编译器：
  * 将引擎无关的 PageIntent 图纸单向编译为符合 tmagic 规范的标准节点树。
  * 
- * 严格门禁：编译前执行 validateIntent()，一旦发现样式泄露或非法结构立即抛出异常。
+ * 严格门禁：编译前执行 validateIntent()，并对物料变体进行强校验（绝不静默回落）。
  */
 export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan }): TmagicPageDsl {
   const check = validateIntent(page)
@@ -37,6 +38,9 @@ export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan 
 
     switch (block.kind) {
       case 'header': {
+        if (block.variant && !MATERIAL_VARIANTS.header.includes(block.variant as any)) {
+          throw new Error(`[Foundry:tmagic] Header 物料不支持变体 "${block.variant}"，可用变体: ${MATERIAL_VARIANTS.header.join(', ')}`)
+        }
         items.push({
           id: nodeId,
           type: 'tmagic-header',
@@ -49,6 +53,12 @@ export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan 
         break
       }
       case 'hero': {
+        if (block.variant && !MATERIAL_VARIANTS.hero.includes(block.variant as any)) {
+          throw new Error(`[Foundry:tmagic] Hero 物料不支持变体 "${block.variant}"，可用变体: ${MATERIAL_VARIANTS.hero.join(', ')}`)
+        }
+        if (block.density && !MATERIAL_VARIANTS.density.includes(block.density as any)) {
+          throw new Error(`[Foundry:tmagic] Hero 物料不支持密度 "${block.density}"，可用密度: ${MATERIAL_VARIANTS.density.join(', ')}`)
+        }
         items.push({
           id: nodeId,
           type: 'tmagic-hero',
@@ -64,6 +74,12 @@ export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan 
         break
       }
       case 'section': {
+        if (block.density && !MATERIAL_VARIANTS.density.includes(block.density as any)) {
+          throw new Error(`[Foundry:tmagic] Section 物料不支持密度 "${block.density}"，可用密度: ${MATERIAL_VARIANTS.density.join(', ')}`)
+        }
+        if (block.body?.kind === 'featureGrid' && block.body.variant && !MATERIAL_VARIANTS.featureGrid.includes(block.body.variant as any)) {
+          throw new Error(`[Foundry:tmagic] FeatureGrid 物料不支持变体 "${block.body.variant}"，可用变体: ${MATERIAL_VARIANTS.featureGrid.join(', ')}`)
+        }
         items.push({
           id: nodeId,
           type: 'tmagic-section',
@@ -76,6 +92,9 @@ export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan 
         break
       }
       case 'cta': {
+        if (block.variant && !MATERIAL_VARIANTS.cta.includes(block.variant as any)) {
+          throw new Error(`[Foundry:tmagic] CTA 物料不支持变体 "${block.variant}"，可用变体: ${MATERIAL_VARIANTS.cta.join(', ')}`)
+        }
         items.push({
           id: nodeId,
           type: 'tmagic-cta',
