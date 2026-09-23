@@ -1170,7 +1170,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(formPage.includes('rounded-[var(--r-md,'), '/p/form must consume rounded-[var(--r-md)] for icon base and banners')
     assert.ok(formPage.includes('rounded-[var(--r-sm,'), '/p/form must consume rounded-[var(--r-sm)] for inputs and button')
     assert.ok(formPage.includes('h-[var(--row-h,'), '/p/form must consume control height var(--row-h)')
-    assert.ok(formPage.includes('text-[var(--fs,14px)]'), '/p/form must consume font size var(--fs,14px)')
+    assert.ok(formPage.includes('text-[length:var(--fs,14px)]'), '/p/form must consume font size var(--fs,14px)')
 
     // G2: No bare Tailwind arbitrary radius/shadow rungs
     assert.ok(!formPage.includes('rounded-2xl'), '/p/form must not use hardcoded rounded-2xl')
@@ -1205,6 +1205,93 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       assert.ok(bodyKinds.has(expectedKind), `CMS intent producer must emit ${expectedKind} section (found ${[...bodyKinds].join(', ')})`)
     }
     assert.strictEqual(bodyKinds.size, 5, `CMS intent producer must cover all 5/5 body kinds, found ${bodyKinds.size}`)
+  })
+
+  it('23. UI Audit v2.3.6 verification (H1-H5): text-[length:var(--fs)] type hint, footer dock avoidance, var(--blur) light token, polished date inputs, and mobile header space', async () => {
+    const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
+    const materials = tmagicMaterialFiles()
+    const allMaterialsCode = Object.values(materials).join('\n')
+
+    const planWithForm = {
+      ...mockPlan,
+      caps: {
+        ...mockPlan.caps,
+        landing_form: {
+          version: '1.0.0',
+          config: { formTitle: '在线业务申请登记', submitText: '立即提交' }
+        }
+      }
+    }
+    const formUi = uiFiles(planWithForm)
+    const formPage = formUi['app/pages/p/form.vue']
+
+    // 1. H1: Zero ambiguous text-[var(--fs)] across both materials and /p/form
+    const combinedCode = allMaterialsCode + '\n' + formPage
+    const ambiguousFs = combinedCode.match(/text-\[var\(--fs/g) || []
+    assert.strictEqual(ambiguousFs.length, 0, `Must have ZERO ambiguous text-[var(--fs, found: ${ambiguousFs.length}`)
+
+    const unambiguousFs = combinedCode.match(/text-\[length:var\(--fs,\s*14px\)\]/g) || []
+    assert.strictEqual(unambiguousFs.length, 27, `Must have 27 unambiguous text-[length:var(--fs,14px)] in default generation (21 materials + 6 form), found ${unambiguousFs.length}`)
+
+    // Also test custom fields branch in /p/form
+    const planWithCustomFields = {
+      ...mockPlan,
+      groups: [
+        {
+          name: '测试业务',
+          icon: 'lucide:folder',
+          modules: [
+            {
+              id: 99,
+              name: '预约登记',
+              key: 'appointment',
+              tableName: 'appointment',
+              fields: [
+                { name: 'ID', key: 'id', type: 'id', pk: true },
+                { name: '申请主题', key: 'title', type: 'varchar' },
+                { name: '预约类型', key: 'type', type: 'enum', dict: 'status' },
+                { name: '预约日期', key: 'due', type: 'date' },
+                { name: '详细说明', key: 'desc', type: 'text' },
+                { name: '预算金额', key: 'budget', type: 'decimal' },
+                { name: '手机号', key: 'phone', type: 'varchar' }
+              ]
+            }
+          ]
+        }
+      ],
+      caps: {
+        ...mockPlan.caps,
+        landing_form: {
+          version: '1.0.0',
+          config: { targetModel: 'appointment' }
+        }
+      }
+    }
+    const customFormPage = uiFiles(planWithCustomFields)['app/pages/p/form.vue']
+    const customAmbiguousFs = customFormPage.match(/text-\[var\(--fs/g) || []
+    assert.strictEqual(customAmbiguousFs.length, 0, 'Custom form fields must have zero ambiguous text-[var(--fs')
+    const customUnambiguousFs = customFormPage.match(/text-\[length:var\(--fs,\s*14px\)\]/g) || []
+    assert.strictEqual(customUnambiguousFs.length, 10, `Custom form page must consume 10 text-[length:var(--fs,14px)], found ${customUnambiguousFs.length}`)
+
+    // 2. H2: Fixed dock bottom padding in TmagicPage.vue (avoid covering footer)
+    const pageCode = materials['app/components/tmagic/TmagicPage.vue']
+    assert.ok(pageCode.includes('pb-24 md:pb-28'), 'TmagicPage must reserve pb-24 md:pb-28 bottom safe area for fixed dock')
+
+    // 3. H3: var(--blur) skin token consumption (0 bare backdrop-blur without variable)
+    assert.ok(allMaterialsCode.includes('backdrop-blur-[var(--blur,'), 'Materials must consume var(--blur) token')
+    const bareBackdropBlur = allMaterialsCode.match(/\bbackdrop-blur\b(?!-\[)/g) || []
+    assert.strictEqual(bareBackdropBlur.length, 0, `Materials must have 0 bare backdrop-blur, found ${bareBackdropBlur.length}`)
+
+    // 4. H4: Date input appearance and webkit pseudo element styling in /p/form
+    assert.ok(customFormPage.includes('cursor-pointer') && customFormPage.includes('[&::-webkit-datetime-edit]:text-muted'), '/p/form date inputs must style webkit pseudo elements')
+
+    // 5. H5: Mobile header subtitle avoids width competition
+    const headerCode = materials['app/components/tmagic/TmagicHeader.vue']
+    assert.ok(headerCode.includes('hidden sm:block'), 'Header subtitle must be hidden on mobile 390px to prevent multi-line wrap')
+
+    // 6. G2余项: /p/form consumes var(--pad) and var(--gap)
+    assert.ok(formPage.includes('var(--pad'), '/p/form card must consume var(--pad)')
+    assert.ok(formPage.includes('var(--gap'), '/p/form grid must consume var(--gap)')
   })
 })
 

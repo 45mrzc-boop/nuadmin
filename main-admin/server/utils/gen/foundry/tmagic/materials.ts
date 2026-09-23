@@ -31,7 +31,7 @@ export function tmagicMaterialFiles(theme?: TenantPlan['theme']): Record<string,
   return {
     'app/components/tmagic/TmagicPage.vue': `<template>
   <div class="tmagic-page-runtime min-h-screen bg-default text-default font-sans antialiased flex flex-col justify-between selection:bg-primary-500 selection:text-inverted">
-    <div class="flex-1 w-full">
+    <div class="flex-1 w-full pb-24 md:pb-28">
       <template v-for="node in (dsl?.items || [])" :key="node.id">
         <TmagicHeader v-if="node.type === 'tmagic-header'" :node="node" />
         <TmagicHero v-else-if="node.type === 'tmagic-hero'" :node="node" />
@@ -67,7 +67,7 @@ defineProps<{
 
     'app/components/tmagic/TmagicHeader.vue': `<template>
   <header
-    class="sticky top-0 z-40 w-full backdrop-blur border-b transition-shadow"
+    class="sticky top-0 z-40 w-full backdrop-blur-[var(--blur,blur(16px))] border-b transition-shadow"
     :class="node.variant === 'transparent' ? 'bg-default/70 border-default/50' : 'bg-default/95 border-default'"
   >
     <div
@@ -88,7 +88,7 @@ defineProps<{
         </div>
         <div>
           <div class="font-bold text-highlighted tracking-tight text-base leading-tight">{{ node.brand?.name || '品牌门户' }}</div>
-          <div v-if="node.brand?.title" class="text-xs text-muted font-medium">{{ node.brand.title }}</div>
+          <div v-if="node.brand?.title" class="text-xs text-muted font-medium hidden sm:block">{{ node.brand.title }}</div>
         </div>
       </div>
 
@@ -97,7 +97,7 @@ defineProps<{
           v-for="(link, i) in node.links"
           :key="i"
           @click="handleAction(link.action)"
-          class="text-[var(--fs,14px)] font-medium text-muted hover:text-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-[var(--r-sm,8px)] px-2 py-1 transition-colors"
+          class="text-[length:var(--fs,14px)] font-medium text-muted hover:text-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-[var(--r-sm,8px)] px-2 py-1 transition-colors"
         >
           {{ link.label }}
         </button>
@@ -151,7 +151,7 @@ function handleAction(act: any) {
         <h1 class="text-3xl sm:text-5xl font-extrabold text-highlighted tracking-tight leading-tight sm:leading-tight mb-6">
           {{ node.title }}
         </h1>
-        <p v-if="node.text" class="text-[var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-8">
+        <p v-if="node.text" class="text-[length:var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-8">
           {{ node.text }}
         </p>
         <div v-if="node.action" class="flex gap-4">
@@ -185,7 +185,7 @@ function handleAction(act: any) {
         <h1 class="text-3xl sm:text-5xl font-extrabold text-highlighted tracking-tight leading-tight sm:leading-tight mb-6">
           {{ node.title }}
         </h1>
-        <p v-if="node.text" class="text-[var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-8">
+        <p v-if="node.text" class="text-[length:var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-8">
           {{ node.text }}
         </p>
         <div v-if="node.action">
@@ -209,7 +209,7 @@ function handleAction(act: any) {
 
     <!-- 变体 3: mediaBg (质感卡片居中高光) -->
     <div v-else-if="node.variant === 'mediaBg'" class="max-w-5xl mx-auto px-[var(--pad,1.5rem)]">
-      <div class="p-8 sm:p-14 rounded-[var(--r,16px)] bg-card/80 backdrop-blur border border-primary-500/20 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] text-center">
+      <div class="p-8 sm:p-14 rounded-[var(--r,16px)] bg-card/80 backdrop-blur-[var(--blur,blur(20px))] border border-primary-500/20 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] text-center">
         <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse motion-reduce:animate-none"></span>
           {{ node.eyebrow }}
@@ -217,7 +217,7 @@ function handleAction(act: any) {
         <h1 class="text-3xl sm:text-5xl font-extrabold text-highlighted tracking-tight leading-tight sm:leading-tight mb-6">
           {{ node.title }}
         </h1>
-        <p v-if="node.text" class="max-w-2xl mx-auto text-[var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-10">
+        <p v-if="node.text" class="max-w-2xl mx-auto text-[length:var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-10">
           {{ node.text }}
         </p>
         <div v-if="node.action" class="mb-12">
@@ -250,7 +250,7 @@ function handleAction(act: any) {
         {{ node.title }}
       </h1>
 
-      <p v-if="node.text" class="max-w-2xl mx-auto text-[var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-10">
+      <p v-if="node.text" class="max-w-2xl mx-auto text-[length:var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-10">
         {{ node.text }}
       </p>
 
@@ -305,7 +305,7 @@ function handleAction(act: any) {
         <h2 class="text-2xl sm:text-3xl font-bold text-highlighted tracking-tight mb-3">
           {{ node.title }}
         </h2>
-        <p v-if="node.subtitle" class="text-[var(--fs,14px)] sm:text-base text-muted">
+        <p v-if="node.subtitle" class="text-[length:var(--fs,14px)] sm:text-base text-muted">
           {{ node.subtitle }}
         </p>
       </div>
@@ -324,7 +324,7 @@ function handleAction(act: any) {
             :class="{ 'cursor-pointer': !!card.action }"
           >
             <div class="text-lg font-bold text-highlighted mb-2">{{ card.title }}</div>
-            <div class="text-[var(--fs,14px)] text-muted leading-relaxed mb-4">{{ card.text }}</div>
+            <div class="text-[length:var(--fs,14px)] text-muted leading-relaxed mb-4">{{ card.text }}</div>
             <div v-if="card.footnote" class="text-xs text-dimmed font-medium pt-3 border-t border-default">
               {{ card.footnote }}
             </div>
@@ -372,7 +372,7 @@ function handleAction(act: any) {
               <h3 class="text-base sm:text-lg font-bold text-highlighted mb-1.5 hover:text-primary-500 transition-colors line-clamp-1">
                 {{ row.title }}
               </h3>
-              <p class="text-[var(--fs,14px)] text-muted line-clamp-2 leading-relaxed">
+              <p class="text-[length:var(--fs,14px)] text-muted line-clamp-2 leading-relaxed">
                 {{ row.text }}
               </p>
             </div>
@@ -398,7 +398,7 @@ function handleAction(act: any) {
             <svg class="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getIconPath(feat.icon)"></svg>
           </div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
-          <div class="text-[var(--fs,14px)] text-muted leading-relaxed">{{ feat.text }}</div>
+          <div class="text-[length:var(--fs,14px)] text-muted leading-relaxed">{{ feat.text }}</div>
         </div>
       </div>
       <div v-else-if="node.body?.kind === 'featureGrid' && node.body.variant === 'numbered'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[var(--gap,1.5rem)]">
@@ -409,7 +409,7 @@ function handleAction(act: any) {
         >
           <div class="text-3xl font-black text-primary-500/20 mb-3 tracking-wider">0{{ i + 1 }}</div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
-          <div class="text-[var(--fs,14px)] text-muted leading-relaxed">{{ feat.text }}</div>
+          <div class="text-[length:var(--fs,14px)] text-muted leading-relaxed">{{ feat.text }}</div>
         </div>
       </div>
       <div v-else-if="node.body?.kind === 'featureGrid' && node.body.variant === 'iconLeft'" class="grid grid-cols-1 md:grid-cols-2 gap-[var(--gap,1.5rem)]">
@@ -423,7 +423,7 @@ function handleAction(act: any) {
           </div>
           <div class="flex-1 min-w-0">
             <div class="font-bold text-highlighted text-base mb-1.5">{{ feat.title }}</div>
-            <div class="text-[var(--fs,14px)] text-muted leading-relaxed">{{ feat.text }}</div>
+            <div class="text-[length:var(--fs,14px)] text-muted leading-relaxed">{{ feat.text }}</div>
           </div>
         </div>
       </div>
@@ -437,7 +437,7 @@ function handleAction(act: any) {
             <svg class="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getIconPath(feat.icon)"></svg>
           </div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
-          <div class="text-[var(--fs,14px)] text-muted leading-relaxed">{{ feat.text }}</div>
+          <div class="text-[length:var(--fs,14px)] text-muted leading-relaxed">{{ feat.text }}</div>
         </div>
       </div>
 
@@ -450,7 +450,7 @@ function handleAction(act: any) {
         >
           <div class="text-2xl font-black text-primary-500/30 mb-2">0{{ st.stepNumber || i + 1 }}</div>
           <div class="font-bold text-highlighted text-base mb-1">{{ st.title }}</div>
-          <div class="text-[var(--fs,14px)] text-muted leading-relaxed">{{ st.text }}</div>
+          <div class="text-[length:var(--fs,14px)] text-muted leading-relaxed">{{ st.text }}</div>
         </div>
       </div>
 
@@ -464,7 +464,7 @@ function handleAction(act: any) {
           <div class="font-bold text-highlighted text-base mb-2 flex items-center gap-2">
             <span class="text-primary-500 font-extrabold">Q:</span> {{ faq.q }}
           </div>
-          <div class="text-[var(--fs,14px)] text-muted pl-6 leading-relaxed">
+          <div class="text-[length:var(--fs,14px)] text-muted pl-6 leading-relaxed">
             {{ faq.a }}
           </div>
         </div>
@@ -532,7 +532,7 @@ function handleAction(act: any) {
   >
     <div class="max-w-4xl mx-auto p-8 sm:p-12 rounded-[var(--r,16px)] bg-primary-500 text-inverted shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
       <h2 class="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">{{ node.title }}</h2>
-      <p v-if="node.text" class="text-inverted/85 max-w-xl mx-auto text-[var(--fs,14px)] sm:text-base mb-6 leading-relaxed">{{ node.text }}</p>
+      <p v-if="node.text" class="text-inverted/85 max-w-xl mx-auto text-[length:var(--fs,14px)] sm:text-base mb-6 leading-relaxed">{{ node.text }}</p>
       <button
         v-if="node.action"
         @click="handleAction(node.action.action)"
@@ -549,7 +549,7 @@ function handleAction(act: any) {
     <div class="max-w-5xl mx-auto p-8 sm:p-12 rounded-[var(--r,16px)] bg-card border-2 border-primary-500/30 flex flex-col md:flex-row items-center justify-between gap-[var(--gap,1.5rem)] shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
       <div class="max-w-xl text-left">
         <h2 class="text-2xl sm:text-3xl font-bold text-highlighted mb-3 tracking-tight">{{ node.title }}</h2>
-        <p v-if="node.text" class="text-muted text-[var(--fs,14px)] sm:text-base leading-relaxed">{{ node.text }}</p>
+        <p v-if="node.text" class="text-muted text-[length:var(--fs,14px)] sm:text-base leading-relaxed">{{ node.text }}</p>
       </div>
       <div class="flex-shrink-0">
         <button
@@ -565,7 +565,7 @@ function handleAction(act: any) {
   <section v-else class="py-14 bg-primary-500 text-inverted text-center">
     <div class="max-w-4xl mx-auto px-[var(--pad,1.5rem)]">
       <h2 class="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">{{ node.title }}</h2>
-      <p v-if="node.text" class="text-inverted/85 max-w-xl mx-auto text-[var(--fs,14px)] sm:text-base mb-6 leading-relaxed">{{ node.text }}</p>
+      <p v-if="node.text" class="text-inverted/85 max-w-xl mx-auto text-[length:var(--fs,14px)] sm:text-base mb-6 leading-relaxed">{{ node.text }}</p>
       <button
         v-if="node.action"
         @click="handleAction(node.action.action)"
@@ -589,7 +589,7 @@ function handleAction(act: any) {
 `,
 
     'app/components/tmagic/TmagicFooter.vue': `<template>
-  <footer class="bg-inverted text-inverted/70 py-12 text-[var(--fs,14px)] border-t border-inverted/10">
+  <footer class="bg-inverted text-inverted/70 py-12 text-[length:var(--fs,14px)] border-t border-inverted/10">
     <div class="max-w-6xl mx-auto px-[var(--pad,1.5rem)]">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div>
@@ -620,7 +620,7 @@ defineProps<{ node: any }>()
   <nav
     role="tablist"
     aria-label="快捷导航"
-    class="fixed bottom-0 inset-x-0 bg-default/95 backdrop-blur border-t border-default z-40 py-1.5 px-4 flex justify-around md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:px-6 md:py-2 md:rounded-[var(--r-pill,999px)] md:border md:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] md:gap-6 md:bg-default/90"
+    class="fixed bottom-0 inset-x-0 bg-default/95 backdrop-blur-[var(--blur,blur(20px))] border-t border-default z-40 py-1.5 px-4 flex justify-around md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:px-6 md:py-2 md:rounded-[var(--r-pill,999px)] md:border md:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] md:gap-6 md:bg-default/90"
   >
     <button
       v-for="tab in node.tabs"
@@ -666,13 +666,13 @@ function handleTab(tab: any) {
 `,
 
     'app/components/tmagic/TmagicOverlayForm.vue': `<template>
-  <div v-if="visible" role="dialog" aria-modal="true" aria-labelledby="modal-form-title" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm">
+  <div v-if="visible" role="dialog" aria-modal="true" aria-labelledby="modal-form-title" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-[var(--blur,blur(8px))]">
     <div class="bg-card rounded-[var(--r,16px)] max-w-lg w-full p-6 sm:p-8 shadow-[var(--shadow,0_20px_40px_rgba(0,0,0,0.18))] border border-default relative animate-in fade-in zoom-in-95 duration-150 motion-reduce:animate-none">
       <div class="flex items-center justify-between mb-4">
         <h3 id="modal-form-title" class="text-xl font-bold text-highlighted tracking-tight">{{ node.title }}</h3>
         <button type="button" @click="visible = false" aria-label="关闭表单" class="text-muted hover:text-highlighted text-2xl font-bold leading-none p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-[var(--r-sm,8px)]">×</button>
       </div>
-      <p v-if="node.subtitle" class="text-[var(--fs,14px)] text-muted mb-6 leading-relaxed">{{ node.subtitle }}</p>
+      <p v-if="node.subtitle" class="text-[length:var(--fs,14px)] text-muted mb-6 leading-relaxed">{{ node.subtitle }}</p>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div v-for="f in node.fields" :key="f.name || f.key">
@@ -684,7 +684,7 @@ function handleTab(tab: any) {
             v-model="formData[f.name || f.key]"
             :placeholder="f.placeholder || f.label"
             :required="f.required"
-            class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all"
+            class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all"
           />
           <textarea
             v-else
@@ -693,7 +693,7 @@ function handleTab(tab: any) {
             :placeholder="f.placeholder || f.label"
             :required="f.required"
             rows="3"
-            class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all"
+            class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all"
           ></textarea>
         </div>
 

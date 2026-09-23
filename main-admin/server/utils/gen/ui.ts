@@ -5026,17 +5026,17 @@ function landingFormPage(p: TenantPlan): string {
         const label = `${f.name || f.key}${f.required ? ' <span class="text-red-500 font-bold">*</span>' : ''}`
         const isColSpan2 = f.type === 'text' || f.type === 'richtext'
         const colClass = isColSpan2 ? 'sm:col-span-2' : 'col-span-1'
-        let inputEl = `<input :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
+        let inputEl = `<input :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
         if (f.type === 'enum' && f.dict && p.dicts[f.dict]) {
-          inputEl = `<USelect :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" :items="dicts['${f.dict}'] || []" placeholder="请选择${f.name || f.key}" class="w-full h-[var(--row-h,40px)] rounded-[var(--r-sm,8px)] text-[var(--fs,14px)]" />`
+          inputEl = `<USelect :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" :items="dicts['${f.dict}'] || []" placeholder="请选择${f.name || f.key}" class="w-full h-[var(--row-h,40px)] rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)]" />`
         } else if (f.type === 'date' || f.type === 'datetime') {
-          inputEl = `<input :id="'field-' + '${f.key}'" type="${f.type === 'datetime' ? 'datetime-local' : 'date'}" v-model="formState['${f.key}']" class="w-full h-[var(--row-h,40px)] px-4 py-2 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all appearance-none" />`
+          inputEl = `<input :id="'field-' + '${f.key}'" type="${f.type === 'datetime' ? 'datetime-local' : 'date'}" v-model="formState['${f.key}']" class="w-full h-[var(--row-h,40px)] px-4 py-2 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all appearance-none cursor-pointer [&::-webkit-datetime-edit]:text-muted [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:cursor-pointer" />`
         } else if (f.type === 'text' || f.type === 'richtext') {
-          inputEl = `<textarea :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" rows="3" class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60"></textarea>`
+          inputEl = `<textarea :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" rows="3" class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60"></textarea>`
         } else if (f.type === 'int' || f.type === 'decimal' || f.type === 'money') {
-          inputEl = `<input :id="'field-' + '${f.key}'" type="number" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
+          inputEl = `<input :id="'field-' + '${f.key}'" type="number" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
         } else if (f.key.includes('phone') || f.key.includes('mobile') || f.key.includes('tel')) {
-          inputEl = `<input :id="'field-' + '${f.key}'" type="tel" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
+          inputEl = `<input :id="'field-' + '${f.key}'" type="tel" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
         }
         return `          <div class="space-y-1.5 text-left ${colClass}">
             <label :for="'field-' + '${f.key}'" class="block text-xs font-semibold text-highlighted">${label}</label>
@@ -5045,17 +5045,17 @@ function landingFormPage(p: TenantPlan): string {
       }).join('\n')
     : `          <div class="space-y-1.5 text-left col-span-1">
             <label for="field-name" class="block text-xs font-semibold text-highlighted">姓名称呼 <span class="text-red-500 font-bold">*</span></label>
-            <input id="field-name" v-model="formState.name" placeholder="请输入您的姓名" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />
+            <input id="field-name" v-model="formState.name" placeholder="请输入您的姓名" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />
           </div>
 
           <div class="space-y-1.5 text-left col-span-1">
             <label for="field-phone" class="block text-xs font-semibold text-highlighted">联系电话 <span class="text-red-500 font-bold">*</span></label>
-            <input id="field-phone" v-model="formState.phone" type="tel" placeholder="请输入手机号码" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />
+            <input id="field-phone" v-model="formState.phone" type="tel" placeholder="请输入手机号码" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />
           </div>
 
           <div class="space-y-1.5 text-left sm:col-span-2">
             <label for="field-remark" class="block text-xs font-semibold text-highlighted">意向留言 / 需求说明</label>
-            <textarea id="field-remark" v-model="formState.remark" placeholder="请简要描述您的业务诉求（选填）" rows="3" class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60"></textarea>
+            <textarea id="field-remark" v-model="formState.remark" placeholder="请简要描述您的业务诉求（选填）" rows="3" class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60"></textarea>
           </div>`
 
   return `<script setup lang="ts">
@@ -5100,7 +5100,7 @@ function resetForm() {
 
 <template>
   <div class="min-h-screen bg-default text-default flex flex-col items-center justify-center p-4 sm:p-8 antialiased">
-    <div class="w-full max-w-2xl bg-card border border-default rounded-[var(--r,16px)] p-6 sm:p-10 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
+    <div class="w-full max-w-2xl bg-card border border-default rounded-[var(--r,16px)] p-[var(--pad,1.5rem)] sm:p-[calc(var(--pad,1.5rem)*1.5)] shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
       <div v-if="!submitted" class="space-y-6">
         <div class="text-center space-y-2">
           <div class="inline-flex size-14 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 items-center justify-center mb-1">
@@ -5112,15 +5112,15 @@ function resetForm() {
             </svg>
           </div>
           <h1 class="text-2xl sm:text-3xl font-bold text-highlighted tracking-tight">{{ ${formTitle} }}</h1>
-          <p class="text-[var(--fs,14px)] text-muted">请留下您的真实联系方式，我们的顾问将为您提供专属服务</p>
+          <p class="text-[length:var(--fs,14px)] text-muted">请留下您的真实联系方式，我们的顾问将为您提供专属服务</p>
         </div>
 
-        <div v-if="errorMsg" class="p-3.5 bg-red-500/10 border border-red-500/20 text-red-600 text-[var(--fs,14px)] rounded-[var(--r-md,12px)] flex items-center gap-2">
+        <div v-if="errorMsg" class="p-3.5 bg-red-500/10 border border-red-500/20 text-red-600 text-[length:var(--fs,14px)] rounded-[var(--r-md,12px)] flex items-center gap-2">
           <svg class="size-4 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span>{{ errorMsg }}</span>
         </div>
 
-        <form @submit.prevent="onSubmit" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form @submit.prevent="onSubmit" class="grid grid-cols-1 sm:grid-cols-2 gap-[var(--gap,1rem)]">
 ${fieldsTemplate}
 
           <div class="sm:col-span-2 pt-2">
@@ -5142,12 +5142,12 @@ ${fieldsTemplate}
         </div>
         <div class="space-y-2">
           <h2 class="text-xl sm:text-2xl font-bold text-highlighted tracking-tight">提交成功</h2>
-          <p class="text-[var(--fs,14px)] text-muted">{{ ${successMsg} }}</p>
+          <p class="text-[length:var(--fs,14px)] text-muted">{{ ${successMsg} }}</p>
         </div>
         <button
           type="button"
           @click="resetForm"
-          class="h-[var(--row-h,40px)] px-6 border border-default hover:bg-default text-muted hover:text-highlighted text-[var(--fs,14px)] font-medium rounded-[var(--r-sm,8px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors"
+          class="h-[var(--row-h,40px)] px-6 border border-default hover:bg-default text-muted hover:text-highlighted text-[length:var(--fs,14px)] font-medium rounded-[var(--r-sm,8px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors"
         >
           返回再次填写
         </button>
