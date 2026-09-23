@@ -322,12 +322,42 @@ function appConfigTs(p: TenantPlan): string {
   return `/**
  * Nuxt UI 默认把语义色 primary 指向 Tailwind 的 green。
  * 这里指向 'primary'，也就是 app/assets/css/main.css 里由设计站生成的 --color-primary-* 色阶。
+ * 同时覆盖组件变体，确保 subtle/soft 等变体使用 WCAG AA 求解的高对比度令牌。
  * defineAppConfig 与模块默认值是深合并，其它配色与组件主题不受影响。
  */
 export default defineAppConfig({
   ui: {
     colors: {
       primary: 'primary'
+    },
+    badge: {
+      variants: {
+        size: {
+          xs: { base: 'text-[11px] px-1.5 py-0.5 gap-1 rounded-sm' }
+        }
+      },
+      compoundVariants: [
+        {
+          color: 'primary',
+          variant: 'subtle',
+          class: 'bg-primary-500/10 text-primary-fg-badge dark:text-primary-fg-dark ring ring-inset ring-primary-500/25'
+        },
+        {
+          color: 'primary',
+          variant: 'soft',
+          class: 'bg-primary-500/10 text-primary-fg-badge dark:text-primary-fg-dark'
+        },
+        {
+          color: 'primary',
+          variant: 'outline',
+          class: 'text-primary-fg-badge dark:text-primary-fg-dark ring ring-inset ring-primary-500/50'
+        },
+        {
+          color: 'error',
+          variant: 'subtle',
+          class: 'bg-red-500/10 text-red-700 dark:text-red-300 ring ring-inset ring-red-500/25'
+        }
+      ]
     }
   }
 })
@@ -3284,7 +3314,7 @@ const cur = computed(() => opts.find(o => o.v === mode.value) || opts[1])
   <div data-gen="page-root" class="skin-main flex flex-col gap-4 p-4 lg:p-6">
     <div data-gen="toolbar" class="panel-head flex flex-wrap items-center gap-2">
       <span class="text-sm font-semibold text-default truncate">🚪 门禁模式中枢</span>
-      <UBadge color="primary" variant="subtle" size="sm">当前运行模式：{{ cur.name }}</UBadge>
+      <UBadge color="primary" variant="subtle" size="sm" class="text-primary-fg-badge dark:text-primary-fg-dark">当前运行模式：{{ cur.name }}</UBadge>
       <span class="flex-1" />
       <UButton icon="i-lucide-rotate-cw" size="xs" color="neutral" variant="ghost" :loading="saving" @click="load" />
     </div>
@@ -5278,7 +5308,7 @@ onMounted(loadData)
           <div class="space-y-1">
             <div class="flex items-center justify-between">
               <h3 class="font-semibold text-base text-highlighted truncate">{{ item.${inferredTitle} || item.name || item.title || '记录 #' + item.id }}</h3>
-              <UBadge v-if="item.status !== undefined" color="primary" variant="subtle" size="xs">{{ item.status ? '正常' : '暂停' }}</UBadge>
+              <UBadge v-if="item.status !== undefined" color="primary" variant="subtle" size="xs" class="text-primary-fg-badge dark:text-primary-fg-dark">{{ item.status ? '正常' : '暂停' }}</UBadge>
             </div>
             <p class="text-xs text-muted line-clamp-2">{{ item.${inferredDesc} || item.remark || item.description || item.summary || '点击查看完整详情...' }}</p>
           </div>

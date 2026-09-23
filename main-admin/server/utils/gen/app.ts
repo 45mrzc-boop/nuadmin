@@ -399,6 +399,9 @@ ${shades.map((s, i) => `  --color-primary-${names[i]}: ${s};`).join('\n')}
 
   --font-sans: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* 皮肤字号轴：接管 text-sm，防止与 --fs 打架（解决 md:text-sm 在桌面端顶成 14px 的层叠优先级问题） */
+  --text-sm: var(--fs, 13px);
 }
 
 /* Nuxt UI resolves its own corner radii through --ui-radius, not --radius-*. */
@@ -410,6 +413,23 @@ ${shades.map((s, i) => `  --color-primary-${names[i]}: ${s};`).join('\n')}
   --ui-primary-fg-dark: var(--color-primary-${darkFg.shadeName});
   --ui-primary-fg-badge: var(--color-primary-${badgeFg.shadeName});
   --r-md: var(--radius-md, 12px);
+
+  /* 中性语义色在浅底上提升对比度，达到 WCAG AA 4.5:1 要求 */
+  --ui-text-dimmed: var(--color-slate-500, #64748b);
+  --ui-text-muted: var(--color-slate-600, #475569);
+}
+
+/* 文本主色前景映射至数学求解的高对比令牌，确保页签激活项、面包屑当前项与内联链接对比度达标 */
+.text-primary {
+  color: var(--color-primary-fg-light);
+}
+.dark .text-primary {
+  color: var(--color-primary-fg-dark);
+}
+
+.dark {
+  --ui-text-dimmed: var(--color-slate-400, #94a3b8);
+  --ui-text-muted: var(--color-slate-400, #94a3b8);
 }
 
 ${skinCss(t.skin, p)}
