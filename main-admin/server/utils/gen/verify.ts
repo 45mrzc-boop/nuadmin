@@ -128,6 +128,10 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
     if (hasCss) {
       const cssContent = readFileSync(cssPath, 'utf8')
       const hasContrastTokens = cssContent.includes('--color-primary-fg-light') && cssContent.includes('--ui-primary-fg-light')
+      const hasTextPrimaryMapping = cssContent.includes('.text-primary {') && cssContent.includes('var(--color-primary-fg-light)')
+      const hasNeutralContrastTokens = cssContent.includes('--ui-text-dimmed:')
+      const hasFontSizeAxis = cssContent.includes('--text-sm: var(--fs')
+      const hasDarkGradTokens = cssContent.includes('--grad:') && cssContent.includes('--btn-grad:')
 
       // 基于租户真实配色与统一暗底 (DARK_SURFACE_HEX) 动态计算对比度 < 4.5 的不达标色阶
       const base = resolveBrandBase(plan.theme)
@@ -171,6 +175,14 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
 
       if (!hasContrastTokens) {
         add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失对比度求解令牌', s)
+      } else if (!hasTextPrimaryMapping) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失 .text-primary 文本主色高对比映射', s)
+      } else if (!hasNeutralContrastTokens) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失 --ui-text-dimmed 等高对比中性语义色', s)
+      } else if (!hasFontSizeAxis) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失 --text-sm: var(--fs) 字号轴统一绑定', s)
+      } else if (!hasDarkGradTokens) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失暗色模式 --grad / --btn-grad 安全渐变覆盖', s)
       } else if (typoFound) {
         add('contrast', 'WCAG AA 文本对比度门禁', 'fail', `组件中存在暗色对比度反转 (${typoFound}，当前配色下实测对比度 < 4.5:1)`, s)
       } else if (missingDarkBadge) {
@@ -178,7 +190,7 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       } else {
         add('contrast', 'WCAG AA 文本对比度门禁', 'pass',
           consumed
-            ? '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1) 且物料组件真实消费（动态亮度判据 0 缺陷）'
+            ? '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1) 且物料组件真实消费（字号轴/语义色/渐变/主色映射全达标）'
             : '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1)', s)
       }
     } else {

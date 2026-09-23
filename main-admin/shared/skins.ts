@@ -108,8 +108,8 @@ export const skinRadius = (skin: unknown): number =>
 /** 基座（= macOS·现代）：画廊里写在 .skin-frame 自身上。 */
 export const SKIN_BASE_VARS = "--r: 10px; --r-md: 8px; --r-sm: 7px; --r-pill: 999px; --bg: #f5f5f7; --bg-dark: #0f172a; --panel: #ffffff; --side: rgba(246,246,248,.78); --line: rgba(0,0,0,.09); --line-strong: rgba(0,0,0,.14); --text: #1d1d1f; --muted: #6e6e73; --side-fg: var(--text); --side-muted: var(--muted); --accent: #0a84ff; --accent-fg: #fff; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 6px 20px rgba(0,0,0,.06); --blur: saturate(180%) blur(20px); --pad: 14px; --row-h: 40px; --fs: 13px; --gap: 10px; --frame-r: calc(var(--r) + 4px); --grad: none; --btn-grad: none; --inset: none; border: 1px solid var(--line-strong); border-radius: var(--frame-r, var(--r)); background: var(--bg); color: var(--text); font-size: var(--fs); overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.14);"
 
-/** 暗色基座变量：暗色模式下接管浅色面板/侧栏/文本/边框 */
-export const SKIN_DARK_BASE_VARS = "--bg: #0b1220; --bg-dark: #0f172a; --panel: rgba(30,41,59,.93); --side: rgba(15,23,42,.72); --line: rgba(255,255,255,.12); --line-strong: rgba(255,255,255,.20); --text: #e2e8f0; --muted: #94a3b8; --side-fg: var(--text); --side-muted: var(--muted); --ui-bg: var(--bg-dark, #0f172a);"
+/** 暗色基座变量：暗色模式下接管浅色面板/侧栏/文本/边框/渐变 */
+export const SKIN_DARK_BASE_VARS = "--bg: #0b1220; --bg-dark: #0f172a; --panel: rgba(30,41,59,.93); --side: rgba(15,23,42,.72); --line: rgba(255,255,255,.12); --line-strong: rgba(255,255,255,.20); --text: #e2e8f0; --muted: #94a3b8; --side-fg: var(--text); --side-muted: var(--muted); --grad: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); --btn-grad: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02)); --ui-bg: var(--bg-dark, #0f172a);"
  
  /** 各皮肤覆盖的变量，逐条来自画廊的 .skin-frame[data-skin=x] 块。 */
  export const SKIN_VARS: Record<string, string> = {
@@ -250,7 +250,8 @@ export function galleryCss(): string {
     const one = sel.split(',').map(x => scopeOne(x.trim())).join(', ')
     return one + ' {'
   })
-  const vars = `.skin-frame { ${SKIN_BASE_VARS} }\n.dark .skin-frame, .skin-frame.dark { ${SKIN_DARK_BASE_VARS} }\n`
+  const vars = `.skin-frame { ${SKIN_BASE_VARS} }\n`
     + Object.entries(SKIN_VARS).map(([k, v]) => `.skin-frame[data-skin='${k}'] { ${v} }`).join('\n')
+    + `\n.dark .skin-frame:not([data-skin='glass']), .skin-frame.dark:not([data-skin='glass']) { ${SKIN_DARK_BASE_VARS} }\n.dark .skin-frame[data-skin='glass'], .skin-frame.dark[data-skin='glass'] { --ui-bg: var(--bg-dark, #121526); }\n`
   return vars + '\n' + scoped(ROLE_GENERIC) + '\n' + scoped(Object.values(ROLE_OWN).join('\n'))
 }

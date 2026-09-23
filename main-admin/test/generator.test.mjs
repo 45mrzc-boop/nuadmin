@@ -1422,15 +1422,20 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(portalPage.includes('text-primary-fg-light dark:text-primary-fg-dark'), 'portal page must consume text-primary-fg-light dark:text-primary-fg-dark')
     assert.ok(formPage.includes('text-primary-fg-badge dark:text-primary-fg-dark'), 'form page must consume text-primary-fg-badge dark:text-primary-fg-dark')
 
-    // 4. Verify.ts Case 4.7 code audit (Unified DARK_SURFACE_HEX & semantic badge dark coverage)
+    // 4. Verify.ts Case 4.7 code audit (Unified DARK_SURFACE_HEX & semantic badge dark coverage & gate expansions)
     const verifySrc = readFileSync(resolve(root, 'server/utils/gen/verify.ts'), 'utf-8')
     assert.ok(verifySrc.includes('contrastRatio(shades[i], DARK_SURFACE_HEX)'), 'verify.ts Case 4.7 must compute real contrast ratio per shade against DARK_SURFACE_HEX')
     assert.ok(verifySrc.includes('text-primary-fg-badge'), 'verify.ts Case 4.7 must verify text-primary-fg-badge dark coverage')
     assert.ok(verifySrc.includes("bcm.includes('dark:text-primary-fg-dark')"), 'verify.ts Case 4.7 must enforce semantic dark:text-primary-fg-dark coverage on badge tokens')
+    assert.ok(verifySrc.includes('hasDarkGradTokens'), 'verify.ts Case 4.7 must verify dark mode gradient tokens')
+    assert.ok(verifySrc.includes('hasTextPrimaryMapping'), 'verify.ts Case 4.7 must verify text-primary mapping')
+    assert.ok(verifySrc.includes('hasFontSizeAxis'), 'verify.ts Case 4.7 must verify font size axis')
 
     // 5. Design system dark tokens: skins.ts exports DEFAULT_DARK_BG, DARK_SURFACE_HEX equals #0f172a (calibrated with real Nuxt UI slate-900)
-    const { DEFAULT_DARK_BG } = await jiti.import(resolve(root, 'shared/skins.ts'))
+    const { DEFAULT_DARK_BG, SKIN_DARK_BASE_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
     assert.strictEqual(DEFAULT_DARK_BG, '#0f172a', 'DEFAULT_DARK_BG must equal #0f172a')
+    assert.ok(SKIN_DARK_BASE_VARS.includes('--grad: linear-gradient'), 'SKIN_DARK_BASE_VARS must include dark safe --grad token')
+    assert.ok(SKIN_DARK_BASE_VARS.includes('--btn-grad: linear-gradient'), 'SKIN_DARK_BASE_VARS must include dark safe --btn-grad token')
     const { DARK_SURFACE_HEX } = await jiti.import(resolve(root, 'server/utils/gen/app.ts'))
     assert.strictEqual(DARK_SURFACE_HEX, '#0f172a', 'DARK_SURFACE_HEX must equal #0f172a')
     const genApp = appFiles(mockPlan)
@@ -1440,6 +1445,14 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(generatedMainCss.includes('--text-sm: var(--fs'), 'main.css must bind --text-sm to --fs to cure I2 font size discrepancy')
     assert.ok(generatedMainCss.includes('--ui-text-dimmed:'), 'main.css must set high-contrast neutral text tokens')
     assert.ok(generatedMainCss.includes('.text-primary {'), 'main.css must map .text-primary to solved tokens')
+    assert.ok(generatedMainCss.includes('--grad: linear-gradient'), 'main.css must include dark mode --grad in .dark block')
+    assert.ok(generatedMainCss.includes('--btn-grad: linear-gradient'), 'main.css must include dark mode --btn-grad in .dark block')
+
+    // Droplet skin dark mode overrides (prevents light gradient regression on panel-head / btn)
+    const dropletPlan = { ...mockPlan, skin: 'macos-droplet' }
+    const dropletCss = appFiles(dropletPlan)['app/assets/css/main.css']
+    assert.ok(dropletCss.includes('.dark { --bg: #0b1220;'), 'droplet skin dark mode must override light background')
+    assert.ok(dropletCss.includes('--grad: linear-gradient(180deg, rgba(255,255,255,.06)'), 'droplet skin dark mode must override white panel gradient')
 
     // 6. Nuxt UI app.config.ts badge theme & size tokens
     const genUi = uiFiles(mockPlan)
