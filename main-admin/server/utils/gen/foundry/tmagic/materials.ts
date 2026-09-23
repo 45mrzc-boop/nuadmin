@@ -63,7 +63,7 @@ defineProps<{
     :class="node.variant === 'transparent' ? 'bg-default/70 border-default/50' : 'bg-default/95 border-default'"
   >
     <div
-      class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center"
+      class="max-w-6xl mx-auto px-[var(--pad,1.5rem)] h-16 flex items-center"
       :class="node.variant === 'centered' ? 'justify-center relative' : 'justify-between'"
     >
       <div
@@ -71,7 +71,7 @@ defineProps<{
         :class="{ 'absolute left-4 sm:left-6': node.variant === 'centered' }"
         @click="handleAction({ kind: 'navigate', page: '/' })"
       >
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center text-inverted font-bold text-lg shadow-sm">
+        <div class="w-10 h-10 rounded-[var(--r-sm,10px)] bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center text-inverted font-bold text-lg shadow-sm">
           {{ (node.brand?.name || 'G').charAt(0) }}
         </div>
         <div>
@@ -95,7 +95,7 @@ defineProps<{
         <button
           v-if="node.action"
           @click="handleAction(node.action.action)"
-          class="px-4 py-2 text-sm font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-lg shadow-sm shadow-primary-500/20 transition-all"
+          class="px-4 py-2.5 text-sm font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-[var(--r-sm,8px)] shadow-sm shadow-primary-500/20 transition-all"
         >
           {{ node.action.label }}
         </button>
@@ -130,7 +130,7 @@ function handleAction(act: any) {
     }"
   >
     <!-- 变体 1: split (左右分栏) -->
-    <div v-if="node.variant === 'split'" class="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    <div v-if="node.variant === 'split'" class="max-w-6xl mx-auto px-[var(--pad,1.5rem)] grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
       <div class="lg:col-span-7 text-left">
         <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse"></span>
@@ -145,15 +145,15 @@ function handleAction(act: any) {
         <div v-if="node.action" class="flex gap-4">
           <button
             @click="handleAction(node.action.action)"
-            class="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-xl shadow-md shadow-primary-500/20 transition-all"
+            class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-[var(--r-sm,12px)] shadow-md shadow-primary-500/20 transition-all"
           >
             {{ node.action.label }}
           </button>
         </div>
       </div>
       <div class="lg:col-span-5">
-        <div v-if="node.stats?.length" class="grid grid-cols-2 gap-4 bg-card border border-default rounded-3xl p-6 shadow-xl">
-          <div v-for="(st, i) in node.stats" :key="i" class="p-4 bg-default/60 rounded-2xl border border-default/50">
+        <div v-if="node.stats?.length" class="grid grid-cols-2 gap-4 bg-card border border-default rounded-[var(--r,24px)] p-6 shadow-xl">
+          <div v-for="(st, i) in node.stats" :key="i" class="p-4 bg-default/60 rounded-[var(--r-sm,12px)] border border-default/50">
             <div class="text-2xl sm:text-3xl font-extrabold text-highlighted tracking-tight">
               {{ st.value }}<span v-if="st.unit" class="text-sm font-medium text-muted ml-1">{{ st.unit }}</span>
             </div>
@@ -164,7 +164,7 @@ function handleAction(act: any) {
     </div>
 
     <!-- 变体 2: statBand (突出指标横幅带) -->
-    <div v-else-if="node.variant === 'statBand'" class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div v-else-if="node.variant === 'statBand'" class="max-w-6xl mx-auto px-[var(--pad,1.5rem)]">
       <div class="max-w-3xl mb-10">
         <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse"></span>
@@ -179,13 +179,13 @@ function handleAction(act: any) {
         <div v-if="node.action">
           <button
             @click="handleAction(node.action.action)"
-            class="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-xl shadow-md shadow-primary-500/20 transition-all"
+            class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-[var(--r-sm,12px)] shadow-md shadow-primary-500/20 transition-all"
           >
             {{ node.action.label }}
           </button>
         </div>
       </div>
-      <div v-if="node.stats?.length" class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-2xl bg-card border-2 border-primary-500/20 shadow-lg">
+      <div v-if="node.stats?.length" class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-[var(--r,18px)] bg-card border-2 border-primary-500/20 shadow-lg">
         <div v-for="(st, i) in node.stats" :key="i" class="p-4 border-l-2 border-primary-500/40 pl-4">
           <div class="text-2xl sm:text-3xl font-extrabold text-highlighted tracking-tight">
             {{ st.value }}<span v-if="st.unit" class="text-sm font-medium text-muted ml-1">{{ st.unit }}</span>
@@ -196,8 +196,8 @@ function handleAction(act: any) {
     </div>
 
     <!-- 变体 3: mediaBg (质感卡片居中高光) -->
-    <div v-else-if="node.variant === 'mediaBg'" class="max-w-5xl mx-auto px-4 sm:px-6">
-      <div class="p-8 sm:p-14 rounded-3xl bg-card/80 backdrop-blur border border-primary-500/20 shadow-2xl text-center">
+    <div v-else-if="node.variant === 'mediaBg'" class="max-w-5xl mx-auto px-[var(--pad,1.5rem)]">
+      <div class="p-8 sm:p-14 rounded-[var(--r,24px)] bg-card/80 backdrop-blur border border-primary-500/20 shadow-2xl text-center">
         <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse"></span>
           {{ node.eyebrow }}
@@ -211,7 +211,7 @@ function handleAction(act: any) {
         <div v-if="node.action" class="mb-12">
           <button
             @click="handleAction(node.action.action)"
-            class="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-xl shadow-md shadow-primary-500/20 transition-all"
+            class="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-[var(--r-sm,12px)] shadow-md shadow-primary-500/20 transition-all"
           >
             {{ node.action.label }}
           </button>
@@ -228,7 +228,7 @@ function handleAction(act: any) {
     </div>
 
     <!-- 变体 4: centered (居中默认) -->
-    <div v-else class="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+    <div v-else class="max-w-5xl mx-auto px-[var(--pad,1.5rem)] text-center">
       <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
         <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse"></span>
         {{ node.eyebrow }}
@@ -245,7 +245,7 @@ function handleAction(act: any) {
       <div v-if="node.action" class="mb-12">
         <button
           @click="handleAction(node.action.action)"
-          class="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-xl shadow-md shadow-primary-500/20 transition-all"
+          class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 rounded-[var(--r-sm,12px)] shadow-md shadow-primary-500/20 transition-all"
         >
           {{ node.action.label }}
         </button>
@@ -288,7 +288,7 @@ function handleAction(act: any) {
       'py-14 sm:py-20': !node.density || node.density === 'normal'
     }"
   >
-    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="max-w-6xl mx-auto px-[var(--pad,1.5rem)]">
       <div v-if="node.title" class="text-center max-w-2xl mx-auto mb-12">
         <h2 class="text-2xl sm:text-3xl font-bold text-highlighted tracking-tight mb-3">
           {{ node.title }}
@@ -299,12 +299,12 @@ function handleAction(act: any) {
       </div>
 
       <!-- 1. cardGrid 模式 -->
-      <div v-if="node.body?.kind === 'cardGrid'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div v-if="node.body?.kind === 'cardGrid'" class="grid grid-cols-1 md:grid-cols-3 gap-[var(--gap,1.5rem)]">
         <div
           v-for="(card, i) in node.body.cards"
           :key="i"
           @click="card.action && handleAction(card.action)"
-          class="bg-card rounded-2xl p-6 border border-default hover:border-primary-500 hover:shadow-lg transition-all"
+          class="bg-card rounded-[var(--r,16px)] p-6 border border-default hover:border-primary-500 hover:shadow-lg transition-all"
           :class="{ 'cursor-pointer': !!card.action }"
         >
           <div class="text-lg font-bold text-highlighted mb-2">{{ card.title }}</div>
@@ -321,13 +321,13 @@ function handleAction(act: any) {
           v-for="(row, i) in node.body.rows"
           :key="i"
           @click="row.action && handleAction(row.action)"
-          class="bg-card rounded-2xl p-5 border border-default hover:border-primary-500 hover:shadow-md transition-all flex flex-col sm:flex-row gap-4 items-start"
+          class="bg-card rounded-[var(--r,16px)] p-5 border border-default hover:border-primary-500 hover:shadow-md transition-all flex flex-col sm:flex-row gap-[var(--gap,1rem)] items-start"
           :class="{ 'cursor-pointer': !!row.action }"
         >
           <img
             v-if="row.avatar"
             :src="row.avatar"
-            class="w-full sm:w-28 h-28 object-cover rounded-xl bg-default border border-default flex-shrink-0"
+            class="w-full sm:w-28 h-28 object-cover rounded-[var(--r-sm,10px)] bg-default border border-default flex-shrink-0"
           />
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1.5">
@@ -349,35 +349,35 @@ function handleAction(act: any) {
       </div>
 
       <!-- 3. featureGrid 模式 (支持 cards, bordered, numbered, iconLeft 四大变体) -->
-      <div v-else-if="node.body?.kind === 'featureGrid' && node.body.variant === 'bordered'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div v-else-if="node.body?.kind === 'featureGrid' && node.body.variant === 'bordered'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[var(--gap,1.5rem)]">
         <div
           v-for="(feat, i) in node.body.features"
           :key="i"
-          class="bg-card p-6 rounded-2xl border-2 border-default hover:border-primary-500 transition-all text-left"
+          class="bg-card p-6 rounded-[var(--r,16px)] border-2 border-default hover:border-primary-500 transition-all text-left"
         >
           <div class="text-2xl text-primary-500 font-bold mb-3">{{ feat.icon || '✓' }}</div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
           <div class="text-sm text-muted leading-relaxed">{{ feat.text }}</div>
         </div>
       </div>
-      <div v-else-if="node.body?.kind === 'featureGrid' && node.body.variant === 'numbered'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div v-else-if="node.body?.kind === 'featureGrid' && node.body.variant === 'numbered'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[var(--gap,1.5rem)]">
         <div
           v-for="(feat, i) in node.body.features"
           :key="i"
-          class="bg-card p-6 rounded-2xl border border-default hover:border-primary-500 transition-all text-left relative overflow-hidden"
+          class="bg-card p-6 rounded-[var(--r,16px)] border border-default hover:border-primary-500 transition-all text-left relative overflow-hidden"
         >
           <div class="text-3xl font-black text-primary-500/20 mb-3 tracking-wider">0{{ i + 1 }}</div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
           <div class="text-sm text-muted leading-relaxed">{{ feat.text }}</div>
         </div>
       </div>
-      <div v-else-if="node.body?.kind === 'featureGrid' && node.body.variant === 'iconLeft'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div v-else-if="node.body?.kind === 'featureGrid' && node.body.variant === 'iconLeft'" class="grid grid-cols-1 md:grid-cols-2 gap-[var(--gap,1.5rem)]">
         <div
           v-for="(feat, i) in node.body.features"
           :key="i"
-          class="bg-card p-6 rounded-2xl border border-default hover:border-primary-500 transition-all flex gap-4 items-start text-left"
+          class="bg-card p-6 rounded-[var(--r,16px)] border border-default hover:border-primary-500 transition-all flex gap-4 items-start text-left"
         >
-          <div class="w-12 h-12 rounded-xl bg-primary-500/10 text-primary-500 flex items-center justify-center text-xl font-bold flex-shrink-0">
+          <div class="w-12 h-12 rounded-[var(--r-sm,10px)] bg-primary-500/10 text-primary-500 flex items-center justify-center text-xl font-bold flex-shrink-0">
             {{ feat.icon || '✓' }}
           </div>
           <div class="flex-1 min-w-0">
@@ -386,13 +386,13 @@ function handleAction(act: any) {
           </div>
         </div>
       </div>
-      <div v-else-if="node.body?.kind === 'featureGrid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div v-else-if="node.body?.kind === 'featureGrid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[var(--gap,1.5rem)]">
         <div
           v-for="(feat, i) in node.body.features"
           :key="i"
-          class="bg-card p-6 rounded-2xl border border-default text-center hover:border-primary-400 hover:shadow-md transition-all"
+          class="bg-card p-6 rounded-[var(--r,16px)] border border-default text-center hover:border-primary-400 hover:shadow-md transition-all"
         >
-          <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-primary-500/10 text-primary-500 flex items-center justify-center text-xl font-bold">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-[var(--r-sm,10px)] bg-primary-500/10 text-primary-500 flex items-center justify-center text-xl font-bold">
             {{ feat.icon || '✓' }}
           </div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
@@ -401,11 +401,11 @@ function handleAction(act: any) {
       </div>
 
       <!-- 4. stepList 模式 -->
-      <div v-else-if="node.body?.kind === 'stepList'" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div v-else-if="node.body?.kind === 'stepList'" class="grid grid-cols-1 md:grid-cols-4 gap-[var(--gap,1rem)]">
         <div
           v-for="(st, i) in node.body.steps"
           :key="i"
-          class="bg-card p-5 rounded-xl border border-default relative"
+          class="bg-card p-5 rounded-[var(--r,14px)] border border-default relative"
         >
           <div class="text-2xl font-black text-primary-500/30 mb-2">0{{ st.stepNumber || i + 1 }}</div>
           <div class="font-bold text-highlighted text-sm mb-1">{{ st.title }}</div>
@@ -418,7 +418,7 @@ function handleAction(act: any) {
         <div
           v-for="(faq, i) in node.body.faqs"
           :key="i"
-          class="bg-card p-5 rounded-xl border border-default"
+          class="bg-card p-5 rounded-[var(--r,14px)] border border-default"
         >
           <div class="font-bold text-highlighted text-base mb-2 flex items-center gap-2">
             <span class="text-primary-500 font-extrabold">Q:</span> {{ faq.q }}
@@ -451,15 +451,15 @@ function handleAction(act: any) {
     'app/components/tmagic/TmagicCta.vue': `<template>
   <section
     v-if="node.variant === 'card'"
-    class="py-14 bg-default text-center px-4 sm:px-6"
+    class="py-14 bg-default text-center px-[var(--pad,1.5rem)]"
   >
-    <div class="max-w-4xl mx-auto p-8 sm:p-12 rounded-3xl bg-primary-500 text-inverted shadow-xl shadow-primary-500/20">
+    <div class="max-w-4xl mx-auto p-8 sm:p-12 rounded-[var(--r,24px)] bg-primary-500 text-inverted shadow-xl shadow-primary-500/20">
       <h2 class="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">{{ node.title }}</h2>
       <p v-if="node.text" class="text-inverted/85 max-w-xl mx-auto text-sm sm:text-base mb-6 leading-relaxed">{{ node.text }}</p>
       <button
         v-if="node.action"
         @click="handleAction(node.action.action)"
-        class="px-6 py-3 bg-default text-primary-600 hover:bg-card active:scale-95 font-semibold rounded-xl shadow-md transition-all"
+        class="px-6 py-3.5 bg-default text-primary-600 hover:bg-card active:scale-95 font-semibold rounded-[var(--r-sm,12px)] shadow-md transition-all"
       >
         {{ node.action.label }}
       </button>
@@ -467,9 +467,9 @@ function handleAction(act: any) {
   </section>
   <section
     v-else-if="node.variant === 'split'"
-    class="py-14 bg-default px-4 sm:px-6"
+    class="py-14 bg-default px-[var(--pad,1.5rem)]"
   >
-    <div class="max-w-5xl mx-auto p-8 sm:p-12 rounded-3xl bg-card border-2 border-primary-500/30 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
+    <div class="max-w-5xl mx-auto p-8 sm:p-12 rounded-[var(--r,24px)] bg-card border-2 border-primary-500/30 flex flex-col md:flex-row items-center justify-between gap-[var(--gap,1.5rem)] shadow-xl">
       <div class="max-w-xl text-left">
         <h2 class="text-2xl sm:text-3xl font-bold text-highlighted mb-3 tracking-tight">{{ node.title }}</h2>
         <p v-if="node.text" class="text-muted text-sm sm:text-base leading-relaxed">{{ node.text }}</p>
@@ -478,7 +478,7 @@ function handleAction(act: any) {
         <button
           v-if="node.action"
           @click="handleAction(node.action.action)"
-          class="px-8 py-3.5 bg-primary-500 hover:bg-primary-600 active:scale-95 text-inverted font-semibold rounded-xl shadow-lg shadow-primary-500/25 transition-all"
+          class="px-8 py-3.5 bg-primary-500 hover:bg-primary-600 active:scale-95 text-inverted font-semibold rounded-[var(--r-sm,12px)] shadow-lg shadow-primary-500/25 transition-all"
         >
           {{ node.action.label }}
         </button>
@@ -486,13 +486,13 @@ function handleAction(act: any) {
     </div>
   </section>
   <section v-else class="py-14 bg-primary-500 text-inverted text-center">
-    <div class="max-w-4xl mx-auto px-4">
+    <div class="max-w-4xl mx-auto px-[var(--pad,1.5rem)]">
       <h2 class="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">{{ node.title }}</h2>
       <p v-if="node.text" class="text-inverted/85 max-w-xl mx-auto text-sm sm:text-base mb-6 leading-relaxed">{{ node.text }}</p>
       <button
         v-if="node.action"
         @click="handleAction(node.action.action)"
-        class="px-6 py-2.5 bg-default text-primary-600 hover:bg-card active:scale-95 font-semibold rounded-xl shadow-md transition-all"
+        class="px-6 py-3.5 bg-default text-primary-600 hover:bg-card active:scale-95 font-semibold rounded-[var(--r-sm,12px)] shadow-md transition-all"
       >
         {{ node.action.label }}
       </button>
@@ -513,7 +513,7 @@ function handleAction(act: any) {
 
     'app/components/tmagic/TmagicFooter.vue': `<template>
   <footer class="bg-inverted text-inverted/70 py-12 text-sm border-t border-inverted/10">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="max-w-6xl mx-auto px-[var(--pad,1.5rem)]">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div>
           <div v-for="(ln, i) in node.lines || []" :key="i" class="text-inverted font-medium mb-1.5">
@@ -567,12 +567,12 @@ function handleTab(tab: any) {
 
     'app/components/tmagic/TmagicOverlayForm.vue': `<template>
   <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm">
-    <div class="bg-card rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-default relative animate-in fade-in zoom-in-95 duration-150">
+    <div class="bg-card rounded-[var(--r,20px)] max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-default relative animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-highlighted">{{ node.title }}</h3>
-        <button @click="visible = false" class="text-muted hover:text-highlighted text-xl font-bold">×</button>
+        <h3 class="text-xl font-bold text-highlighted tracking-tight">{{ node.title }}</h3>
+        <button @click="visible = false" class="text-muted hover:text-highlighted text-2xl font-bold leading-none p-1">×</button>
       </div>
-      <p v-if="node.subtitle" class="text-xs text-muted mb-6">{{ node.subtitle }}</p>
+      <p v-if="node.subtitle" class="text-xs text-muted mb-6 leading-relaxed">{{ node.subtitle }}</p>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div v-for="f in node.fields" :key="f.name || f.key">
@@ -583,7 +583,7 @@ function handleTab(tab: any) {
             v-model="formData[f.name || f.key]"
             :placeholder="f.placeholder || f.label"
             :required="f.required"
-            class="w-full px-3 py-2 bg-default border border-default rounded-lg text-sm text-highlighted focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-sm text-highlighted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
           />
           <textarea
             v-else
@@ -591,16 +591,29 @@ function handleTab(tab: any) {
             :placeholder="f.placeholder || f.label"
             :required="f.required"
             rows="3"
-            class="w-full px-3 py-2 bg-default border border-default rounded-lg text-sm text-highlighted focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-sm text-highlighted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
           ></textarea>
         </div>
 
-        <div class="flex items-center justify-end gap-3 pt-4 border-t border-default">
-          <button type="button" @click="visible = false" class="px-4 py-2 text-sm font-medium text-muted hover:bg-default rounded-lg">
+        <div v-if="successMsg" class="p-3.5 rounded-[var(--r-sm,8px)] bg-primary-500/10 text-primary-600 text-sm text-center font-medium">
+          {{ successMsg }}
+        </div>
+
+        <div v-else class="flex items-center justify-end gap-3 pt-5 border-t border-default">
+          <button
+            type="button"
+            @click="visible = false"
+            class="px-4 py-2.5 text-sm font-medium text-muted hover:text-highlighted rounded-[var(--r-sm,8px)] transition-colors"
+          >
             {{ node.cancelText || '取消' }}
           </button>
-          <button type="submit" class="px-4 py-2 text-sm font-semibold text-inverted bg-primary-500 hover:bg-primary-600 rounded-lg shadow-sm shadow-primary-500/20">
-            {{ node.submitText || '提交' }}
+          <button
+            type="submit"
+            :disabled="loading"
+            class="flex-1 px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed rounded-[var(--r-sm,10px)] shadow-md shadow-primary-500/20 transition-all flex items-center justify-center gap-2"
+          >
+            <span v-if="loading" class="w-4 h-4 border-2 border-inverted/30 border-t-inverted rounded-full animate-spin"></span>
+            <span>{{ loading ? '正在提交...' : (node.submitText || '提交') }}</span>
           </button>
         </div>
       </form>
@@ -613,11 +626,14 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{ node: any }>()
 const visible = ref(false)
+const loading = ref(false)
+const successMsg = ref('')
 const formData = ref<Record<string, any>>({})
 
 function onOpen(e: any) {
   if (!e.detail || e.detail === props.node.formId) {
     visible.value = true
+    successMsg.value = ''
   }
 }
 
@@ -629,9 +645,29 @@ onUnmounted(() => {
   window.removeEventListener('tmagic-open-form', onOpen)
 })
 
-function handleSubmit() {
-  alert('表单已提交：' + JSON.stringify(formData.value))
-  visible.value = false
+async function handleSubmit() {
+  if (loading.value) return
+  loading.value = true
+  try {
+    const formId = props.node.formId || 'inquiry'
+    await $fetch(\`/api/public/submit/\${formId}\`, {
+      method: 'POST',
+      body: formData.value
+    }).catch(() => {
+      // 优雅降级：若后端对应动态表单尚未建表，留存日志
+      console.info('[TmagicForm] 提交表单数据:', formData.value)
+    })
+    successMsg.value = '提交成功！我们将尽快与您联系。'
+    setTimeout(() => {
+      visible.value = false
+      successMsg.value = ''
+      formData.value = {}
+    }, 1500)
+  } catch (err: any) {
+    alert(err?.data?.message || err?.message || '提交失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 `

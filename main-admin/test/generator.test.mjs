@@ -1044,6 +1044,29 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.strictEqual(techFeature.body.variant, 'cards', 'Tech tenant featureGrid variant must be cards')
     assert.strictEqual(techCta.variant, 'band', 'Tech tenant CTA variant must be band')
   })
+
+  it('20. Visual scale layer verification (D1-D4): Zero literal radius, full skin variable consumption, and form scale hierarchy', async () => {
+    const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
+    const materials = tmagicMaterialFiles()
+    const allCode = Object.values(materials).join('\n')
+
+    // D1 & D4: Zero literal radius rungs (must consume var(--r) or var(--r-sm))
+    const literalRadius = allCode.match(/rounded-(lg|xl|2xl|3xl)\b/g) || []
+    assert.strictEqual(literalRadius.length, 0, `Materials must have 0 literal rounded rungs, found ${literalRadius.length}`)
+
+    // Must consume skin variables (var(--r), var(--r-sm), var(--pad), var(--gap))
+    assert.ok(allCode.includes('var(--r'), 'Materials must consume var(--r)')
+    assert.ok(allCode.includes('var(--r-sm'), 'Materials must consume var(--r-sm)')
+    assert.ok(allCode.includes('var(--pad'), 'Materials must consume var(--pad)')
+    assert.ok(allCode.includes('var(--gap'), 'Materials must consume var(--gap)')
+
+    // D2 & D3: Form control scale hierarchy (submit button is flex-1, py-3.5, text-base, while input is py-2.5, text-sm)
+    const formCode = materials['app/components/tmagic/TmagicOverlayForm.vue']
+    assert.ok(formCode.includes('flex-1 px-6 py-3.5 text-base'), 'Submit button must be flex-1, py-3.5 and text-base')
+    assert.ok(formCode.includes('px-4 py-2.5'), 'Input field must be py-2.5')
+    assert.ok(formCode.includes('hover:text-highlighted'), 'Cancel button must be text button hierarchy')
+    assert.ok(formCode.includes('$fetch'), 'OverlayForm must call real public submit API')
+  })
 })
 
 
