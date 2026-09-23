@@ -1335,16 +1335,23 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       assert.ok(ratio800 >= 4.5, `Palette ${pal.id} shade 800 must pass WCAG AA (>= 4.5:1), got ${ratio800.toFixed(2)}:1`)
     }
 
-    // 3. I1: Template foreground text contrast conformity (no bare text-primary-500/600 on light backgrounds)
-    assert.ok(allMaterialsCode.includes('text-primary-800 dark:text-primary-200'), 'Badges and active dock must consume WCAG AA compliant text-primary-800 dark:text-primary-200')
+    // 3. I1: Template foreground text contrast conformity (consume semantic solver tokens, eliminate 1.8:1 typo)
+    assert.ok(allMaterialsCode.includes('text-primary-fg-badge dark:text-primary-fg-dark'), 'Badges and active dock must consume semantic tokens text-primary-fg-badge dark:text-primary-fg-dark')
+    assert.ok(allMaterialsCode.includes('text-primary-fg-light dark:text-primary-fg-dark'), 'CTA must consume semantic tokens text-primary-fg-light dark:text-primary-fg-dark')
     const ctaCode = materials['app/components/tmagic/TmagicCta.vue']
-    assert.ok(ctaCode.includes('text-primary-800 dark:text-primary-900'), 'CTA button on white must consume text-primary-800')
+    assert.ok(ctaCode.includes('text-primary-fg-light dark:text-primary-fg-dark'), 'CTA button must consume semantic tokens text-primary-fg-light dark:text-primary-fg-dark')
+    assert.ok(!ctaCode.includes('dark:text-primary-900'), 'CTA button must strictly prohibit dark:text-primary-900 (1.8:1 typo)')
+    assert.strictEqual((ctaCode.match(/dark:text-primary-900/g) || []).length, 0, 'CTA must have zero dark:text-primary-900 occurrences')
 
     // 4. I1: main.css exports semantic contrast variables
     const generatedApp = appFiles(mockPlan)
     const mainCssCode = generatedApp['app/assets/css/main.css']
     assert.ok(mainCssCode.includes('--color-primary-fg-light:'), 'main.css must export --color-primary-fg-light')
+    assert.ok(mainCssCode.includes('--color-primary-fg-dark:'), 'main.css must export --color-primary-fg-dark')
+    assert.ok(mainCssCode.includes('--color-primary-fg-badge:'), 'main.css must export --color-primary-fg-badge')
     assert.ok(mainCssCode.includes('--ui-primary-fg-light:'), 'main.css must export --ui-primary-fg-light')
+    assert.ok(mainCssCode.includes('--ui-primary-fg-dark:'), 'main.css must export --ui-primary-fg-dark')
+    assert.ok(mainCssCode.includes('--ui-primary-fg-badge:'), 'main.css must export --ui-primary-fg-badge')
 
     // 5. I2: USelect font-size override in /p/form
     const planWithCustomFields = {
@@ -1382,7 +1389,46 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const { verify } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
     assert.ok(typeof verify === 'function', 'verify function must be exported')
   })
+
+  it('25. UI Audit v2.3.8 verification (P0 CTA contrast typo eliminated, 100% solver token consumption, deepened Case 4.7 smoke gate)', async () => {
+    const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
+    const materials = tmagicMaterialFiles()
+    const allMaterialsCode = Object.values(materials).join('\n')
+
+    // 1. P0 Defect 1: Dark mode CTA text inversion typo strictly eliminated
+    const ctaCode = materials['app/components/tmagic/TmagicCta.vue']
+    assert.strictEqual((ctaCode.match(/dark:text-primary-900/g) || []).length, 0, 'Must have ZERO dark:text-primary-900 occurrences in CTA')
+    assert.strictEqual((allMaterialsCode.match(/dark:text-primary-900/g) || []).length, 0, 'Must have ZERO dark:text-primary-900 occurrences across all materials')
+
+    // 2. P0 Defect 2: 100% mathematical solver token consumption (zero dead code)
+    assert.ok(allMaterialsCode.includes('text-primary-fg-light'), 'Materials must consume text-primary-fg-light')
+    assert.ok(allMaterialsCode.includes('text-primary-fg-badge'), 'Materials must consume text-primary-fg-badge')
+    assert.ok(allMaterialsCode.includes('dark:text-primary-fg-dark'), 'Materials must consume dark:text-primary-fg-dark')
+
+    // 3. UI public pages consume semantic solver tokens
+    const planWithLandings = {
+      ...mockPlan,
+      caps: {
+        landing_poster: { version: '1.0.0', config: { title: '测试海报' } },
+        landing_portal: { version: '1.0.0', config: { portalTitle: '测试门户', listModel: 'goods' } },
+        landing_form: { version: '1.0.0', config: { formTitle: '测试表单', targetModel: 'goods' } }
+      }
+    }
+    const publicUi = uiFiles(planWithLandings)
+    const posterPage = publicUi['app/pages/p/[scene].vue']
+    const portalPage = publicUi['app/pages/portal/index.vue']
+    const formPage = publicUi['app/pages/p/form.vue']
+    assert.ok(posterPage.includes('text-primary-fg-badge dark:text-primary-fg-dark'), 'poster page must consume text-primary-fg-badge dark:text-primary-fg-dark')
+    assert.ok(portalPage.includes('text-primary-fg-light dark:text-primary-fg-dark'), 'portal page must consume text-primary-fg-light dark:text-primary-fg-dark')
+    assert.ok(formPage.includes('text-primary-fg-badge dark:text-primary-fg-dark'), 'form page must consume text-primary-fg-badge dark:text-primary-fg-dark')
+
+    // 4. Verify.ts Case 4.7 code audit
+    const verifySrc = readFileSync(resolve(root, 'server/utils/gen/verify.ts'), 'utf-8')
+    assert.ok(verifySrc.includes('dark:text-primary-900'), 'verify.ts Case 4.7 must actively scan for dark:text-primary-900 typo')
+    assert.ok(verifySrc.includes('primary-fg-light') && verifySrc.includes('primary-fg-badge'), 'verify.ts Case 4.7 must verify real component consumption')
+  })
 })
+
 
 
 

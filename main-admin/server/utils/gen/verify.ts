@@ -104,19 +104,8 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       UDashboardNavbar: ['left', 'center', 'right', 'title']
     }
     const bad: string[] = []
-    const walkVue = async (d: string): Promise<string[]> => {
-      const out: string[] = []
-      let es: any[] = []
-      try { es = await readdir(d, { withFileTypes: true }) } catch { return out }
-      for (const e of es) {
-        const p = join(d, e.name)
-        if (e.isDirectory()) out.push(...await walkVue(p))
-        else if (e.name.endsWith('.vue')) out.push(p)
-      }
-      return out
-    }
     for (const file of await walkVue(join(root, 'app'))) {
-      const src = await readFileSync(file, 'utf8')
+      const src = readFileSync(file, 'utf8')
       for (const [comp, allowed] of Object.entries(SLOTS)) {
         const re = new RegExp(`<${comp}\\b[\\s\\S]*?</${comp}>`, 'g')
         for (const block of src.match(re) ?? []) {
@@ -130,7 +119,7 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       bad.length ? bad.slice(0, 4).join(' | ') : '未发现拼错或越界的具名槽', s)
   }
 
-  // 4.7 WCAG AA 文本对比度门禁 (检验主色阶与成对前景色阶求解完整性)
+  // 4.7 WCAG AA 文本对比度门禁 (检验主色阶与成对前景色阶求解完整性及真实消费)
   s = Date.now()
   {
     const cssPath = join(root, 'app/assets/css/main.css')
@@ -138,8 +127,32 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
     if (hasCss) {
       const cssContent = readFileSync(cssPath, 'utf8')
       const hasContrastTokens = cssContent.includes('--color-primary-fg-light') && cssContent.includes('--ui-primary-fg-light')
-      add('contrast', 'WCAG AA 文本对比度门禁', hasContrastTokens ? 'pass' : 'fail',
-        hasContrastTokens ? '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1)' : 'main.css 缺失对比度求解令牌', s)
+
+      const vueFiles = await walkVue(join(root, 'app'))
+      let consumed = false
+      let hasTypo = false
+      for (const f of vueFiles) {
+        try {
+          const src = readFileSync(f, 'utf8')
+          if (src.includes('primary-fg-light') || src.includes('primary-fg-badge') || src.includes('primary-fg-dark')) {
+            consumed = true
+          }
+          if (src.includes('dark:text-primary-900')) {
+            hasTypo = true
+          }
+        } catch {}
+      }
+
+      if (!hasContrastTokens) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失对比度求解令牌', s)
+      } else if (hasTypo) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', '组件中存在暗色对比度反转笔误 (dark:text-primary-900 对比度 < 2:1)', s)
+      } else {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'pass',
+          consumed
+            ? '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1) 且物料组件真实消费'
+            : '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1)', s)
+      }
     } else {
       add('contrast', 'WCAG AA 文本对比度门禁', 'pass', '默认设计系统预置合规对比度', s)
     }
@@ -222,6 +235,18 @@ async function walkTs(root: string): Promise<string[]> {
     }
   }
   await walk(root)
+  return out
+}
+
+async function walkVue(dir: string): Promise<string[]> {
+  const out: string[] = []
+  let es: any[] = []
+  try { es = await readdir(dir, { withFileTypes: true }) } catch { return out }
+  for (const e of es) {
+    const p = join(dir, e.name)
+    if (e.isDirectory()) out.push(...await walkVue(p))
+    else if (e.name.endsWith('.vue')) out.push(p)
+  }
   return out
 }
 

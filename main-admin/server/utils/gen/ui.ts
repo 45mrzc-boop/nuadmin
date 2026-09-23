@@ -4955,7 +4955,7 @@ onMounted(async () => {
 <template>
   <div class="min-h-screen bg-default text-default flex flex-col items-center justify-center p-4 sm:p-6 font-sans antialiased">
     <div class="w-full max-w-md bg-card border border-default rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col items-center text-center space-y-6">
-      <div class="size-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 text-primary-700 dark:text-primary-300 flex items-center justify-center text-3xl shadow-inner">
+      <div class="size-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 text-primary-fg-badge dark:text-primary-fg-dark flex items-center justify-center text-3xl shadow-inner">
         📱
       </div>
 
@@ -4974,7 +4974,7 @@ onMounted(async () => {
 
       <div class="flex items-center gap-2 text-xs text-muted bg-muted/20 px-4 py-2 rounded-full border border-default">
         <span>已累计访问：</span>
-        <span class="font-bold text-primary-800 dark:text-primary-200 tabular-nums">{{ (info.channel?.pv ?? 0) + 1 }}</span>
+        <span class="font-bold text-primary-fg-badge dark:text-primary-fg-dark tabular-nums">{{ (info.channel?.pv ?? 0) + 1 }}</span>
         <span>次</span>
       </div>
 
@@ -5103,7 +5103,7 @@ function resetForm() {
     <div class="w-full max-w-2xl bg-card border border-default rounded-[var(--r,16px)] p-[var(--pad,1.5rem)] sm:p-[calc(var(--pad,1.5rem)*1.5)] shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
       <div v-if="!submitted" class="space-y-6">
         <div class="text-center space-y-2">
-          <div class="inline-flex size-14 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-700 dark:text-primary-300 items-center justify-center mb-1">
+          <div class="inline-flex size-14 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-fg-badge dark:text-primary-fg-dark items-center justify-center mb-1">
             <svg class="size-7 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
               <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
@@ -5284,7 +5284,7 @@ onMounted(loadData)
           </div>
           <div class="flex items-center justify-between text-xs text-muted pt-2 border-t border-default">
             <span>ID: {{ item.id }}</span>
-            <span class="text-primary-700 dark:text-primary-300 flex items-center gap-1 font-medium">查看详情 <UIcon name="i-lucide-chevron-right" class="size-3.5" /></span>
+            <span class="text-primary-fg-light dark:text-primary-fg-dark flex items-center gap-1 font-medium">查看详情 <UIcon name="i-lucide-chevron-right" class="size-3.5" /></span>
           </div>
         </div>
       </div>
