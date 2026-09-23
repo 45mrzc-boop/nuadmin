@@ -25,12 +25,16 @@ const REQUIRED = [
 ]
 
 /**
- * 原生暗色皮肤物理双特征判定：浅色块文本为白且次要文本为白（支持 rgba、严格定长锚定的 4/8 位 hex-alpha、以及 oklch alpha），天然无需暗色色板重写
+ * 原生暗色皮肤物理双特征判定：
+ * 1. 浅色块主文本必须为不透明白（#fff, #ffffff, #ffffffff, rgb(255,255,255), oklch(1/100% 0 0)）
+ * 2. 次要文本必须为半透明白（rgba(255,255,255,...), 严格定长的 4/8 位 hex-alpha, 或 oklch alpha）
+ * 满足双特征即视为原生暗色皮肤，天然无需暗色色板重写。
  */
 export function isNativeDarkSkin(lightBlock: string): boolean {
   if (!lightBlock) return false
-  return /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock)
-    && /--muted:\s*(?:rgba\(255,\s*255,\s*255|#fff[0-9a-f]\b|#ffffff[0-9a-f]{2}\b|oklch\(\s*1\s+0\s+0\s*\/\s*0?\.\d+)/i.test(lightBlock)
+  const isOpaqueWhiteText = /--text:\s*(?:#fff\b|#ffffff\b|#ffffffff\b|rgb\(\s*255,\s*255,\s*255\s*\)|oklch\(\s*(?:1|100%)\s+0\s+0\s*(?:\/\s*1(?:\.0+)?\s*)?\))/i.test(lightBlock)
+  const isTranslucentWhiteMuted = /--muted:\s*(?:rgba\(\s*255,\s*255,\s*255|rgb\(\s*255\s+255\s+255\s*\/|#fff[0-9a-f]\b|#ffffff[0-9a-f]{2}\b|oklch\(\s*(?:1|100%)\s+0\s+0\s*\/\s*(?:0?\.\d+|\d{1,2}%))/i.test(lightBlock)
+  return isOpaqueWhiteText && isTranslucentWhiteMuted
 }
 
 /**

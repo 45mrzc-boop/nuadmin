@@ -1497,7 +1497,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !new Set(toks(forgedDarkBlock)).has(k))
     assert.deepStrictEqual(forgedMissing, ['--panel'], 'Adversarial check: missing --panel in dark block must be detected')
 
-    // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing)
+    // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing: 20 cases)
     const nativeDarkTable = [
       ['--text: #fff; --muted: rgba(255,255,255,.68);', true, 'glass actual CSS'],
       ['--text: #fff; --muted: rgba(255, 255, 255, .68);', true, 'rgba with spaces'],
@@ -1511,6 +1511,14 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       ['--text: #fff; --muted: oklch(1 0 0 / 1);', false, 'oklch opaque white (must not exempt)'],
       ['--text: #1d1d1f; --muted: #6e6e73;', false, 'standard light skin'],
       ['', false, 'empty block'],
+      ['--text: #fff; --muted: #fff9;', true, '4-digit hex-alpha #fff9'],
+      ['--text: #ffffffff; --muted: rgba(255,255,255,.68);', true, '--text 8-digit hex #ffffffff'],
+      ['--text: oklch(1 0 0); --muted: rgba(255,255,255,.68);', true, '--text oklch(1 0 0)'],
+      ['--text: oklch(100% 0 0); --muted: rgba(255,255,255,.68);', true, '--text oklch(100% 0 0) percentage'],
+      ['--text: #fff; --muted: oklch(100% 0 0 / .68);', true, '--muted oklch(100% 0 0 / .68) percentage'],
+      ['--text: #fff; --muted: oklch(100% 0 0 / 1);', false, '--muted oklch(100% 0 0 / 1) opaque percentage'],
+      ['--text: #fff; --muted: oklch(100% 0 0 / 68%);', true, '--muted oklch percentage alpha 68%'],
+      ['--text: #6e6e73; --muted: rgba(255,255,255,.68);', false, 'dark text with white muted'],
     ]
     for (const [block, expected, label] of nativeDarkTable) {
       assert.strictEqual(isNativeDarkSkin(block), expected, `isNativeDarkSkin table assertion failed for: ${label}`)
