@@ -1386,16 +1386,18 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(customFormPage.includes(':ui="{ select: \'text-[length:var(--fs,14px)]\' }"'), 'USelect must pass :ui select font size prop')
 
     // 6. Verify smoke gate: includes WCAG AA contrast check
-    const { verify, isNativeDarkSkin, parseWhiteLiteral, lastDecl } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
+    const { verify, isNativeDarkSkin, parseWhiteLiteral, lastDecl, isColorless, hasLinearGradient } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
     assert.ok(typeof verify === 'function', 'verify function must be exported')
     assert.ok(typeof isNativeDarkSkin === 'function', 'isNativeDarkSkin helper must be exported')
     assert.ok(typeof parseWhiteLiteral === 'function', 'parseWhiteLiteral helper must be exported')
     assert.ok(typeof lastDecl === 'function', 'lastDecl helper must be exported')
+    assert.ok(typeof isColorless === 'function', 'isColorless helper must be exported')
+    assert.ok(typeof hasLinearGradient === 'function', 'hasLinearGradient helper must be exported')
   })
 
   it('25. UI Audit v2.3.8 verification (P0 CTA contrast typo eliminated, 100% solver token consumption, deepened Case 4.7 smoke gate)', async () => {
     const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
-    const { isNativeDarkSkin, parseWhiteLiteral, lastDecl, darkCoverageGap, isColorless } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
+    const { isNativeDarkSkin, parseWhiteLiteral, lastDecl, darkCoverageGap, isColorless, hasLinearGradient } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
     const materials = tmagicMaterialFiles()
     const allMaterialsCode = Object.values(materials).join('\n')
 
@@ -1443,6 +1445,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('unmanagedDecor'), 'verify.ts Case 4.7 must check unmanagedDecor')
     assert.ok(verifySrc.includes('darkCoverageGap'), 'verify.ts Case 4.7 must export and use darkCoverageGap')
     assert.ok(verifySrc.includes('isColorless'), 'verify.ts Case 4.7 must implement isColorless')
+    assert.ok(verifySrc.includes('hasLinearGradient'), 'verify.ts Case 4.7 must implement hasLinearGradient')
     assert.ok(verifySrc.includes('isNativeDarkSkin'), 'verify.ts Case 4.7 must invoke exported isNativeDarkSkin')
     assert.ok(verifySrc.includes('parseWhiteLiteral'), 'verify.ts Case 4.7 must implement parseWhiteLiteral')
     assert.ok(verifySrc.includes('lastDecl'), 'verify.ts Case 4.7 must implement lastDecl')
@@ -1501,6 +1504,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     // Adversarial verification 1: simulate missing dark token (e.g. --panel removed from dark block)
     const forgedDroplet = dropletCss.slice(0, iDark) + dropletCss.slice(iDark).replace(/--panel:\s*[^;]+;/, '')
     const dropletLightBlock = dropletCss.slice(dropletCss.indexOf('/* 皮肤：'), iDark)
+    const dropletDarkBlock = dropletCss.slice(iDark)
     const forgedDarkBlock = forgedDroplet.slice(forgedDroplet.lastIndexOf('.dark {'))
     const forgedMissing = darkCoverageGap(dropletLightBlock, forgedDarkBlock)
     assert.deepStrictEqual(forgedMissing, ['--panel'], 'Adversarial check: missing --panel in dark block must be detected')
@@ -1524,22 +1528,37 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const glassDarkBlock = glassCss.slice(glassCss.lastIndexOf('.dark {'))
     assert.deepStrictEqual(darkCoverageGap(glassLightBlock, glassDarkBlock), [], 'Glass native dark skin must be exempted by darkCoverageGap')
 
-    // 5.1.1 isColorless unit test matrix & case-insensitive none / !important tests (P4 Value Guard)
+    // 5.1.1 isColorless unit test matrix & case-insensitive none / empty / !important tests (P4 Value Guard)
     assert.strictEqual(isColorless('none'), true, 'none keyword')
     assert.strictEqual(isColorless(' NONE '), true, 'uppercase NONE with whitespace')
     assert.strictEqual(isColorless('None !important'), true, 'titlecase None with !important')
     assert.strictEqual(isColorless('none ! important'), true, 'none with spaced ! important')
+    assert.strictEqual(isColorless(''), true, 'empty string is colorless')
+    assert.strictEqual(isColorless(' '), true, 'whitespace string is colorless')
+    assert.strictEqual(isColorless('!important'), true, '!important without value is colorless')
     assert.strictEqual(isColorless('inset 1px 1px 0 #fff'), false, 'real inset shadow is not colorless')
     assert.strictEqual(isColorless('inherit'), false, 'inherit is not colorless')
     assert.strictEqual(isColorless('unset'), false, 'unset is not colorless')
 
-    // Case-insensitive / !important none in darkCoverageGap (must not produce false positive)
+    // Case-insensitive / !important none / empty value in darkCoverageGap (must not produce false positive)
     assert.deepStrictEqual(darkCoverageGap('--text:#1d1d1f; --muted:#6e6e73; --inset: NONE;', '--text:#e2e8f0; --muted:#94a3b8;'), [], 'NONE must be exempted as colorless')
     assert.deepStrictEqual(darkCoverageGap('--text:#1d1d1f; --muted:#6e6e73; --inset: none !important;', '--text:#e2e8f0; --muted:#94a3b8;'), [], 'none !important must be exempted as colorless')
+    assert.deepStrictEqual(darkCoverageGap('--text:#1d1d1f; --muted:#6e6e73; --inset: ;', '--text:#e2e8f0; --muted:#94a3b8;'), [], 'empty inset must be exempted as colorless')
 
-    // Case-insensitive LINEAR-GRADIENT adversarial check
-    const upperGradBlock = dropletLightBlock.replace('linear-gradient', 'LINEAR-GRADIENT')
-    assert.ok(/--(?:btn-)?grad:\s*linear-gradient/i.test(upperGradBlock), 'needsDarkGrad must match uppercase LINEAR-GRADIENT')
+    // 5.1.2 hasLinearGradient unit test matrix & uppercase LINEAR-GRADIENT tests (falsifiable black-box tests)
+    const upperGradBlock = dropletLightBlock.replaceAll('linear-gradient', 'LINEAR-GRADIENT')
+    const upperDarkBlock = dropletDarkBlock.replaceAll('linear-gradient', 'LINEAR-GRADIENT')
+    assert.strictEqual(hasLinearGradient(upperGradBlock), true, 'hasLinearGradient must match uppercase LINEAR-GRADIENT with any (default)')
+    assert.strictEqual(hasLinearGradient(upperGradBlock, 'grad'), true, 'hasLinearGradient must match uppercase LINEAR-GRADIENT for grad')
+    assert.strictEqual(hasLinearGradient(upperGradBlock, 'btn-grad'), true, 'hasLinearGradient must match uppercase LINEAR-GRADIENT for btn-grad')
+    assert.strictEqual(hasLinearGradient(upperGradBlock, 'both'), true, 'hasLinearGradient must match uppercase LINEAR-GRADIENT for both')
+    assert.strictEqual(hasLinearGradient(upperDarkBlock, 'both'), true, 'hasLinearGradient must match uppercase dark block for both')
+
+    // Negative cases
+    assert.strictEqual(hasLinearGradient('--grad: none; --btn-grad: none;'), false, 'none is not linear-gradient')
+    assert.strictEqual(hasLinearGradient('--grad: radial-gradient(circle, #fff, #000);'), false, 'radial gradient is not linear-gradient')
+    assert.strictEqual(hasLinearGradient('--grad: linear-gradient(180deg,#fff,#000);', 'btn-grad'), false, 'grad only does not satisfy btn-grad')
+    assert.strictEqual(hasLinearGradient('--grad: linear-gradient(180deg,#fff,#000);', 'both'), false, 'grad only does not satisfy both')
 
     // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing; authoritative length asserted below)
     const nativeDarkTable = [
