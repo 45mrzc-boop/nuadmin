@@ -67,7 +67,7 @@ defineProps<{
 
     'app/components/tmagic/TmagicHeader.vue': `<template>
   <header
-    class="sticky top-0 z-40 w-full backdrop-blur-[var(--blur,blur(16px))] border-b transition-shadow"
+    class="sticky top-0 z-40 w-full [backdrop-filter:var(--blur,blur(16px))] border-b transition-shadow"
     :class="node.variant === 'transparent' ? 'bg-default/70 border-default/50' : 'bg-default/95 border-default'"
   >
     <div
@@ -97,7 +97,7 @@ defineProps<{
           v-for="(link, i) in node.links"
           :key="i"
           @click="handleAction(link.action)"
-          class="text-[length:var(--fs,14px)] font-medium text-muted hover:text-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-[var(--r-sm,8px)] px-2 py-1 transition-colors"
+          class="text-[length:var(--fs,14px)] font-medium text-muted hover:text-primary-700 dark:hover:text-primary-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-[var(--r-sm,8px)] px-2 py-1 transition-colors"
         >
           {{ link.label }}
         </button>
@@ -144,7 +144,7 @@ function handleAction(act: any) {
     <!-- 变体 1: split (左右分栏) -->
     <div v-if="node.variant === 'split'" class="max-w-6xl mx-auto px-[var(--pad,1.5rem)] grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
       <div class="lg:col-span-7 text-left">
-        <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
+        <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-800 dark:text-primary-200 mb-6 ring-1 ring-primary-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse motion-reduce:animate-none"></span>
           {{ node.eyebrow }}
         </div>
@@ -178,7 +178,7 @@ function handleAction(act: any) {
     <!-- 变体 2: statBand (突出指标横幅带) -->
     <div v-else-if="node.variant === 'statBand'" class="max-w-6xl mx-auto px-[var(--pad,1.5rem)]">
       <div class="max-w-3xl mb-10">
-        <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
+        <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-800 dark:text-primary-200 mb-6 ring-1 ring-primary-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse motion-reduce:animate-none"></span>
           {{ node.eyebrow }}
         </div>
@@ -209,8 +209,8 @@ function handleAction(act: any) {
 
     <!-- 变体 3: mediaBg (质感卡片居中高光) -->
     <div v-else-if="node.variant === 'mediaBg'" class="max-w-5xl mx-auto px-[var(--pad,1.5rem)]">
-      <div class="p-8 sm:p-14 rounded-[var(--r,16px)] bg-card/80 backdrop-blur-[var(--blur,blur(20px))] border border-primary-500/20 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] text-center">
-        <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
+      <div class="p-8 sm:p-14 rounded-[var(--r,16px)] bg-card/80 [backdrop-filter:var(--blur,blur(20px))] border border-primary-500/20 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] text-center">
+        <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-800 dark:text-primary-200 mb-6 ring-1 ring-primary-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse motion-reduce:animate-none"></span>
           {{ node.eyebrow }}
         </div>
@@ -241,7 +241,7 @@ function handleAction(act: any) {
 
     <!-- 变体 4: centered (居中默认) -->
     <div v-else class="max-w-5xl mx-auto px-[var(--pad,1.5rem)] text-center">
-      <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
+      <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-800 dark:text-primary-200 mb-6 ring-1 ring-primary-500/20">
         <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse motion-reduce:animate-none"></span>
         {{ node.eyebrow }}
       </div>
@@ -362,14 +362,14 @@ function handleAction(act: any) {
             />
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1.5">
-                <span v-if="row.meta" class="text-xs px-2 py-0.5 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-600 font-medium">
+                <span v-if="row.meta" class="text-xs px-2 py-0.5 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-800 dark:text-primary-200 font-medium">
                   {{ row.meta }}
                 </span>
                 <span v-for="(tg, tgi) in row.tags || []" :key="tgi" class="text-xs px-2 py-0.5 rounded-[var(--r-md,12px)] bg-default text-muted border border-default font-medium">
                   {{ tg }}
                 </span>
               </div>
-              <h3 class="text-base sm:text-lg font-bold text-highlighted mb-1.5 hover:text-primary-500 transition-colors line-clamp-1">
+              <h3 class="text-base sm:text-lg font-bold text-highlighted mb-1.5 hover:text-primary-700 dark:hover:text-primary-300 transition-colors line-clamp-1">
                 {{ row.title }}
               </h3>
               <p class="text-[length:var(--fs,14px)] text-muted line-clamp-2 leading-relaxed">
@@ -394,7 +394,7 @@ function handleAction(act: any) {
           :key="i"
           class="bg-card p-6 rounded-[var(--r,16px)] border-2 border-default hover:border-primary-500 transition-all text-left"
         >
-          <div class="w-10 h-10 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 flex items-center justify-center mb-3">
+          <div class="w-10 h-10 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-700 dark:text-primary-300 flex items-center justify-center mb-3">
             <svg class="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getIconPath(feat.icon)"></svg>
           </div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
@@ -418,7 +418,7 @@ function handleAction(act: any) {
           :key="i"
           class="bg-card p-6 rounded-[var(--r,16px)] border border-default hover:border-primary-500 transition-all flex gap-4 items-start text-left"
         >
-          <div class="w-12 h-12 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 flex items-center justify-center flex-shrink-0">
+          <div class="w-12 h-12 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-700 dark:text-primary-300 flex items-center justify-center flex-shrink-0">
             <svg class="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getIconPath(feat.icon)"></svg>
           </div>
           <div class="flex-1 min-w-0">
@@ -433,7 +433,7 @@ function handleAction(act: any) {
           :key="i"
           class="bg-card p-6 rounded-[var(--r,16px)] border border-default text-center hover:border-primary-400 hover:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] transition-all"
         >
-          <div class="w-12 h-12 mx-auto mb-4 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 flex items-center justify-center">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-700 dark:text-primary-300 flex items-center justify-center">
             <svg class="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getIconPath(feat.icon)"></svg>
           </div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
@@ -462,7 +462,7 @@ function handleAction(act: any) {
           class="bg-card p-6 rounded-[var(--r,16px)] border border-default"
         >
           <div class="font-bold text-highlighted text-base mb-2 flex items-center gap-2">
-            <span class="text-primary-500 font-extrabold">Q:</span> {{ faq.q }}
+            <span class="text-primary-800 dark:text-primary-200 font-extrabold">Q:</span> {{ faq.q }}
           </div>
           <div class="text-[length:var(--fs,14px)] text-muted pl-6 leading-relaxed">
             {{ faq.a }}
@@ -536,7 +536,7 @@ function handleAction(act: any) {
       <button
         v-if="node.action"
         @click="handleAction(node.action.action)"
-        class="h-[calc(var(--row-h,40px)+8px)] px-6 bg-default text-primary-600 hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 font-semibold rounded-[var(--r-sm,8px)] transition-all inline-flex items-center justify-center"
+        class="h-[calc(var(--row-h,40px)+8px)] px-6 bg-default text-primary-800 dark:text-primary-900 hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 font-semibold rounded-[var(--r-sm,8px)] transition-all inline-flex items-center justify-center"
       >
         {{ node.action.label }}
       </button>
@@ -569,7 +569,7 @@ function handleAction(act: any) {
       <button
         v-if="node.action"
         @click="handleAction(node.action.action)"
-        class="h-[calc(var(--row-h,40px)+8px)] px-6 bg-default text-primary-600 hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 font-semibold rounded-[var(--r-sm,8px)] transition-all inline-flex items-center justify-center"
+        class="h-[calc(var(--row-h,40px)+8px)] px-6 bg-default text-primary-800 dark:text-primary-900 hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 font-semibold rounded-[var(--r-sm,8px)] transition-all inline-flex items-center justify-center"
       >
         {{ node.action.label }}
       </button>
@@ -620,7 +620,7 @@ defineProps<{ node: any }>()
   <nav
     role="tablist"
     aria-label="快捷导航"
-    class="fixed bottom-0 inset-x-0 bg-default/95 backdrop-blur-[var(--blur,blur(20px))] border-t border-default z-40 py-1.5 px-4 flex justify-around md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:px-6 md:py-2 md:rounded-[var(--r-pill,999px)] md:border md:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] md:gap-6 md:bg-default/90"
+    class="fixed bottom-0 inset-x-0 bg-default/95 [backdrop-filter:var(--blur,blur(20px))] border-t border-default z-40 py-1.5 px-4 flex justify-around md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:px-6 md:py-2 md:rounded-[var(--r-pill,999px)] md:border md:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] md:gap-6 md:bg-default/90"
   >
     <button
       v-for="tab in node.tabs"
@@ -630,7 +630,7 @@ defineProps<{ node: any }>()
       :aria-label="tab.label"
       @click="handleTab(tab)"
       class="flex flex-col md:flex-row items-center gap-1 text-xs font-medium py-1 px-2.5 rounded-[var(--r-sm,8px)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-      :class="node.current === tab.id ? 'text-primary-500 font-bold bg-primary-500/10' : 'text-muted hover:text-highlighted'"
+      :class="node.current === tab.id ? 'text-primary-800 dark:text-primary-200 font-bold bg-primary-500/10' : 'text-muted hover:text-highlighted'"
     >
       <svg class="w-4 h-4 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getTabIcon(tab.icon)"></svg>
       <span>{{ tab.label }}</span>
@@ -666,7 +666,7 @@ function handleTab(tab: any) {
 `,
 
     'app/components/tmagic/TmagicOverlayForm.vue': `<template>
-  <div v-if="visible" role="dialog" aria-modal="true" aria-labelledby="modal-form-title" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-[var(--blur,blur(8px))]">
+  <div v-if="visible" role="dialog" aria-modal="true" aria-labelledby="modal-form-title" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 [backdrop-filter:var(--blur,blur(8px))]">
     <div class="bg-card rounded-[var(--r,16px)] max-w-lg w-full p-6 sm:p-8 shadow-[var(--shadow,0_20px_40px_rgba(0,0,0,0.18))] border border-default relative animate-in fade-in zoom-in-95 duration-150 motion-reduce:animate-none">
       <div class="flex items-center justify-between mb-4">
         <h3 id="modal-form-title" class="text-xl font-bold text-highlighted tracking-tight">{{ node.title }}</h3>
@@ -702,7 +702,7 @@ function handleTab(tab: any) {
           <span>{{ errorMsg }}</span>
         </div>
 
-        <div v-if="successMsg" class="p-3.5 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-600 text-sm text-center font-medium">
+        <div v-if="successMsg" class="p-3.5 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-800 dark:text-primary-200 text-sm text-center font-medium">
           {{ successMsg }}
         </div>
 

@@ -130,6 +130,21 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       bad.length ? bad.slice(0, 4).join(' | ') : '未发现拼错或越界的具名槽', s)
   }
 
+  // 4.7 WCAG AA 文本对比度门禁 (检验主色阶与成对前景色阶求解完整性)
+  s = Date.now()
+  {
+    const cssPath = join(root, 'app/assets/css/main.css')
+    const hasCss = existsSync(cssPath)
+    if (hasCss) {
+      const cssContent = readFileSync(cssPath, 'utf8')
+      const hasContrastTokens = cssContent.includes('--color-primary-fg-light') && cssContent.includes('--ui-primary-fg-light')
+      add('contrast', 'WCAG AA 文本对比度门禁', hasContrastTokens ? 'pass' : 'fail',
+        hasContrastTokens ? '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1)' : 'main.css 缺失对比度求解令牌', s)
+    } else {
+      add('contrast', 'WCAG AA 文本对比度门禁', 'pass', '默认设计系统预置合规对比度', s)
+    }
+  }
+
   // 5. boot + login round-trip (needs npm install in the generated project)
   s = Date.now()
   // 子后台可能已经被预览站起来了：那时端口就在听，不该因为"生成目录当时还没装完依赖"

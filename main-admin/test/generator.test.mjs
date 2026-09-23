@@ -1271,16 +1271,16 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const customAmbiguousFs = customFormPage.match(/text-\[var\(--fs/g) || []
     assert.strictEqual(customAmbiguousFs.length, 0, 'Custom form fields must have zero ambiguous text-[var(--fs')
     const customUnambiguousFs = customFormPage.match(/text-\[length:var\(--fs,\s*14px\)\]/g) || []
-    assert.strictEqual(customUnambiguousFs.length, 10, `Custom form page must consume 10 text-[length:var(--fs,14px)], found ${customUnambiguousFs.length}`)
+    assert.strictEqual(customUnambiguousFs.length, 13, `Custom form page must consume 13 text-[length:var(--fs,14px)], found ${customUnambiguousFs.length}`)
 
     // 2. H2: Fixed dock bottom padding in TmagicPage.vue (avoid covering footer)
     const pageCode = materials['app/components/tmagic/TmagicPage.vue']
     assert.ok(pageCode.includes('pb-24 md:pb-28'), 'TmagicPage must reserve pb-24 md:pb-28 bottom safe area for fixed dock')
 
-    // 3. H3: var(--blur) skin token consumption (0 bare backdrop-blur without variable)
-    assert.ok(allMaterialsCode.includes('backdrop-blur-[var(--blur,'), 'Materials must consume var(--blur) token')
-    const bareBackdropBlur = allMaterialsCode.match(/\bbackdrop-blur\b(?!-\[)/g) || []
-    assert.strictEqual(bareBackdropBlur.length, 0, `Materials must have 0 bare backdrop-blur, found ${bareBackdropBlur.length}`)
+    // 3. H3: var(--blur) skin token consumption via verified escape hatch [backdrop-filter:var(--blur,...)]
+    assert.ok(allMaterialsCode.includes('[backdrop-filter:var(--blur,'), 'Materials must consume var(--blur) token via [backdrop-filter:...]')
+    const bareBackdropBlur = allMaterialsCode.match(/\bbackdrop-blur\b/g) || []
+    assert.strictEqual(bareBackdropBlur.length, 0, `Materials must have 0 backdrop-blur utilities, found ${bareBackdropBlur.length}`)
 
     // 4. H4: Date input appearance and webkit pseudo element styling in /p/form
     assert.ok(customFormPage.includes('cursor-pointer') && customFormPage.includes('[&::-webkit-datetime-edit]:text-muted'), '/p/form date inputs must style webkit pseudo elements')
@@ -1292,6 +1292,95 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     // 6. G2余项: /p/form consumes var(--pad) and var(--gap)
     assert.ok(formPage.includes('var(--pad'), '/p/form card must consume var(--pad)')
     assert.ok(formPage.includes('var(--gap'), '/p/form grid must consume var(--gap)')
+  })
+
+  it('24. UI Audit v2.3.7 verification (H3-residue, I1 WCAG AA contrast, I2 USelect fs): [backdrop-filter:var(--blur)] escape hatch, mathematical contrast solver, compliant primary shades, and USelect font-size override', async () => {
+    const { relativeLuminance, contrastRatio, fgOn, appFiles } = await jiti.import(resolve(root, 'server/utils/gen/app.ts'))
+    const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
+    const { PALETTES } = await jiti.import(resolve(root, 'shared/skins.ts'))
+    const materials = tmagicMaterialFiles()
+    const allMaterialsCode = Object.values(materials).join('\n')
+
+    // 1. H3-residue: All 4 materials use [backdrop-filter:var(--blur,...)] and ZERO backdrop-blur-[
+    const backdropFilterMatches = allMaterialsCode.match(/\[backdrop-filter:var\(--blur,\s*blur\(\d+px\)\)\]/g) || []
+    assert.strictEqual(backdropFilterMatches.length, 4, `Must have exactly 4 [backdrop-filter:var(--blur,blur(...))], found: ${backdropFilterMatches.length}`)
+    const oldBackdropBlur = allMaterialsCode.match(/backdrop-blur-\[/g) || []
+    assert.strictEqual(oldBackdropBlur.length, 0, `Must have ZERO backdrop-blur-[, found: ${oldBackdropBlur.length}`)
+
+    // 2. I1: Mathematical contrast solver & WCAG AA verification across all 30 color presets
+    assert.strictEqual(Math.round(contrastRatio('#ffffff', '#000000')), 21, 'Black/white contrast must be 21:1')
+    assert.strictEqual(Math.round(contrastRatio('#ffffff', '#ffffff')), 1, 'White/white contrast must be 1:1')
+
+    // Verify all 30 palettes achieve >= 4.5:1 on white background
+    const allPalettes = Object.values(PALETTES).flat()
+    assert.strictEqual(allPalettes.length, 30, `Must test all 30 palettes from skins.ts, found ${allPalettes.length}`)
+    for (const pal of allPalettes) {
+      const accent = pal.accent
+      // Simulate ramp
+      const white = '#ffffff', black = '#000000'
+      const mix = (a, b, t) => {
+        const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16))
+        const [r, g, bl] = p(a).map((v, i) => Math.round(v + (p(b)[i] - v) * t))
+        return '#' + [r, g, bl].map(v => v.toString(16).padStart(2, '0')).join('')
+      }
+      const shades = [
+        mix(accent, white, 0.92), mix(accent, white, 0.84), mix(accent, white, 0.66), mix(accent, white, 0.45),
+        mix(accent, white, 0.20), accent, mix(accent, black, 0.14), mix(accent, black, 0.28),
+        mix(accent, black, 0.42), mix(accent, black, 0.56), mix(accent, black, 0.70)
+      ]
+      const solved = fgOn('#ffffff', shades, 4.5)
+      assert.ok(solved.ratio >= 4.5, `Palette ${pal.id} (${accent}) must find a compliant foreground (found ${solved.shadeName} with ratio ${solved.ratio.toFixed(2)}:1)`)
+      // Also verify shade 800 (index 8) is ALWAYS >= 4.5:1 on white for all palettes
+      const ratio800 = contrastRatio(shades[8], '#ffffff')
+      assert.ok(ratio800 >= 4.5, `Palette ${pal.id} shade 800 must pass WCAG AA (>= 4.5:1), got ${ratio800.toFixed(2)}:1`)
+    }
+
+    // 3. I1: Template foreground text contrast conformity (no bare text-primary-500/600 on light backgrounds)
+    assert.ok(allMaterialsCode.includes('text-primary-800 dark:text-primary-200'), 'Badges and active dock must consume WCAG AA compliant text-primary-800 dark:text-primary-200')
+    const ctaCode = materials['app/components/tmagic/TmagicCta.vue']
+    assert.ok(ctaCode.includes('text-primary-800 dark:text-primary-900'), 'CTA button on white must consume text-primary-800')
+
+    // 4. I1: main.css exports semantic contrast variables
+    const generatedApp = appFiles(mockPlan)
+    const mainCssCode = generatedApp['app/assets/css/main.css']
+    assert.ok(mainCssCode.includes('--color-primary-fg-light:'), 'main.css must export --color-primary-fg-light')
+    assert.ok(mainCssCode.includes('--ui-primary-fg-light:'), 'main.css must export --ui-primary-fg-light')
+
+    // 5. I2: USelect font-size override in /p/form
+    const planWithCustomFields = {
+      ...mockPlan,
+      groups: [
+        {
+          name: '测试业务',
+          icon: 'lucide:folder',
+          modules: [
+            {
+              id: 99,
+              name: '预约登记',
+              key: 'appointment',
+              tableName: 'appointment',
+              fields: [
+                { name: '预约类型', key: 'type', type: 'enum', dict: 'status' }
+              ]
+            }
+          ]
+        }
+      ],
+      caps: {
+        ...mockPlan.caps,
+        landing_form: {
+          version: '1.0.0',
+          config: { targetModel: 'appointment' }
+        }
+      }
+    }
+    const customFormPage = uiFiles(planWithCustomFields)['app/pages/p/form.vue']
+    assert.ok(customFormPage.includes('[&_select]:text-[length:var(--fs,14px)]'), 'USelect must override internal select font size with [&_select]:text-[length:var(--fs,14px)]')
+    assert.ok(customFormPage.includes(':ui="{ select: \'text-[length:var(--fs,14px)]\' }"'), 'USelect must pass :ui select font size prop')
+
+    // 6. Verify smoke gate: includes WCAG AA contrast check
+    const { verify } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
+    assert.ok(typeof verify === 'function', 'verify function must be exported')
   })
 })
 

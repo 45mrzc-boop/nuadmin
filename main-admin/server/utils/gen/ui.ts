@@ -4955,7 +4955,7 @@ onMounted(async () => {
 <template>
   <div class="min-h-screen bg-default text-default flex flex-col items-center justify-center p-4 sm:p-6 font-sans antialiased">
     <div class="w-full max-w-md bg-card border border-default rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col items-center text-center space-y-6">
-      <div class="size-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 text-primary-500 flex items-center justify-center text-3xl shadow-inner">
+      <div class="size-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 text-primary-700 dark:text-primary-300 flex items-center justify-center text-3xl shadow-inner">
         📱
       </div>
 
@@ -4974,7 +4974,7 @@ onMounted(async () => {
 
       <div class="flex items-center gap-2 text-xs text-muted bg-muted/20 px-4 py-2 rounded-full border border-default">
         <span>已累计访问：</span>
-        <span class="font-bold text-primary-500 tabular-nums">{{ (info.channel?.pv ?? 0) + 1 }}</span>
+        <span class="font-bold text-primary-800 dark:text-primary-200 tabular-nums">{{ (info.channel?.pv ?? 0) + 1 }}</span>
         <span>次</span>
       </div>
 
@@ -5028,7 +5028,7 @@ function landingFormPage(p: TenantPlan): string {
         const colClass = isColSpan2 ? 'sm:col-span-2' : 'col-span-1'
         let inputEl = `<input :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
         if (f.type === 'enum' && f.dict && p.dicts[f.dict]) {
-          inputEl = `<USelect :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" :items="dicts['${f.dict}'] || []" placeholder="请选择${f.name || f.key}" class="w-full h-[var(--row-h,40px)] rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)]" />`
+          inputEl = `<USelect :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" :items="dicts['${f.dict}'] || []" placeholder="请选择${f.name || f.key}" class="w-full h-[var(--row-h,40px)] rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] [&_select]:text-[length:var(--fs,14px)] [&_button]:text-[length:var(--fs,14px)]" :ui="{ select: 'text-[length:var(--fs,14px)]' }" />`
         } else if (f.type === 'date' || f.type === 'datetime') {
           inputEl = `<input :id="'field-' + '${f.key}'" type="${f.type === 'datetime' ? 'datetime-local' : 'date'}" v-model="formState['${f.key}']" class="w-full h-[var(--row-h,40px)] px-4 py-2 bg-default border border-default rounded-[var(--r-sm,8px)] text-[length:var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all appearance-none cursor-pointer [&::-webkit-datetime-edit]:text-muted [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:cursor-pointer" />`
         } else if (f.type === 'text' || f.type === 'richtext') {
@@ -5103,7 +5103,7 @@ function resetForm() {
     <div class="w-full max-w-2xl bg-card border border-default rounded-[var(--r,16px)] p-[var(--pad,1.5rem)] sm:p-[calc(var(--pad,1.5rem)*1.5)] shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
       <div v-if="!submitted" class="space-y-6">
         <div class="text-center space-y-2">
-          <div class="inline-flex size-14 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 items-center justify-center mb-1">
+          <div class="inline-flex size-14 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-700 dark:text-primary-300 items-center justify-center mb-1">
             <svg class="size-7 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
               <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
@@ -5284,7 +5284,7 @@ onMounted(loadData)
           </div>
           <div class="flex items-center justify-between text-xs text-muted pt-2 border-t border-default">
             <span>ID: {{ item.id }}</span>
-            <span class="text-primary-500 flex items-center gap-1 font-medium">查看详情 <UIcon name="i-lucide-chevron-right" class="size-3.5" /></span>
+            <span class="text-primary-700 dark:text-primary-300 flex items-center gap-1 font-medium">查看详情 <UIcon name="i-lucide-chevron-right" class="size-3.5" /></span>
           </div>
         </div>
       </div>
