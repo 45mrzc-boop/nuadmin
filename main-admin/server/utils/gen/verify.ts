@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { buildPlan } from './plan'
 import { tenantDdl } from './server'
-import { ramp, contrastRatio, resolveBrandBase } from './app'
+import { ramp, contrastRatio, resolveBrandBase, DARK_SURFACE_HEX } from './app'
 
 const run1 = promisify(execFile)
 
@@ -129,13 +129,13 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const cssContent = readFileSync(cssPath, 'utf8')
       const hasContrastTokens = cssContent.includes('--color-primary-fg-light') && cssContent.includes('--ui-primary-fg-light')
 
-      // 基于租户真实配色与实际暗底 (#171717) 动态计算对比度 < 4.5 的不达标色阶
+      // 基于租户真实配色与统一暗底 (DARK_SURFACE_HEX) 动态计算对比度 < 4.5 的不达标色阶
       const base = resolveBrandBase(plan.theme)
       const shades = ramp(base)
       const shadeNames = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']
       const nonCompliantDarkShades: string[] = []
       for (let i = 0; i < shades.length; i++) {
-        const ratio = contrastRatio(shades[i], '#171717')
+        const ratio = contrastRatio(shades[i], DARK_SURFACE_HEX)
         if (ratio < 4.5) {
           nonCompliantDarkShades.push(shadeNames[i])
         }
@@ -159,10 +159,10 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
             const m = src.match(darkInversionRe)
             if (m) typoFound = m[0]
           }
-          // 模式盲令牌漏配 dark: 覆盖检测
+          // 模式盲令牌漏配语义级 dark:text-primary-fg-dark 覆盖检测
           const badgeClassMatches = src.match(/class="[^"]*text-primary-fg-badge[^"]*"/g) || []
           for (const bcm of badgeClassMatches) {
-            if (!bcm.includes('dark:')) {
+            if (!bcm.includes('dark:text-primary-fg-dark')) {
               missingDarkBadge = true
             }
           }
@@ -174,7 +174,7 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       } else if (typoFound) {
         add('contrast', 'WCAG AA 文本对比度门禁', 'fail', `组件中存在暗色对比度反转 (${typoFound}，当前配色下实测对比度 < 4.5:1)`, s)
       } else if (missingDarkBadge) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', '组件中 text-primary-fg-badge 漏配 dark: 模式覆盖 (模式盲令牌在暗底对比度不足)', s)
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', '组件中 text-primary-fg-badge 漏配 dark:text-primary-fg-dark 模式覆盖 (模式盲令牌在暗底对比度不足)', s)
       } else {
         add('contrast', 'WCAG AA 文本对比度门禁', 'pass',
           consumed

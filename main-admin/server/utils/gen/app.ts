@@ -355,6 +355,9 @@ export function resolveBrandBase(t: TenantPlan['theme']): string {
   return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : '#0a84ff'
 }
 
+/** Standard dark surface base hex used for WCAG AA dark-mode contrast calculations. */
+export const DARK_SURFACE_HEX = '#0f172a'
+
 /** Brand tokens become real Tailwind v4 theme variables, not runtime CSS vars. */
 function mainCss(p: TenantPlan) {
   const t = p.theme
@@ -371,7 +374,7 @@ function mainCss(p: TenantPlan) {
 
   // WCAG AA 对比度求解
   const lightFg = fgOn('#ffffff', shades, 4.5)
-  const darkFg = fgOn('#0f172a', shades, 4.5)
+  const darkFg = fgOn(DARK_SURFACE_HEX, shades, 4.5)
   const tintSurface = mix(shades[5], '#ffffff', 0.90)
   const badgeFg = fgOn(tintSurface, shades, 4.5)
 
