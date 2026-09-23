@@ -3,7 +3,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { TenantPlan } from './types'
 import { allModules } from './types'
-import { findPalette, skinCss } from '#shared/skins'
+import { findPalette, skinCss, DEFAULT_DARK_BG } from '#shared/skins'
 import { CAPABILITY_CATALOG } from '../capabilities'
 
 export const capSpec = (key: string) =>
@@ -355,8 +355,8 @@ export function resolveBrandBase(t: TenantPlan['theme']): string {
   return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : '#0a84ff'
 }
 
-/** Standard dark surface base hex used for WCAG AA dark-mode contrast calculations. */
-export const DARK_SURFACE_HEX = '#0f172a'
+/** Standard dark surface base hex used for WCAG AA dark-mode contrast calculations (aligned with Nuxt UI neutral-900 / skins default dark background). */
+export const DARK_SURFACE_HEX = DEFAULT_DARK_BG
 
 /** Brand tokens become real Tailwind v4 theme variables, not runtime CSS vars. */
 function mainCss(p: TenantPlan) {

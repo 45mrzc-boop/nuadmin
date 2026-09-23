@@ -1427,6 +1427,16 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('contrastRatio(shades[i], DARK_SURFACE_HEX)'), 'verify.ts Case 4.7 must compute real contrast ratio per shade against DARK_SURFACE_HEX')
     assert.ok(verifySrc.includes('text-primary-fg-badge'), 'verify.ts Case 4.7 must verify text-primary-fg-badge dark coverage')
     assert.ok(verifySrc.includes("bcm.includes('dark:text-primary-fg-dark')"), 'verify.ts Case 4.7 must enforce semantic dark:text-primary-fg-dark coverage on badge tokens')
+
+    // 5. Design system dark tokens: skins.ts exports DEFAULT_DARK_BG, DARK_SURFACE_HEX equals #171717
+    const { DEFAULT_DARK_BG } = await jiti.import(resolve(root, 'shared/skins.ts'))
+    assert.strictEqual(DEFAULT_DARK_BG, '#171717', 'DEFAULT_DARK_BG must equal #171717')
+    const { DARK_SURFACE_HEX } = await jiti.import(resolve(root, 'server/utils/gen/app.ts'))
+    assert.strictEqual(DARK_SURFACE_HEX, '#171717', 'DARK_SURFACE_HEX must equal #171717')
+    const genApp = appFiles(mockPlan)
+    const generatedMainCss = genApp['app/assets/css/main.css']
+    assert.ok(generatedMainCss.includes('--bg-dark: #171717'), 'main.css must include --bg-dark token')
+    assert.ok(generatedMainCss.includes('.dark { --ui-bg: var(--bg-dark, #171717); }'), 'main.css must bind .dark --ui-bg to var(--bg-dark)')
   })
 })
 
