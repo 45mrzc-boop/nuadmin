@@ -48,10 +48,17 @@ export default defineAuthed(async (event) => {
   let tenantInstalled = null
   const tenantId = body.tenantId ? Number(body.tenantId) : 0
   if (tenantId) {
-    await loadTenant(tenantId)
+    const tenant = await loadTenant(tenantId)
     const defaults: Record<string, unknown> = {}
     for (const item of spec.config ?? []) {
-      if (item && item.key !== undefined) defaults[item.key] = item.default
+      if (item && item.key !== undefined && item.default !== undefined) {
+        defaults[item.key] = item.default
+      }
+    }
+    if (capKey === 'landing_cms') {
+      const isMedical = /医|诊|药|挂号|就医|体检|护士|病|康复|卫生/.test((tenant.app_title || tenant.name || '') + ' ' + (tenant.description || ''))
+      if (!defaults.siteName) defaults.siteName = tenant.app_title || tenant.name || '企业官方网站'
+      if (!defaults.siteSlogan) defaults.siteSlogan = isMedical ? '精医厚德 · 科技赋能 · 提供全天候高品质便民医疗服务' : '连接未来 · 科技驱动 · 赋能企业全链路数字化转型'
     }
     const merged = { ...defaults, ...(body.tenantConfig || body.config || {}) }
     const existing = await one<Record<string, any>>(

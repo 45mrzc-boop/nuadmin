@@ -424,8 +424,8 @@ export const CAPABILITY_CATALOG: CapabilitySeed[] = [
         { key: 'cms_article', name: '文章资讯管理', icon: '📝', route: '/admin/cms/article' }
       ],
       config: [
-        { key: 'siteName', label: '官网品牌名称', type: 'text', default: '企业官方网站' },
-        { key: 'siteSlogan', label: '品牌口号/标语', type: 'text', default: '连接未来，赋能企业数字化' },
+        { key: 'siteName', label: '官网品牌名称', type: 'text' },
+        { key: 'siteSlogan', label: '品牌口号/标语', type: 'text' },
         { key: 'contactPhone', label: '客服咨询热线', type: 'text', default: '400-888-9999' },
         { key: 'contactEmail', label: '商务联系邮箱', type: 'text', default: 'service@example.com' },
         { key: 'address', label: '办公或院区地址', type: 'text', default: '高新科技产业园区数智创新大厦 18 层' },

@@ -3,7 +3,7 @@ import type { TenantPlan } from './types'
 
 export function capCfg(p: TenantPlan, cap: string, key: string, dflt: unknown): unknown {
   const v = p.caps?.[cap]?.config?.[key]
-  return v === undefined || v === null ? dflt : v
+  return v === undefined || v === null || v === '' ? dflt : v
 }
 
 /**
@@ -12,9 +12,11 @@ export function capCfg(p: TenantPlan, cap: string, key: string, dflt: unknown): 
  */
 export function buildCmsSiteIntent(p: TenantPlan): SiteIntent {
   const isMedical = /医|诊|药|挂号|就医|体检|护士|病|康复|卫生/.test((p.title || '') + ' ' + (p.description || ''))
-  const siteName = String(capCfg(p, 'landing_cms', 'siteName', p.title || '企业官方网站'))
+  const rawSiteName = capCfg(p, 'landing_cms', 'siteName', '')
+  const siteName = (rawSiteName && rawSiteName !== '企业官方网站') ? String(rawSiteName) : (p.title || '企业官方网站')
   const defaultSlogan = isMedical ? '精医厚德 · 科技赋能 · 提供全天候高品质便民医疗服务' : '连接未来 · 科技驱动 · 赋能企业全链路数字化转型'
-  const siteSlogan = String(capCfg(p, 'landing_cms', 'siteSlogan', defaultSlogan))
+  const rawSlogan = capCfg(p, 'landing_cms', 'siteSlogan', '')
+  const siteSlogan = (rawSlogan && rawSlogan !== '连接未来，赋能企业数字化') ? String(rawSlogan) : defaultSlogan
   const contactPhone = String(capCfg(p, 'landing_cms', 'contactPhone', '400-888-9999'))
   const contactEmail = String(capCfg(p, 'landing_cms', 'contactEmail', 'service@example.com'))
   const address = String(capCfg(p, 'landing_cms', 'address', '高新科技产业园区数智创新大厦 18 层'))

@@ -822,6 +822,57 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const customDsl = JSON.parse(customUi['app/data/tmagic-dsl.json'])
     assert.equal(customDsl['custom-landing'].items[0].title, '自定义大屏')
   })
+
+  it('17. Regression test for S1 (tenant-aware brand derivation) and S2 (no duplicate tmagicFoundry export)', async () => {
+    const { buildCmsSiteIntent } = await jiti.import(resolve(root, 'server/utils/gen/cms-intent.ts'))
+    const { CAPABILITY_CATALOG } = await jiti.import(resolve(root, 'server/utils/capabilities.ts'))
+    const foundryIndexCode = readFileSync(resolve(root, 'server/utils/gen/foundry/index.ts'), 'utf-8')
+
+    // S2 check: foundry/index.ts must not have duplicated export for tmagicFoundry
+    assert.ok(!foundryIndexCode.includes('export { tmagicFoundry }'), 'foundry/index.ts must not re-export tmagicFoundry')
+
+    // S1 check: capability catalog must not define static generic defaults for siteName and siteSlogan
+    const cmsCap = CAPABILITY_CATALOG.find(c => c.cap_key === 'landing_cms')
+    const siteNameCfg = cmsCap.spec.config.find(c => c.key === 'siteName')
+    const siteSloganCfg = cmsCap.spec.config.find(c => c.key === 'siteSlogan')
+    assert.equal(siteNameCfg.default, undefined, 'siteName must not have static default in catalog')
+    assert.equal(siteSloganCfg.default, undefined, 'siteSlogan must not have static default in catalog')
+
+    // S1 check: medical tenant without custom config must derive tenant.title and medical slogan
+    const medicalPlan = {
+      ...mockPlan,
+      title: '智慧医院预约挂号平台 v10',
+      description: '提供全天候便民门诊服务',
+      caps: {
+        landing_cms: {
+          version: '2.0.0',
+          config: {} // no config
+        }
+      }
+    }
+    const intent = buildCmsSiteIntent(medicalPlan)
+    assert.equal(intent.siteName, '智慧医院预约挂号平台 v10', 'siteName must derive from tenant title')
+    const heroBlock = intent.pages[0].blocks.find(b => b.kind === 'hero')
+    assert.ok(heroBlock.text.includes('精医厚德'), 'siteSlogan must derive from medical slogan')
+
+    // Even if config contains the stale generic default '企业官方网站', it must still heal to tenant title
+    const stalePlan = {
+      ...medicalPlan,
+      caps: {
+        landing_cms: {
+          version: '2.0.0',
+          config: {
+            siteName: '企业官方网站',
+            siteSlogan: '连接未来，赋能企业数字化'
+          }
+        }
+      }
+    }
+    const healedIntent = buildCmsSiteIntent(stalePlan)
+    assert.equal(healedIntent.siteName, '智慧医院预约挂号平台 v10', 'Stale catalog default must heal to tenant title')
+    const healedHero = healedIntent.pages[0].blocks.find(b => b.kind === 'hero')
+    assert.ok(healedHero.text.includes('精医厚德'), 'Stale slogan default must heal to medical slogan')
+  })
 })
 
 
