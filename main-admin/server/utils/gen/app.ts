@@ -331,6 +331,8 @@ ${shades.map((s, i) => `  --color-primary-${names[i]}: ${s};`).join('\n')}
   --radius-md: ${Math.max(4, radius - 2)}px;
   --radius-lg: ${radius}px;
   --radius-xl: ${radius + 4}px;
+  --radius-2xl: ${radius + 8}px;
+  --radius-3xl: ${radius + 12}px;
 
   --font-sans: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;

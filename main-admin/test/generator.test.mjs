@@ -1067,6 +1067,71 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(formCode.includes('hover:text-highlighted'), 'Cancel button must be text button hierarchy')
     assert.ok(formCode.includes('$fetch'), 'OverlayForm must call real public submit API')
   })
+
+  it('21. UI Audit v2.3.4 full-axis verification (F1-F8): All radius rungs defined, single-color SVG icons, full A11y, state coverage, and rich intent production', async () => {
+    // 1. F1: Radius namespace must define all 7 rungs (xs, sm, md, lg, xl, 2xl, 3xl) with no --ui-radius formula leak
+    const mainCss = generatedAppFiles['app/assets/css/main.css']
+    assert.ok(mainCss, 'main.css must exist')
+    for (const r of ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl']) {
+      assert.match(
+        mainCss,
+        new RegExp(`--radius-${r}:\\s*\\d+px;`),
+        `--radius-${r} must be tenant-defined to prevent calc(var(--ui-radius) * N) leak`
+      )
+    }
+
+    const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
+    const materials = tmagicMaterialFiles()
+    const allCode = Object.values(materials).join('\n')
+
+    // 2. F2 & F3: Design scale consistency across materials
+    assert.ok(allCode.includes('var(--fs'), 'Materials must consume font size token var(--fs)')
+    assert.ok(allCode.includes('var(--row-h'), 'Materials must consume control height token var(--row-h)')
+    const fallbackRadiusSmall = allCode.match(/var\(--r-sm,\s*\d+px\)/g) || []
+    for (const r of fallbackRadiusSmall) {
+      assert.match(r, /var\(--r-sm,\s*8px\)/, `Small radius fallbacks must be uniformly 8px, found ${r}`)
+    }
+
+    // 3. F4: Single-color linear SVG icons (stroke-current / stroke="currentColor")
+    const sectionCode = materials['app/components/tmagic/TmagicSection.vue']
+    assert.ok(sectionCode.includes('stroke-current'), 'TmagicSection must use single-color stroke-current vector icons')
+    assert.ok(!sectionCode.includes("{{ feat.icon || '✓' }}"), 'TmagicSection must not render bare uncolorable emoji')
+
+    // 4. F5: Accessibility (A11y) coverage
+    assert.ok(sectionCode.includes(':alt="row.title'), 'Images in mediaList must declare alt text')
+    const formCode = materials['app/components/tmagic/TmagicOverlayForm.vue']
+    assert.ok(formCode.includes('role="dialog"'), 'OverlayForm must declare role="dialog"')
+    assert.ok(formCode.includes('aria-modal="true"'), 'OverlayForm must declare aria-modal="true"')
+    assert.ok(formCode.includes('aria-label="关闭表单"'), 'Modal close button must declare aria-label')
+    assert.ok(formCode.includes(':for='), 'Form fields must pair labels with inputs using for and id')
+    assert.ok(allCode.includes('focus-visible:ring-'), 'Interactive elements must define visible focus states')
+    assert.ok(allCode.includes('motion-reduce:animate-none'), 'Animations must support motion reduction')
+
+    // 5. F6: State coverage (Empty & Error states)
+    assert.ok(sectionCode.includes('暂无相关资讯动态'), 'mediaList must include graceful empty state')
+    assert.ok(sectionCode.includes('暂无卡片内容'), 'cardGrid must include graceful empty state')
+    assert.ok(formCode.includes('errorMsg'), 'OverlayForm must maintain errorMsg reactive state')
+    assert.ok(formCode.includes('v-if="errorMsg"'), 'OverlayForm must display inline error alert banner')
+
+    // 6. F7: Responsive tabbar and rich intent production
+    const tabbarCode = materials['app/components/tmagic/TmagicTabbar.vue']
+    assert.ok(tabbarCode.includes('md:left-1/2') && tabbarCode.includes('md:-translate-x-1/2'), 'Tabbar must adapt responsively for desktop floating dock')
+
+    const { buildCmsSiteIntent } = await jiti.import(resolve(root, 'server/utils/gen/cms-intent.ts'))
+    const planWithTheme = {
+      ...mockPlan,
+      theme: { ...mockPlan.theme, density: 'airy' },
+      caps: { ...mockPlan.caps, landing_cms: { version: '2.0.0' } }
+    }
+    const intent = buildCmsSiteIntent(planWithTheme)
+    const blocks = intent.pages[0].blocks
+    assert.ok(blocks.some(b => b.kind === 'section' && b.body?.kind === 'stepList'), 'CMS intent must produce stepList block')
+    assert.ok(blocks.some(b => b.kind === 'section' && b.body?.kind === 'faqList'), 'CMS intent must produce faqList block')
+    assert.ok(blocks.some(b => b.kind === 'tabbar'), 'CMS intent must produce tabbar block')
+    const heroBlock = blocks.find(b => b.kind === 'hero')
+    assert.strictEqual(heroBlock.density, 'airy', 'Hero density must inherit theme density')
+  })
 })
+
 
 
