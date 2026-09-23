@@ -1,4 +1,5 @@
 import type { CapSpec } from './gen/types'
+import { buildCmsSiteIntent } from './gen/cms-intent'
 
 export interface CapabilitySeed {
   cap_key: string
@@ -430,7 +431,8 @@ export const CAPABILITY_CATALOG: CapabilitySeed[] = [
         { key: 'address', label: '办公或院区地址', type: 'text', default: '高新科技产业园区数智创新大厦 18 层' },
         { key: 'icp', label: '网站备案号', type: 'text', default: '京ICP备20260915号-1' }
       ],
-      verify: ['访问 /cms 纯静态秒开无骨架屏', '支持内联抽屉与独立详情页查看资讯', '后台文章管理发布后可增量同步']
+      verify: ['访问 /cms 纯静态秒开无骨架屏', '支持内联抽屉与独立详情页查看资讯', '后台文章管理发布后可增量同步'],
+      intent: buildCmsSiteIntent
     }
   }
 ]

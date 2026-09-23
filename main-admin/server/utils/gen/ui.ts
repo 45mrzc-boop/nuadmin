@@ -1,6 +1,8 @@
 import type { FieldDef, ModuleDef, TenantPlan } from './types'
 import { allModules, dictKnown, emptyDesign, BUILTIN_DICT } from './types'
 import { componentOf, isPk, moduleFields } from './sql'
+import { getFoundry } from './foundry'
+import { buildCmsSiteIntent } from './cms-intent'
 
 /* ------------------------------------------------------------------ *
  * 域 A：子后台前端模板生成器（Nuxt 4 + @nuxt/ui v4 + Tailwind CSS v4）
@@ -379,8 +381,14 @@ export function uiFiles(p: TenantPlan): Record<string, string> {
   if (has(p, 'landing_portal')) {
     files['app/pages/portal/index.vue'] = landingPortalPage(p)
   }
+  // 页面意图与代工厂（Page Intent & Foundry 标准架构）
+  const siteIntent = p.intent || (has(p, 'landing_cms') ? buildCmsSiteIntent(p) : null)
+  if (siteIntent) {
+    const foundry = getFoundry(p.foundry || 'tmagic')
+    const emitted = foundry.emitFiles(siteIntent, p)
+    Object.assign(files, emitted)
+  }
   if (has(p, 'landing_cms')) {
-    files['app/pages/cms/index.vue'] = landingCmsPage(p)
     files['app/pages/cms/[id].vue'] = landingCmsDetailPage(p)
     files['app/pages/admin/cms/article/index.vue'] = cmsArticleAdminPage(p)
   }

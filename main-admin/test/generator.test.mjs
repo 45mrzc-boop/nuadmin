@@ -650,6 +650,178 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const invokerCode = readFileSync(resolve(root, '../scripts/genplus-mcp-call.mjs'), 'utf-8')
     assert.ok(invokerCode.includes('client.close()'), 'genplus-mcp-call must document client.close requirement')
   })
+
+  it('16. Page Intent architecture: validation gatekeeper, blueprint purity, and Tmagic Foundry compilation', async () => {
+    const { validateIntent } = await jiti.import(resolve(root, 'shared/intent.ts'))
+    const { getFoundry } = await jiti.import(resolve(root, 'server/utils/gen/foundry/index.ts'))
+    const { buildCmsSiteIntent } = await jiti.import(resolve(root, 'server/utils/gen/cms-intent.ts'))
+    const { CAPABILITY_CATALOG } = await jiti.import(resolve(root, 'server/utils/capabilities.ts'))
+
+    // 1. Check landing_cms capability declares intent generator in catalog
+    const cmsCap = CAPABILITY_CATALOG.find(c => c.cap_key === 'landing_cms')
+    assert.ok(cmsCap, 'landing_cms capability must exist in CAPABILITY_CATALOG')
+    assert.equal(typeof cmsCap.spec.intent, 'function', 'landing_cms capability must declare an intent function')
+
+    // 2. Pure blueprint conforms to schema and passes strict validation
+    const testPlan = {
+      ...mockPlan,
+      slug: 'hospital_app',
+      name: 'hospital_app',
+      title: '智慧便民医疗中心',
+      description: '提供线上挂号门诊与健康服务',
+      caps: {
+        ...mockPlan.caps,
+        landing_cms: {
+          version: '2.0.0',
+          config: {
+            siteName: '市民健康智慧云医院',
+            siteSlogan: '精医厚德 · 便民利民',
+            contactPhone: '010-88886666'
+          }
+        }
+      }
+    }
+    const cleanIntent = cmsCap.spec.intent(testPlan)
+    const checkClean = validateIntent(cleanIntent)
+    assert.ok(checkClean.valid, 'Standard CMS intent must pass validation: ' + checkClean.errors.join(', '))
+    assert.equal(cleanIntent.pages.length, 1)
+    assert.equal(cleanIntent.pages[0].id, 'cms-home')
+    assert.equal(cleanIntent.pages[0].route, '/cms')
+
+    // 3. Four Prohibitions (四大禁令) gatekeeper tests
+    // 3a. Rejects CSS style properties and units (px, rem, #hex, color)
+    const badStyleIntent = {
+      id: 'bad-style',
+      name: 'Bad Style Page',
+      blocks: [
+        {
+          kind: 'hero',
+          title: 'Title',
+          text: 'Text',
+          color: '#ff0000' // Forbidden style property
+        }
+      ]
+    }
+    assert.equal(validateIntent(badStyleIntent).valid, false, 'Validator must reject style property "color"')
+
+    const badUnitIntent = {
+      id: 'bad-unit',
+      name: 'Bad Unit Page',
+      blocks: [
+        {
+          kind: 'header',
+          brand: { name: 'Brand', logo: '120px' } // Forbidden px unit
+        }
+      ]
+    }
+    assert.equal(validateIntent(badUnitIntent).valid, false, 'Validator must reject CSS unit "120px"')
+
+    // 3b. Rejects layout engine keywords (flex, grid, position, z-index)
+    const badLayoutIntent = {
+      id: 'bad-layout',
+      name: 'Bad Layout Page',
+      blocks: [
+        {
+          kind: 'section',
+          title: 'Section',
+          body: { kind: 'featureGrid', features: [] },
+          position: 'fixed' // Forbidden layout keyword
+        }
+      ]
+    }
+    assert.equal(validateIntent(badLayoutIntent).valid, false, 'Validator must reject layout keyword "position"')
+
+    // 3c. Rejects engine-specific node types
+    const badNodeIntent = {
+      id: 'bad-node',
+      name: 'Bad Node Page',
+      blocks: [
+        {
+          kind: 'section',
+          title: 'Section',
+          type: 'container', // Forbidden engine node type
+          body: { kind: 'cardGrid', cards: [] }
+        }
+      ]
+    }
+    assert.equal(validateIntent(badNodeIntent).valid, false, 'Validator must reject engine node type "container"')
+
+    // 3d. Rejects engine-specific action objects (actionType/to/method)
+    const badActionIntent = {
+      id: 'bad-action',
+      name: 'Bad Action Page',
+      blocks: [
+        {
+          kind: 'cta',
+          title: 'Call to Action',
+          action: {
+            label: 'Click',
+            actionType: 'comp', // Forbidden engine action
+            to: 'node_123',
+            method: 'open'
+          }
+        }
+      ]
+    }
+    assert.equal(validateIntent(badActionIntent).valid, false, 'Validator must reject engine private action structure')
+
+    // 4. Foundry A (Tmagic) compilation tests
+    const foundry = getFoundry('tmagic')
+    assert.equal(foundry.id, 'tmagic')
+    const compiled = foundry.compilePage(cleanIntent.pages[0], { tenant: testPlan })
+    assert.equal(compiled.id, 'cms-home')
+    assert.equal(compiled.type, 'page')
+    assert.ok(compiled.items.length >= 4, 'Compiled DSL must contain header, hero, section, footer, etc.')
+    assert.ok(compiled.items.some(it => it.type === 'tmagic-header'), 'Must compile tmagic-header')
+    assert.ok(compiled.items.some(it => it.type === 'tmagic-hero'), 'Must compile tmagic-hero')
+    assert.ok(compiled.items.some(it => it.type === 'tmagic-section'), 'Must compile tmagic-section')
+    assert.ok(compiled.items.some(it => it.type === 'tmagic-footer'), 'Must compile tmagic-footer')
+
+    // 5. Full UI emission check: blueprint, tmagic-dsl, materials, and page wrapper
+    const emittedUi = uiFiles(testPlan)
+    assert.ok(emittedUi['app/intent/blueprint.json'], 'Must emit app/intent/blueprint.json')
+    const blueprintData = JSON.parse(emittedUi['app/intent/blueprint.json'])
+    assert.equal(blueprintData.siteName, '市民健康智慧云医院')
+
+    assert.ok(emittedUi['app/data/tmagic-dsl.json'], 'Must emit app/data/tmagic-dsl.json')
+    const dslData = JSON.parse(emittedUi['app/data/tmagic-dsl.json'])
+    assert.ok(dslData['cms-home'], 'DSL data must include cms-home page')
+
+    assert.ok(emittedUi['app/components/tmagic/TmagicPage.vue'], 'Must emit TmagicPage runtime component')
+    assert.ok(emittedUi['app/components/tmagic/TmagicHero.vue'], 'Must emit TmagicHero runtime component')
+    assert.ok(emittedUi['app/components/tmagic/TmagicSection.vue'], 'Must emit TmagicSection runtime component')
+
+    assert.ok(emittedUi['app/pages/cms/index.vue'], 'Must emit /cms/index.vue route wrapper')
+    assert.ok(emittedUi['app/pages/cms/index.vue'].includes("definePageMeta({ layout: 'blank' })"), 'Route wrapper must have blank layout')
+    assert.ok(emittedUi['app/pages/cms/index.vue'].includes('<TmagicPage'), 'Route wrapper must mount <TmagicPage />')
+
+    // 6. Custom blueprint override test
+    const customBlueprintPlan = {
+      ...testPlan,
+      intent: {
+        siteName: '定制图纸站点',
+        pages: [
+          {
+            id: 'custom-landing',
+            name: '定制落地页',
+            route: '/cms',
+            blocks: [
+              {
+                kind: 'hero',
+                title: '自定义大屏',
+                text: '由 AI 自定义生成的纯净图纸大屏'
+              }
+            ]
+          }
+        ]
+      }
+    }
+    const customUi = uiFiles(customBlueprintPlan)
+    const customBlueprintJson = JSON.parse(customUi['app/intent/blueprint.json'])
+    assert.equal(customBlueprintJson.siteName, '定制图纸站点')
+    const customDsl = JSON.parse(customUi['app/data/tmagic-dsl.json'])
+    assert.equal(customDsl['custom-landing'].items[0].title, '自定义大屏')
+  })
 })
 
 

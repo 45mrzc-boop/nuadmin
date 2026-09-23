@@ -1,3 +1,6 @@
+import type { PageIntent, SiteIntent } from '../../../shared/intent'
+export type { PageAction, PageBlock, PageIntent, SiteIntent } from '../../../shared/intent'
+
 export type FieldType =
   | 'id' | 'varchar' | 'text' | 'richtext' | 'int' | 'decimal' | 'money'
   | 'date' | 'datetime' | 'bool' | 'enum' | 'json' | 'fk' | 'file' | 'image'
@@ -71,6 +74,8 @@ export interface CapSpec {
   deps?: string[]
   config?: Array<{ key: string; label: string; type: 'text' | 'switch' | 'select' | 'number'; default: unknown; options?: string[] }>
   verify?: string[]
+  /** 页面意图图纸工厂：前台落地页通过图纸定义页面结构，交付代工厂编译 */
+  intent?: (p: TenantPlan) => SiteIntent | PageIntent[]
 }
 
 export interface AuthConfig {
