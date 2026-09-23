@@ -1131,6 +1131,81 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const heroBlock = blocks.find(b => b.kind === 'hero')
     assert.strictEqual(heroBlock.density, 'airy', 'Hero density must inherit theme density')
   })
+
+  it('22. UI Audit v2.3.5 verification (G1-G5): --r-md dedicated non-control rung, /p/form design system conformity, var(--shadow) light sense, uniform --fs 14px, responsive dual-column form, and 5/5 body kinds', async () => {
+    // 1. G1: Dedicated non-control radius --r-md in skins and root CSS
+    const { SKIN_BASE_VARS, SKIN_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
+    assert.ok(SKIN_BASE_VARS.includes('--r-md:'), 'SKIN_BASE_VARS must define --r-md')
+    for (const [k, v] of Object.entries(SKIN_VARS)) {
+      assert.ok(v.includes('--r-md:'), `SKIN_VARS[${k}] must define --r-md`)
+    }
+    const mainCss = generatedAppFiles['app/assets/css/main.css']
+    assert.ok(mainCss.includes('--r-md: var(--radius-md,'), 'main.css must map --r-md to var(--radius-md, 12px)')
+
+    const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
+    const materials = tmagicMaterialFiles()
+    const allMaterialsCode = Object.values(materials).join('\n')
+
+    // Materials must consume --r-md for non-controls (stats, avatars, badges, icon boxes, banners)
+    assert.ok(allMaterialsCode.includes('rounded-[var(--r-md,'), 'Materials must consume --r-md for non-control elements')
+
+    // 2. G2 & G5: /p/form completely conforms to design system and dual-column responsive layout
+    const planWithForm = {
+      ...mockPlan,
+      caps: {
+        ...mockPlan.caps,
+        landing_form: {
+          version: '1.0.0',
+          config: { formTitle: '在线业务申请登记', submitText: '立即提交' }
+        }
+      }
+    }
+    const formUi = uiFiles(planWithForm)
+    const formPage = formUi['app/pages/p/form.vue']
+    assert.ok(formPage, 'landing form page must be generated')
+
+    // G2: Consumes design system tokens
+    assert.ok(formPage.includes('rounded-[var(--r,'), '/p/form card must consume rounded-[var(--r)]')
+    assert.ok(formPage.includes('shadow-[var(--shadow,'), '/p/form card must consume shadow-[var(--shadow)]')
+    assert.ok(formPage.includes('rounded-[var(--r-md,'), '/p/form must consume rounded-[var(--r-md)] for icon base and banners')
+    assert.ok(formPage.includes('rounded-[var(--r-sm,'), '/p/form must consume rounded-[var(--r-sm)] for inputs and button')
+    assert.ok(formPage.includes('h-[var(--row-h,'), '/p/form must consume control height var(--row-h)')
+    assert.ok(formPage.includes('text-[var(--fs,14px)]'), '/p/form must consume font size var(--fs,14px)')
+
+    // G2: No bare Tailwind arbitrary radius/shadow rungs
+    assert.ok(!formPage.includes('rounded-2xl'), '/p/form must not use hardcoded rounded-2xl')
+    assert.ok(!formPage.includes('shadow-xl'), '/p/form must not use hardcoded shadow-xl')
+    assert.ok(!formPage.includes('📋'), '/p/form must not use bare emoji for header')
+
+    // G5: Dual-column responsive layout on desktop
+    assert.ok(formPage.includes('max-w-2xl'), '/p/form must use max-w-2xl for desktop readability')
+    assert.ok(formPage.includes('sm:grid-cols-2'), '/p/form must use sm:grid-cols-2 for responsive dual-column layout')
+    assert.ok(formPage.includes('sm:col-span-2'), '/p/form must span textareas and submit button across 2 columns')
+
+    // 3. G3: var(--shadow) light sense and MD3 elevation-0 for buttons
+    assert.ok(allMaterialsCode.includes('shadow-[var(--shadow,'), 'Materials must consume var(--shadow) for card/dialog light sense')
+    const rawTailwindShadows = allMaterialsCode.match(/\bshadow-(sm|md|lg|xl|2xl)\b/g) || []
+    assert.strictEqual(rawTailwindShadows.length, 0, `Materials must have 0 bare Tailwind shadows, found: ${rawTailwindShadows.join(', ')}`)
+
+    // 4. G4: Uniform --fs fallback at 14px across materials
+    const fsFallbacks = allMaterialsCode.match(/var\(--fs,\s*[^)]+\)/g) || []
+    for (const f of fsFallbacks) {
+      assert.match(f, /var\(--fs,\s*14px\)/, `--fs fallback must uniformly be 14px, found ${f}`)
+    }
+
+    // 5. F7 completeness: 5/5 body kinds coverage in intent producer
+    const { buildCmsSiteIntent } = await jiti.import(resolve(root, 'server/utils/gen/cms-intent.ts'))
+    const intent = buildCmsSiteIntent(mockPlan)
+    const bodyKinds = new Set(
+      intent.pages[0].blocks
+        .filter(b => b.kind === 'section' && b.body?.kind)
+        .map(b => b.body.kind)
+    )
+    for (const expectedKind of ['featureGrid', 'cardGrid', 'stepList', 'mediaList', 'faqList']) {
+      assert.ok(bodyKinds.has(expectedKind), `CMS intent producer must emit ${expectedKind} section (found ${[...bodyKinds].join(', ')})`)
+    }
+    assert.strictEqual(bodyKinds.size, 5, `CMS intent producer must cover all 5/5 body kinds, found ${bodyKinds.size}`)
+  })
 })
 
 

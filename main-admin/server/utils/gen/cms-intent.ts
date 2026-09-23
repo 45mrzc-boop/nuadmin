@@ -114,6 +114,46 @@ export function buildCmsSiteIntent(p: TenantPlan): SiteIntent {
     { label: '稳定运行', value: '99.9%' }
   ]
 
+  const solutionCards = isMedical ? [
+    {
+      title: '心脑血管诊疗中心',
+      text: '国家级重点专科，配备国际先进导管室与顶尖介入团队，提供冠心病、心律失常等一站式救治。',
+      footnote: '每周一至周五全天门诊',
+      action: { kind: 'openForm' as const, form: 'inquiry' }
+    },
+    {
+      title: '微创外科与骨关节中心',
+      text: '引进高精度手术机器人与关节镜系统，创伤小、出血少、恢复快，专注脊柱退行性病变及关节置换。',
+      footnote: '名医工作室常态化出诊',
+      action: { kind: 'openForm' as const, form: 'inquiry' }
+    },
+    {
+      title: '妇女儿童健康关爱中心',
+      text: '集孕前检查、围产期保健、高危儿监护于一体，多学科联合守护母婴安康全生命周期。',
+      footnote: '开设全天候绿色通道',
+      action: { kind: 'openForm' as const, form: 'inquiry' }
+    }
+  ] : [
+    {
+      title: '数智微前端应用中枢',
+      text: '面向多租户场景的一站式应用构建引擎，统一数据模型、声明式图纸与确定性编译交付。',
+      footnote: '支持独立私有化分库运行',
+      action: { kind: 'openForm' as const, form: 'inquiry' }
+    },
+    {
+      title: '零信任安全门禁与Casbin RBAC',
+      text: '多租户物理分库与动态权限矩阵联动，开箱即用三套认证模式，Fail-Closed保障系统安全。',
+      footnote: '秒级热重载权限规则',
+      action: { kind: 'openForm' as const, form: 'inquiry' }
+    },
+    {
+      title: 'B+C 端业务双向协同闭环',
+      text: '免鉴权海报落地页、动态线索收集表单与后台业务对账无缝打通，形成全链路转化链路。',
+      footnote: '全渠道数据追踪与核销',
+      action: { kind: 'openForm' as const, form: 'inquiry' }
+    }
+  ]
+
   // 变体生产者：根据租户行业特征与配置动态装配变体（医疗场景：左右分栏+边框矩阵+卡片CTA；通用/科技场景：居中大屏+卡片网格+横条CTA）
   const heroVariant = (capCfg(p, 'landing_cms', 'heroVariant', isMedical ? 'split' : 'centered') as any) || (isMedical ? 'split' : 'centered')
   const headerVariant = (capCfg(p, 'landing_cms', 'headerVariant', 'bar') as any) || 'bar'
@@ -153,6 +193,16 @@ export function buildCmsSiteIntent(p: TenantPlan): SiteIntent {
         kind: 'featureGrid',
         variant: featureVariant,
         features
+      }
+    },
+    {
+      kind: 'section',
+      density,
+      title: isMedical ? '重点优势专科' : '中台产品矩阵',
+      subtitle: isMedical ? '权威专家领衔，打造顶尖优势专科诊疗中心' : '面向未来企业级场景的现代化数智中台架构',
+      body: {
+        kind: 'cardGrid',
+        cards: solutionCards
       }
     },
     {

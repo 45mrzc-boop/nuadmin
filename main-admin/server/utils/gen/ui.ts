@@ -5023,39 +5023,39 @@ function landingFormPage(p: TenantPlan): string {
 
   const fieldsTemplate = hasCustomFields
     ? formFields.map(f => {
-        const label = `${f.name || f.key}${f.required ? ' <span class="text-error-400">*</span>' : ''}`
-        let inputEl = `<UInput v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" size="lg" class="w-full" />`
+        const label = `${f.name || f.key}${f.required ? ' <span class="text-red-500 font-bold">*</span>' : ''}`
+        const isColSpan2 = f.type === 'text' || f.type === 'richtext'
+        const colClass = isColSpan2 ? 'sm:col-span-2' : 'col-span-1'
+        let inputEl = `<input :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
         if (f.type === 'enum' && f.dict && p.dicts[f.dict]) {
-          inputEl = `<USelect v-model="formState['${f.key}']" :items="dicts['${f.dict}'] || []" placeholder="请选择${f.name || f.key}" size="lg" class="w-full" />`
-        } else if (f.type === 'date') {
-          inputEl = `<UInput v-model="formState['${f.key}']" type="date" placeholder="请选择${f.name || f.key}" size="lg" class="w-full" />`
-        } else if (f.type === 'datetime') {
-          inputEl = `<UInput v-model="formState['${f.key}']" type="datetime-local" placeholder="请选择${f.name || f.key}" size="lg" class="w-full" />`
+          inputEl = `<USelect :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" :items="dicts['${f.dict}'] || []" placeholder="请选择${f.name || f.key}" class="w-full h-[var(--row-h,40px)] rounded-[var(--r-sm,8px)] text-[var(--fs,14px)]" />`
+        } else if (f.type === 'date' || f.type === 'datetime') {
+          inputEl = `<input :id="'field-' + '${f.key}'" type="${f.type === 'datetime' ? 'datetime-local' : 'date'}" v-model="formState['${f.key}']" class="w-full h-[var(--row-h,40px)] px-4 py-2 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all appearance-none" />`
         } else if (f.type === 'text' || f.type === 'richtext') {
-          inputEl = `<UTextarea v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" :rows="3" size="lg" class="w-full" />`
+          inputEl = `<textarea :id="'field-' + '${f.key}'" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" rows="3" class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60"></textarea>`
         } else if (f.type === 'int' || f.type === 'decimal' || f.type === 'money') {
-          inputEl = `<UInput v-model="formState['${f.key}']" type="number" placeholder="请输入${f.name || f.key}" size="lg" class="w-full" />`
+          inputEl = `<input :id="'field-' + '${f.key}'" type="number" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
         } else if (f.key.includes('phone') || f.key.includes('mobile') || f.key.includes('tel')) {
-          inputEl = `<UInput v-model="formState['${f.key}']" type="tel" placeholder="请输入${f.name || f.key}" size="lg" class="w-full" />`
+          inputEl = `<input :id="'field-' + '${f.key}'" type="tel" v-model="formState['${f.key}']" placeholder="请输入${f.name || f.key}" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />`
         }
-        return `          <div class="space-y-1.5 text-left">
-            <label class="text-xs font-medium text-neutral-300">${label}</label>
+        return `          <div class="space-y-1.5 text-left ${colClass}">
+            <label :for="'field-' + '${f.key}'" class="block text-xs font-semibold text-highlighted">${label}</label>
             ${inputEl}
           </div>`
       }).join('\n')
-    : `          <div class="space-y-1.5 text-left">
-            <label class="text-xs font-medium text-muted">姓名称呼 <span class="text-error-500">*</span></label>
-            <UInput v-model="formState.name" placeholder="请输入您的姓名" size="lg" class="w-full" />
+    : `          <div class="space-y-1.5 text-left col-span-1">
+            <label for="field-name" class="block text-xs font-semibold text-highlighted">姓名称呼 <span class="text-red-500 font-bold">*</span></label>
+            <input id="field-name" v-model="formState.name" placeholder="请输入您的姓名" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />
           </div>
 
-          <div class="space-y-1.5 text-left">
-            <label class="text-xs font-medium text-muted">联系电话 <span class="text-error-500">*</span></label>
-            <UInput v-model="formState.phone" type="tel" placeholder="请输入手机号码" size="lg" class="w-full" />
+          <div class="space-y-1.5 text-left col-span-1">
+            <label for="field-phone" class="block text-xs font-semibold text-highlighted">联系电话 <span class="text-red-500 font-bold">*</span></label>
+            <input id="field-phone" v-model="formState.phone" type="tel" placeholder="请输入手机号码" class="w-full h-[var(--row-h,40px)] px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60" />
           </div>
 
-          <div class="space-y-1.5 text-left">
-            <label class="text-xs font-medium text-muted">意向留言 / 需求说明</label>
-            <UTextarea v-model="formState.remark" placeholder="请简要描述您的业务诉求（选填）" :rows="3" size="lg" class="w-full" />
+          <div class="space-y-1.5 text-left sm:col-span-2">
+            <label for="field-remark" class="block text-xs font-semibold text-highlighted">意向留言 / 需求说明</label>
+            <textarea id="field-remark" v-model="formState.remark" placeholder="请简要描述您的业务诉求（选填）" rows="3" class="w-full px-4 py-2.5 bg-default border border-default rounded-[var(--r-sm,8px)] text-[var(--fs,14px)] text-highlighted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-all placeholder:text-muted/60"></textarea>
           </div>`
 
   return `<script setup lang="ts">
@@ -5099,42 +5099,58 @@ function resetForm() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-default text-default flex flex-col items-center justify-center p-4 sm:p-6 antialiased">
-    <div class="w-full max-w-lg bg-card border border-default rounded-2xl p-6 sm:p-8 shadow-xl">
+  <div class="min-h-screen bg-default text-default flex flex-col items-center justify-center p-4 sm:p-8 antialiased">
+    <div class="w-full max-w-2xl bg-card border border-default rounded-[var(--r,16px)] p-6 sm:p-10 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
       <div v-if="!submitted" class="space-y-6">
         <div class="text-center space-y-2">
-          <div class="inline-flex size-14 rounded-2xl bg-primary-500/10 text-primary-500 items-center justify-center text-2xl mb-1">
-            📋
+          <div class="inline-flex size-14 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 items-center justify-center mb-1">
+            <svg class="size-7 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+              <path d="M9 12h6"/>
+              <path d="M9 16h6"/>
+            </svg>
           </div>
-          <h1 class="text-2xl font-bold text-highlighted">{{ ${formTitle} }}</h1>
-          <p class="text-xs text-muted">请留下您的真实联系方式，我们的顾问将为您提供专属服务</p>
+          <h1 class="text-2xl sm:text-3xl font-bold text-highlighted tracking-tight">{{ ${formTitle} }}</h1>
+          <p class="text-[var(--fs,14px)] text-muted">请留下您的真实联系方式，我们的顾问将为您提供专属服务</p>
         </div>
 
-        <div v-if="errorMsg" class="p-3 bg-error-500/10 border border-error-500/20 text-error-500 text-xs rounded-xl flex items-center gap-2">
-          <UIcon name="i-lucide-alert-circle" class="size-4 shrink-0" />
+        <div v-if="errorMsg" class="p-3.5 bg-red-500/10 border border-red-500/20 text-red-600 text-[var(--fs,14px)] rounded-[var(--r-md,12px)] flex items-center gap-2">
+          <svg class="size-4 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span>{{ errorMsg }}</span>
         </div>
 
-        <form @submit.prevent="onSubmit" class="space-y-4">
+        <form @submit.prevent="onSubmit" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 ${fieldsTemplate}
 
-          <UButton type="submit" block size="xl" color="primary" :loading="loading">
-            {{ ${submitText} }}
-          </UButton>
+          <div class="sm:col-span-2 pt-2">
+            <button
+              type="submit"
+              :disabled="loading"
+              class="w-full h-[calc(var(--row-h,40px)+8px)] px-6 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] transition-all flex items-center justify-center gap-2"
+            >
+              <span v-if="loading" class="w-4 h-4 border-2 border-inverted/30 border-t-inverted rounded-full animate-spin motion-reduce:animate-none"></span>
+              <span>{{ loading ? '正在提交...' : ${submitText} }}</span>
+            </button>
+          </div>
         </form>
       </div>
 
-      <div v-else class="text-center py-8 space-y-5">
-        <div class="size-16 mx-auto rounded-full bg-success-500/20 text-success-500 flex items-center justify-center text-3xl">
-          <UIcon name="i-lucide-check-circle-2" class="size-10" />
+      <div v-else class="text-center py-8 space-y-6">
+        <div class="size-16 mx-auto rounded-[var(--r-md,12px)] bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+          <svg class="size-8 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
         <div class="space-y-2">
-          <h2 class="text-xl font-bold text-highlighted">提交成功</h2>
-          <p class="text-sm text-muted">{{ ${successMsg} }}</p>
+          <h2 class="text-xl sm:text-2xl font-bold text-highlighted tracking-tight">提交成功</h2>
+          <p class="text-[var(--fs,14px)] text-muted">{{ ${successMsg} }}</p>
         </div>
-        <UButton color="neutral" variant="outline" size="md" @click="resetForm">
+        <button
+          type="button"
+          @click="resetForm"
+          class="h-[var(--row-h,40px)] px-6 border border-default hover:bg-default text-muted hover:text-highlighted text-[var(--fs,14px)] font-medium rounded-[var(--r-sm,8px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors"
+        >
           返回再次填写
-        </UButton>
+        </button>
       </div>
     </div>
   </div>

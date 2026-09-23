@@ -83,7 +83,7 @@ defineProps<{
         @click="handleAction({ kind: 'navigate', page: '/' })"
         @keydown.enter="handleAction({ kind: 'navigate', page: '/' })"
       >
-        <div class="w-10 h-10 rounded-[var(--r-sm,8px)] bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center text-inverted font-bold text-lg shadow-sm">
+        <div class="w-10 h-10 rounded-[var(--r-md,12px)] bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center text-inverted font-bold text-lg">
           {{ (node.brand?.name || 'G').charAt(0) }}
         </div>
         <div>
@@ -107,7 +107,7 @@ defineProps<{
         <button
           v-if="node.action"
           @click="handleAction(node.action.action)"
-          class="h-[var(--row-h,40px)] px-4 text-sm font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] shadow-sm shadow-primary-500/20 transition-all flex items-center justify-center"
+          class="h-[var(--row-h,40px)] px-4 text-sm font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] transition-all flex items-center justify-center"
         >
           {{ node.action.label }}
         </button>
@@ -151,21 +151,21 @@ function handleAction(act: any) {
         <h1 class="text-3xl sm:text-5xl font-extrabold text-highlighted tracking-tight leading-tight sm:leading-tight mb-6">
           {{ node.title }}
         </h1>
-        <p v-if="node.text" class="text-[var(--fs,16px)] sm:text-lg text-muted leading-relaxed mb-8">
+        <p v-if="node.text" class="text-[var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-8">
           {{ node.text }}
         </p>
         <div v-if="node.action" class="flex gap-4">
           <button
             @click="handleAction(node.action.action)"
-            class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] shadow-md shadow-primary-500/20 transition-all"
+            class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] transition-all"
           >
             {{ node.action.label }}
           </button>
         </div>
       </div>
       <div class="lg:col-span-5">
-        <div v-if="node.stats?.length" class="grid grid-cols-2 gap-4 bg-card border border-default rounded-[var(--r,16px)] p-6 shadow-xl">
-          <div v-for="(st, i) in node.stats" :key="i" class="p-4 bg-default/60 rounded-[var(--r-sm,8px)] border border-default/50">
+        <div v-if="node.stats?.length" class="grid grid-cols-2 gap-4 bg-card border border-default rounded-[var(--r,16px)] p-6 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
+          <div v-for="(st, i) in node.stats" :key="i" class="p-4 bg-default/60 rounded-[var(--r-md,12px)] border border-default/50">
             <div class="text-2xl sm:text-3xl font-extrabold text-highlighted tracking-tight">
               {{ st.value }}<span v-if="st.unit" class="text-sm font-medium text-muted ml-1">{{ st.unit }}</span>
             </div>
@@ -185,19 +185,19 @@ function handleAction(act: any) {
         <h1 class="text-3xl sm:text-5xl font-extrabold text-highlighted tracking-tight leading-tight sm:leading-tight mb-6">
           {{ node.title }}
         </h1>
-        <p v-if="node.text" class="text-[var(--fs,16px)] sm:text-lg text-muted leading-relaxed mb-8">
+        <p v-if="node.text" class="text-[var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-8">
           {{ node.text }}
         </p>
         <div v-if="node.action">
           <button
             @click="handleAction(node.action.action)"
-            class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] shadow-md shadow-primary-500/20 transition-all"
+            class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] transition-all"
           >
             {{ node.action.label }}
           </button>
         </div>
       </div>
-      <div v-if="node.stats?.length" class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-[var(--r,16px)] bg-card border-2 border-primary-500/20 shadow-lg">
+      <div v-if="node.stats?.length" class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-[var(--r,16px)] bg-card border-2 border-primary-500/20 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
         <div v-for="(st, i) in node.stats" :key="i" class="p-4 border-l-2 border-primary-500/40 pl-4">
           <div class="text-2xl sm:text-3xl font-extrabold text-highlighted tracking-tight">
             {{ st.value }}<span v-if="st.unit" class="text-sm font-medium text-muted ml-1">{{ st.unit }}</span>
@@ -209,7 +209,7 @@ function handleAction(act: any) {
 
     <!-- 变体 3: mediaBg (质感卡片居中高光) -->
     <div v-else-if="node.variant === 'mediaBg'" class="max-w-5xl mx-auto px-[var(--pad,1.5rem)]">
-      <div class="p-8 sm:p-14 rounded-[var(--r,16px)] bg-card/80 backdrop-blur border border-primary-500/20 shadow-2xl text-center">
+      <div class="p-8 sm:p-14 rounded-[var(--r,16px)] bg-card/80 backdrop-blur border border-primary-500/20 shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] text-center">
         <div v-if="node.eyebrow" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--r-pill,999px)] text-xs font-semibold bg-primary-500/10 text-primary-600 mb-6 ring-1 ring-primary-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse motion-reduce:animate-none"></span>
           {{ node.eyebrow }}
@@ -217,13 +217,13 @@ function handleAction(act: any) {
         <h1 class="text-3xl sm:text-5xl font-extrabold text-highlighted tracking-tight leading-tight sm:leading-tight mb-6">
           {{ node.title }}
         </h1>
-        <p v-if="node.text" class="max-w-2xl mx-auto text-[var(--fs,16px)] sm:text-lg text-muted leading-relaxed mb-10">
+        <p v-if="node.text" class="max-w-2xl mx-auto text-[var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-10">
           {{ node.text }}
         </p>
         <div v-if="node.action" class="mb-12">
           <button
             @click="handleAction(node.action.action)"
-            class="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] shadow-md shadow-primary-500/20 transition-all"
+            class="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] transition-all"
           >
             {{ node.action.label }}
           </button>
@@ -250,14 +250,14 @@ function handleAction(act: any) {
         {{ node.title }}
       </h1>
 
-      <p v-if="node.text" class="max-w-2xl mx-auto text-[var(--fs,16px)] sm:text-lg text-muted leading-relaxed mb-10">
+      <p v-if="node.text" class="max-w-2xl mx-auto text-[var(--fs,14px)] sm:text-lg text-muted leading-relaxed mb-10">
         {{ node.text }}
       </p>
 
       <div v-if="node.action" class="mb-12">
         <button
           @click="handleAction(node.action.action)"
-          class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] shadow-md shadow-primary-500/20 transition-all"
+          class="inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] transition-all"
         >
           {{ node.action.label }}
         </button>
@@ -320,7 +320,7 @@ function handleAction(act: any) {
             role="article"
             @click="card.action && handleAction(card.action)"
             @keydown.enter="card.action && handleAction(card.action)"
-            class="bg-card rounded-[var(--r,16px)] p-6 border border-default hover:border-primary-500 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-all"
+            class="bg-card rounded-[var(--r,16px)] p-6 border border-default hover:border-primary-500 hover:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-all"
             :class="{ 'cursor-pointer': !!card.action }"
           >
             <div class="text-lg font-bold text-highlighted mb-2">{{ card.title }}</div>
@@ -351,21 +351,21 @@ function handleAction(act: any) {
             role="article"
             @click="row.action && handleAction(row.action)"
             @keydown.enter="row.action && handleAction(row.action)"
-            class="bg-card rounded-[var(--r,16px)] p-5 border border-default hover:border-primary-500 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-all flex flex-col sm:flex-row gap-[var(--gap,1rem)] items-start"
+            class="bg-card rounded-[var(--r,16px)] p-5 border border-default hover:border-primary-500 hover:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-all flex flex-col sm:flex-row gap-[var(--gap,1rem)] items-start"
             :class="{ 'cursor-pointer': !!row.action }"
           >
             <img
               v-if="row.avatar"
               :src="row.avatar"
               :alt="row.title || '资讯封面'"
-              class="w-full sm:w-28 h-28 object-cover rounded-[var(--r-sm,8px)] bg-default border border-default flex-shrink-0"
+              class="w-full sm:w-28 h-28 object-cover rounded-[var(--r-md,12px)] bg-default border border-default flex-shrink-0"
             />
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1.5">
-                <span v-if="row.meta" class="text-xs px-2 py-0.5 rounded-[var(--r-sm,8px)] bg-primary-500/10 text-primary-600 font-medium">
+                <span v-if="row.meta" class="text-xs px-2 py-0.5 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-600 font-medium">
                   {{ row.meta }}
                 </span>
-                <span v-for="(tg, tgi) in row.tags || []" :key="tgi" class="text-xs px-2 py-0.5 rounded-[var(--r-sm,8px)] bg-default text-muted border border-default font-medium">
+                <span v-for="(tg, tgi) in row.tags || []" :key="tgi" class="text-xs px-2 py-0.5 rounded-[var(--r-md,12px)] bg-default text-muted border border-default font-medium">
                   {{ tg }}
                 </span>
               </div>
@@ -394,7 +394,7 @@ function handleAction(act: any) {
           :key="i"
           class="bg-card p-6 rounded-[var(--r,16px)] border-2 border-default hover:border-primary-500 transition-all text-left"
         >
-          <div class="w-10 h-10 rounded-[var(--r-sm,8px)] bg-primary-500/10 text-primary-500 flex items-center justify-center mb-3">
+          <div class="w-10 h-10 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 flex items-center justify-center mb-3">
             <svg class="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getIconPath(feat.icon)"></svg>
           </div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
@@ -418,7 +418,7 @@ function handleAction(act: any) {
           :key="i"
           class="bg-card p-6 rounded-[var(--r,16px)] border border-default hover:border-primary-500 transition-all flex gap-4 items-start text-left"
         >
-          <div class="w-12 h-12 rounded-[var(--r-sm,8px)] bg-primary-500/10 text-primary-500 flex items-center justify-center flex-shrink-0">
+          <div class="w-12 h-12 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 flex items-center justify-center flex-shrink-0">
             <svg class="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getIconPath(feat.icon)"></svg>
           </div>
           <div class="flex-1 min-w-0">
@@ -431,9 +431,9 @@ function handleAction(act: any) {
         <div
           v-for="(feat, i) in node.body.features"
           :key="i"
-          class="bg-card p-6 rounded-[var(--r,16px)] border border-default text-center hover:border-primary-400 hover:shadow-md transition-all"
+          class="bg-card p-6 rounded-[var(--r,16px)] border border-default text-center hover:border-primary-400 hover:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] transition-all"
         >
-          <div class="w-12 h-12 mx-auto mb-4 rounded-[var(--r-sm,8px)] bg-primary-500/10 text-primary-500 flex items-center justify-center">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-500 flex items-center justify-center">
             <svg class="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="getIconPath(feat.icon)"></svg>
           </div>
           <div class="font-bold text-highlighted text-base mb-2">{{ feat.title }}</div>
@@ -530,13 +530,13 @@ function handleAction(act: any) {
     v-if="node.variant === 'card'"
     class="py-14 bg-default text-center px-[var(--pad,1.5rem)]"
   >
-    <div class="max-w-4xl mx-auto p-8 sm:p-12 rounded-[var(--r,16px)] bg-primary-500 text-inverted shadow-xl shadow-primary-500/20">
+    <div class="max-w-4xl mx-auto p-8 sm:p-12 rounded-[var(--r,16px)] bg-primary-500 text-inverted shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
       <h2 class="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">{{ node.title }}</h2>
       <p v-if="node.text" class="text-inverted/85 max-w-xl mx-auto text-[var(--fs,14px)] sm:text-base mb-6 leading-relaxed">{{ node.text }}</p>
       <button
         v-if="node.action"
         @click="handleAction(node.action.action)"
-        class="h-[calc(var(--row-h,40px)+8px)] px-6 bg-default text-primary-600 hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 font-semibold rounded-[var(--r-sm,8px)] shadow-md transition-all inline-flex items-center justify-center"
+        class="h-[calc(var(--row-h,40px)+8px)] px-6 bg-default text-primary-600 hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 font-semibold rounded-[var(--r-sm,8px)] transition-all inline-flex items-center justify-center"
       >
         {{ node.action.label }}
       </button>
@@ -546,7 +546,7 @@ function handleAction(act: any) {
     v-else-if="node.variant === 'split'"
     class="py-14 bg-default px-[var(--pad,1.5rem)]"
   >
-    <div class="max-w-5xl mx-auto p-8 sm:p-12 rounded-[var(--r,16px)] bg-card border-2 border-primary-500/30 flex flex-col md:flex-row items-center justify-between gap-[var(--gap,1.5rem)] shadow-xl">
+    <div class="max-w-5xl mx-auto p-8 sm:p-12 rounded-[var(--r,16px)] bg-card border-2 border-primary-500/30 flex flex-col md:flex-row items-center justify-between gap-[var(--gap,1.5rem)] shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))]">
       <div class="max-w-xl text-left">
         <h2 class="text-2xl sm:text-3xl font-bold text-highlighted mb-3 tracking-tight">{{ node.title }}</h2>
         <p v-if="node.text" class="text-muted text-[var(--fs,14px)] sm:text-base leading-relaxed">{{ node.text }}</p>
@@ -555,7 +555,7 @@ function handleAction(act: any) {
         <button
           v-if="node.action"
           @click="handleAction(node.action.action)"
-          class="h-[calc(var(--row-h,40px)+8px)] px-8 bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 text-inverted font-semibold rounded-[var(--r-sm,8px)] shadow-lg shadow-primary-500/25 transition-all inline-flex items-center justify-center"
+          class="h-[calc(var(--row-h,40px)+8px)] px-8 bg-primary-500 hover:bg-primary-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 text-inverted font-semibold rounded-[var(--r-sm,8px)] transition-all inline-flex items-center justify-center"
         >
           {{ node.action.label }}
         </button>
@@ -569,7 +569,7 @@ function handleAction(act: any) {
       <button
         v-if="node.action"
         @click="handleAction(node.action.action)"
-        class="h-[calc(var(--row-h,40px)+8px)] px-6 bg-default text-primary-600 hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 font-semibold rounded-[var(--r-sm,8px)] shadow-md transition-all inline-flex items-center justify-center"
+        class="h-[calc(var(--row-h,40px)+8px)] px-6 bg-default text-primary-600 hover:bg-card active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 font-semibold rounded-[var(--r-sm,8px)] transition-all inline-flex items-center justify-center"
       >
         {{ node.action.label }}
       </button>
@@ -620,7 +620,7 @@ defineProps<{ node: any }>()
   <nav
     role="tablist"
     aria-label="快捷导航"
-    class="fixed bottom-0 inset-x-0 bg-default/95 backdrop-blur border-t border-default z-40 py-1.5 px-4 flex justify-around md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:px-6 md:py-2 md:rounded-[var(--r-pill,999px)] md:border md:shadow-lg md:gap-6 md:bg-default/90"
+    class="fixed bottom-0 inset-x-0 bg-default/95 backdrop-blur border-t border-default z-40 py-1.5 px-4 flex justify-around md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:px-6 md:py-2 md:rounded-[var(--r-pill,999px)] md:border md:shadow-[var(--shadow,0_10px_30px_rgba(0,0,0,0.1))] md:gap-6 md:bg-default/90"
   >
     <button
       v-for="tab in node.tabs"
@@ -667,12 +667,12 @@ function handleTab(tab: any) {
 
     'app/components/tmagic/TmagicOverlayForm.vue': `<template>
   <div v-if="visible" role="dialog" aria-modal="true" aria-labelledby="modal-form-title" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm">
-    <div class="bg-card rounded-[var(--r,16px)] max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-default relative animate-in fade-in zoom-in-95 duration-150 motion-reduce:animate-none">
+    <div class="bg-card rounded-[var(--r,16px)] max-w-lg w-full p-6 sm:p-8 shadow-[var(--shadow,0_20px_40px_rgba(0,0,0,0.18))] border border-default relative animate-in fade-in zoom-in-95 duration-150 motion-reduce:animate-none">
       <div class="flex items-center justify-between mb-4">
         <h3 id="modal-form-title" class="text-xl font-bold text-highlighted tracking-tight">{{ node.title }}</h3>
         <button type="button" @click="visible = false" aria-label="关闭表单" class="text-muted hover:text-highlighted text-2xl font-bold leading-none p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-[var(--r-sm,8px)]">×</button>
       </div>
-      <p v-if="node.subtitle" class="text-[var(--fs,13px)] text-muted mb-6 leading-relaxed">{{ node.subtitle }}</p>
+      <p v-if="node.subtitle" class="text-[var(--fs,14px)] text-muted mb-6 leading-relaxed">{{ node.subtitle }}</p>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div v-for="f in node.fields" :key="f.name || f.key">
@@ -697,12 +697,12 @@ function handleTab(tab: any) {
           ></textarea>
         </div>
 
-        <div v-if="errorMsg" class="p-3.5 rounded-[var(--r-sm,8px)] bg-red-500/10 border border-red-500/20 text-red-600 text-sm flex items-center gap-2">
+        <div v-if="errorMsg" class="p-3.5 rounded-[var(--r-md,12px)] bg-red-500/10 border border-red-500/20 text-red-600 text-sm flex items-center gap-2">
           <svg class="w-4 h-4 flex-shrink-0 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span>{{ errorMsg }}</span>
         </div>
 
-        <div v-if="successMsg" class="p-3.5 rounded-[var(--r-sm,8px)] bg-primary-500/10 text-primary-600 text-sm text-center font-medium">
+        <div v-if="successMsg" class="p-3.5 rounded-[var(--r-md,12px)] bg-primary-500/10 text-primary-600 text-sm text-center font-medium">
           {{ successMsg }}
         </div>
 
@@ -718,7 +718,7 @@ function handleTab(tab: any) {
           <button
             type="submit"
             :disabled="loading"
-            class="flex-1 px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] shadow-md shadow-primary-500/20 transition-all flex items-center justify-center gap-2"
+            class="flex-1 px-6 py-3.5 text-base font-semibold text-inverted bg-primary-500 hover:bg-primary-600 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[var(--r-sm,8px)] transition-all flex items-center justify-center gap-2"
           >
             <span v-if="loading" class="w-4 h-4 border-2 border-inverted/30 border-t-inverted rounded-full animate-spin motion-reduce:animate-none"></span>
             <span>{{ loading ? '正在提交...' : (node.submitText || '提交') }}</span>

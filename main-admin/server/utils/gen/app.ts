@@ -343,6 +343,7 @@ ${shades.map((s, i) => `  --color-primary-${names[i]}: ${s};`).join('\n')}
   --ui-radius: ${uiRadius};
   --ui-primary: var(--color-primary-500, #4f7dff);
   --ui-color-primary: var(--color-primary-500, #4f7dff);
+  --r-md: var(--radius-md, 12px);
 }
 
 ${skinCss(t.skin, p)}
