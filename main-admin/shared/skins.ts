@@ -250,7 +250,7 @@ export function galleryCss(): string {
     const one = sel.split(',').map(x => scopeOne(x.trim())).join(', ')
     return one + ' {'
   })
-  const vars = `.skin-frame { ${SKIN_BASE_VARS} }\n`
+  const vars = `.skin-frame { ${SKIN_BASE_VARS} }\n.dark .skin-frame, .skin-frame.dark { ${SKIN_DARK_BASE_VARS} }\n`
     + Object.entries(SKIN_VARS).map(([k, v]) => `.skin-frame[data-skin='${k}'] { ${v} }`).join('\n')
   return vars + '\n' + scoped(ROLE_GENERIC) + '\n' + scoped(Object.values(ROLE_OWN).join('\n'))
 }

@@ -355,7 +355,7 @@ export function resolveBrandBase(t: TenantPlan['theme']): string {
   return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : '#0a84ff'
 }
 
-/** Standard dark surface base hex used for WCAG AA dark-mode contrast calculations (aligned with Nuxt UI neutral-900 / skins default dark background). */
+/** Standard dark surface base hex used for WCAG AA dark-mode contrast calculations (aligned with Nuxt UI neutral/slate-900 #0f172a and skins default dark background). */
 export const DARK_SURFACE_HEX = DEFAULT_DARK_BG
 
 /** Brand tokens become real Tailwind v4 theme variables, not runtime CSS vars. */
