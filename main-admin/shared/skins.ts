@@ -112,7 +112,7 @@ export const SKIN_BASE_VARS = "--r: 10px; --r-md: 8px; --r-sm: 7px; --r-pill: 99
 export const SKIN_DARK_BASE_VARS = "--bg: #0b1220; --bg-dark: #0f172a; --panel: rgba(30,41,59,.93); --side: rgba(15,23,42,.72); --line: rgba(255,255,255,.12); --line-strong: rgba(255,255,255,.20); --text: #e2e8f0; --muted: #94a3b8; --side-fg: var(--text); --side-muted: var(--muted); --grad: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); --btn-grad: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02)); --ui-bg: var(--bg-dark, #0f172a);"
 
 /** 各皮肤专属的暗色覆盖变量（如 macos-retro 的拟物内阴影需由浅色的纯白微光转换为暗底适配的低透明度微光与强化暗边） */
-export const SKIN_DARK_VARS: Record<string, string> = {
+export const SKIN_DARK_VARS: Partial<Record<SkinId, string>> = {
   'macos-retro': '--inset: inset 1px 1px 0 rgba(255,255,255,.10), inset -1px -1px 0 rgba(0,0,0,.45);'
 }
 
@@ -229,7 +229,7 @@ function skinAdapter(): string {
 export function skinCss(skin: unknown, p?: { theme?: { palette?: string } }): string {
   const id = (isSkin(skin) ? skin : DEFAULT_SKIN) as SkinId
   const darkSpecific = SKIN_DARK_VARS[id] ? ' ' + SKIN_DARK_VARS[id] : ''
-  const darkBlock = id === 'glass' ? '--ui-bg: var(--bg-dark, #121526);' : `${SKIN_DARK_BASE_VARS}${darkSpecific}`
+  const darkBlock = id === 'glass' ? `--ui-bg: var(--bg-dark, #121526);${darkSpecific}` : `${SKIN_DARK_BASE_VARS}${darkSpecific}`
   const rules = (ROLE_GENERIC + '\n\n' + (ROLE_OWN[id] ?? ''))
     .replace(/\.skin-frame\[data-skin='[a-z-]+'\]/g, '')
     .replace(/\[data-skin='[a-z-]+'\]/g, '')
@@ -262,7 +262,7 @@ export function galleryCss(): string {
   const vars = `.skin-frame { ${SKIN_BASE_VARS} }\n`
     + Object.entries(SKIN_VARS).map(([k, v]) => `.skin-frame[data-skin='${k}'] { ${v} }`).join('\n')
     + `\n.dark .skin-frame:not([data-skin='glass']), .skin-frame.dark:not([data-skin='glass']) { ${SKIN_DARK_BASE_VARS} }\n`
-    + (darkSpecificRules ? `${darkSpecificRules}\n` : '')
     + `.dark .skin-frame[data-skin='glass'], .skin-frame.dark[data-skin='glass'] { --ui-bg: var(--bg-dark, #121526); }\n`
+    + (darkSpecificRules ? `${darkSpecificRules}\n` : '')
   return vars + '\n' + scoped(ROLE_GENERIC) + '\n' + scoped(Object.values(ROLE_OWN).join('\n'))
 }
