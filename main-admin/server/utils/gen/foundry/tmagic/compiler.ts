@@ -43,7 +43,8 @@ export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan 
           name: '顶栏导航',
           brand: block.brand,
           links: block.links || [],
-          action: block.action
+          action: block.action,
+          variant: block.variant || 'bar'
         })
         break
       }
@@ -56,7 +57,9 @@ export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan 
           title: block.title,
           text: block.text,
           stats: block.stats || [],
-          action: block.action
+          action: block.action,
+          variant: block.variant || 'centered',
+          density: block.density || 'normal'
         })
         break
       }
@@ -67,7 +70,8 @@ export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan 
           name: block.title || '内容板块',
           title: block.title,
           subtitle: block.subtitle || '',
-          body: block.body
+          body: block.body,
+          density: block.density || 'normal'
         })
         break
       }
@@ -78,7 +82,8 @@ export function compileTmagicPage(page: PageIntent, ctx?: { tenant?: TenantPlan 
           name: '行动呼吁',
           title: block.title,
           text: block.text,
-          action: block.action
+          action: block.action,
+          variant: block.variant || 'band'
         })
         break
       }

@@ -873,6 +873,94 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const healedHero = healedIntent.pages[0].blocks.find(b => b.kind === 'hero')
     assert.ok(healedHero.text.includes('精医厚德'), 'Stale slogan default must heal to medical slogan')
   })
+
+  it('18. UI upgrade (U1-U4): Semantic tokenization, theme connection, closed variant vocabulary, and multi-template materials', async () => {
+    const { validateIntent, VALID_HERO_VARIANTS, VALID_DENSITIES } = await jiti.import(resolve(root, 'shared/intent.ts'))
+    const { getFoundry } = await jiti.import(resolve(root, 'server/utils/gen/foundry/index.ts'))
+
+    // 1. U1 & U2: Emitted material components must use semantic tokens and ZERO hardcoded blue-600 / slate-900
+    const ui = uiFiles({
+      ...mockPlan,
+      caps: { ...mockPlan.caps, landing_cms: { version: '2.0.0' } }
+    })
+    const tmagicPageCode = ui['app/components/tmagic/TmagicPage.vue']
+    const tmagicHeroCode = ui['app/components/tmagic/TmagicHero.vue']
+    const tmagicSectionCode = ui['app/components/tmagic/TmagicSection.vue']
+
+    // Must not have hardcoded colors
+    assert.ok(!tmagicPageCode.includes('bg-slate-50'), 'TmagicPage must not hardcode bg-slate-50')
+    assert.ok(!tmagicHeroCode.includes('bg-blue-600'), 'TmagicHero must not hardcode bg-blue-600')
+    assert.ok(!tmagicHeroCode.includes('text-slate-900'), 'TmagicHero must not hardcode text-slate-900')
+    assert.ok(!tmagicSectionCode.includes('border-slate-200'), 'TmagicSection must not hardcode border-slate-200')
+
+    // Must use semantic tokens
+    assert.ok(tmagicPageCode.includes('bg-default text-default'), 'TmagicPage must use bg-default text-default')
+    assert.ok(tmagicHeroCode.includes('text-highlighted'), 'TmagicHero must use text-highlighted')
+    assert.ok(tmagicHeroCode.includes('bg-primary-500'), 'TmagicHero must use bg-primary-500')
+    assert.ok(tmagicHeroCode.includes('text-inverted'), 'TmagicHero must use text-inverted')
+    assert.ok(tmagicSectionCode.includes('bg-card'), 'TmagicSection must use bg-card')
+    assert.ok(tmagicSectionCode.includes('border-default'), 'TmagicSection must use border-default')
+
+    // 2. U4: Closed variant vocabulary sets and validator gatekeeper
+    assert.ok(VALID_HERO_VARIANTS.has('split'), 'VALID_HERO_VARIANTS must include split')
+    assert.ok(VALID_HERO_VARIANTS.has('centered'), 'VALID_HERO_VARIANTS must include centered')
+    assert.ok(VALID_DENSITIES.has('airy'), 'VALID_DENSITIES must include airy')
+
+    // Valid variant and density pass validation
+    const validVariantIntent = {
+      id: 'variant-test',
+      name: 'Variant Test',
+      blocks: [
+        {
+          kind: 'hero',
+          variant: 'split',
+          density: 'airy',
+          title: 'Split Hero',
+          text: 'Two column layout'
+        },
+        {
+          kind: 'section',
+          density: 'compact',
+          title: 'Bordered Features',
+          body: {
+            kind: 'featureGrid',
+            variant: 'bordered',
+            features: [{ title: 'Feat 1', text: 'Desc 1' }]
+          }
+        }
+      ]
+    }
+    const checkValid = validateIntent(validVariantIntent)
+    assert.ok(checkValid.valid, 'Valid variants and densities must pass: ' + checkValid.errors.join(', '))
+
+    // Illegal variant must be rejected by validator
+    const illegalVariantIntent = {
+      id: 'illegal-variant',
+      name: 'Illegal Variant',
+      blocks: [
+        {
+          kind: 'hero',
+          variant: 'gradient-glow-3d', // not in vocabulary
+          title: 'Smuggled Style',
+          text: 'Illegal'
+        }
+      ]
+    }
+    const checkIllegal = validateIntent(illegalVariantIntent)
+    assert.equal(checkIllegal.valid, false, 'Validator must strictly reject variants outside closed vocabulary')
+
+    // 3. U3: Compiler and Material variants
+    const foundry = getFoundry('tmagic')
+    const compiled = foundry.compilePage(validVariantIntent)
+    const compiledHero = compiled.items.find(it => it.type === 'tmagic-hero')
+    assert.equal(compiledHero.variant, 'split')
+    assert.equal(compiledHero.density, 'airy')
+
+    // Split layout branch exists in TmagicHero.vue template
+    assert.ok(tmagicHeroCode.includes("node.variant === 'split'"), 'TmagicHero must contain split variant branch')
+    assert.ok(tmagicHeroCode.includes('lg:grid-cols-12'), 'TmagicHero split variant must implement 12-col grid')
+    assert.ok(tmagicSectionCode.includes("node.body.variant === 'bordered'"), 'TmagicSection must support bordered variant')
+  })
 })
 
 

@@ -62,6 +62,7 @@ export type SectionBody =
     }
   | {
       kind: 'featureGrid'
+      variant?: 'cards' | 'bordered' | 'numbered' | 'iconLeft'
       features: Array<{
         title: string
         text: string
@@ -84,16 +85,26 @@ export type SectionBody =
       }>
     }
 
+/** 表现变体封闭词表：只描述「选哪种设计好的表达」，不含任何样式值 */
+export const VALID_HERO_VARIANTS = new Set(['centered', 'split', 'statBand', 'mediaBg'])
+export const VALID_FEATURE_VARIANTS = new Set(['cards', 'bordered', 'numbered', 'iconLeft'])
+export const VALID_HEADER_VARIANTS = new Set(['bar', 'centered', 'transparent'])
+export const VALID_CTA_VARIANTS = new Set(['band', 'card', 'split'])
+export const VALID_DENSITIES = new Set(['compact', 'normal', 'airy'])
+
 /** 顶级页面区块类型 */
 export type PageBlock =
   | {
       kind: 'header'
+      variant?: 'bar' | 'centered' | 'transparent'
       brand: { name: string; title?: string; logo?: string }
       links?: Array<{ label: string; action: PageAction }>
       action?: PageCta
     }
   | {
       kind: 'hero'
+      variant?: 'centered' | 'split' | 'statBand' | 'mediaBg'
+      density?: 'compact' | 'normal' | 'airy'
       eyebrow?: string
       title: string
       text: string
@@ -102,12 +113,14 @@ export type PageBlock =
     }
   | {
       kind: 'section'
+      density?: 'compact' | 'normal' | 'airy'
       title: string
       subtitle?: string
       body: SectionBody
     }
   | {
       kind: 'cta'
+      variant?: 'band' | 'card' | 'split'
       title: string
       text: string
       action: PageCta
@@ -196,6 +209,30 @@ export function validateIntent(target: PageIntent | SiteIntent): { valid: boolea
       if (block.kind === 'section') {
         if (!block.body || !VALID_BODY_KINDS.has(block.body.kind)) {
           errors.push(`${loc} 的 body.kind 必须为 ${Array.from(VALID_BODY_KINDS).join(', ')} 之一`)
+        }
+      }
+
+      // 变体与密度封闭词表严格门禁（防止走私样式，只允许标准词表项）
+      if ('variant' in block && typeof (block as any).variant === 'string') {
+        const v = (block as any).variant
+        if (block.kind === 'hero' && !VALID_HERO_VARIANTS.has(v)) {
+          errors.push(`${loc} 的 hero.variant '${v}' 不在标准变体词表中 (${Array.from(VALID_HERO_VARIANTS).join(', ')})`)
+        } else if (block.kind === 'header' && !VALID_HEADER_VARIANTS.has(v)) {
+          errors.push(`${loc} 的 header.variant '${v}' 不在标准变体词表中 (${Array.from(VALID_HEADER_VARIANTS).join(', ')})`)
+        } else if (block.kind === 'cta' && !VALID_CTA_VARIANTS.has(v)) {
+          errors.push(`${loc} 的 cta.variant '${v}' 不在标准变体词表中 (${Array.from(VALID_CTA_VARIANTS).join(', ')})`)
+        }
+      }
+      if ('density' in block && typeof (block as any).density === 'string') {
+        const d = (block as any).density
+        if (!VALID_DENSITIES.has(d)) {
+          errors.push(`${loc} 的 density '${d}' 不在标准密度词表中 (${Array.from(VALID_DENSITIES).join(', ')})`)
+        }
+      }
+      if (block.kind === 'section' && block.body?.kind === 'featureGrid' && 'variant' in block.body && typeof (block.body as any).variant === 'string') {
+        const fv = (block.body as any).variant
+        if (!VALID_FEATURE_VARIANTS.has(fv)) {
+          errors.push(`${loc} 的 featureGrid.variant '${fv}' 不在标准变体词表中 (${Array.from(VALID_FEATURE_VARIANTS).join(', ')})`)
         }
       }
     }

@@ -29,8 +29,8 @@ export const tmagicFoundry: Foundry = {
     }
     files['app/data/tmagic-dsl.json'] = JSON.stringify(compiledDsl, null, 2)
 
-    // 3. 产出 tmagic 专属标准物料包与运行时组件
-    Object.assign(files, tmagicMaterialFiles())
+    // 3. 产出 tmagic 专属标准物料包与运行时组件 (接通租户设计系统与主题)
+    Object.assign(files, tmagicMaterialFiles(tenant?.theme))
 
     // 4. 为每个图纸页面发射极简轻量级承载页
     for (const page of site.pages) {
