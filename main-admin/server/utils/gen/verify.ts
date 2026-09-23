@@ -131,7 +131,8 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const hasTextPrimaryMapping = cssContent.includes('.text-primary {') && cssContent.includes('var(--color-primary-fg-light)')
       const hasNeutralContrastTokens = cssContent.includes('--ui-text-dimmed:')
       const hasFontSizeAxis = cssContent.includes('--text-sm: var(--fs')
-      const hasDarkGradTokens = cssContent.includes('--grad:') && cssContent.includes('--btn-grad:')
+      const darkBlock = cssContent.includes('.dark {') ? cssContent.slice(cssContent.indexOf('.dark {')) : ''
+      const hasDarkGradTokens = /--grad:\s*linear-gradient/.test(darkBlock) && /--btn-grad:\s*linear-gradient/.test(darkBlock)
 
       // 基于租户真实配色与统一暗底 (DARK_SURFACE_HEX) 动态计算对比度 < 4.5 的不达标色阶
       const base = resolveBrandBase(plan.theme)
@@ -173,20 +174,17 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
         } catch {}
       }
 
-      if (!hasContrastTokens) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失对比度求解令牌', s)
-      } else if (!hasTextPrimaryMapping) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失 .text-primary 文本主色高对比映射', s)
-      } else if (!hasNeutralContrastTokens) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失 --ui-text-dimmed 等高对比中性语义色', s)
-      } else if (!hasFontSizeAxis) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失 --text-sm: var(--fs) 字号轴统一绑定', s)
-      } else if (!hasDarkGradTokens) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失暗色模式 --grad / --btn-grad 安全渐变覆盖', s)
-      } else if (typoFound) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', `组件中存在暗色对比度反转 (${typoFound}，当前配色下实测对比度 < 4.5:1)`, s)
-      } else if (missingDarkBadge) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', '组件中 text-primary-fg-badge 漏配 dark:text-primary-fg-dark 模式覆盖 (模式盲令牌在暗底对比度不足)', s)
+      const designDefects: string[] = []
+      if (!hasContrastTokens) designDefects.push('main.css 缺失对比度求解令牌')
+      if (!hasTextPrimaryMapping) designDefects.push('main.css 缺失 .text-primary 文本主色高对比映射')
+      if (!hasNeutralContrastTokens) designDefects.push('main.css 缺失 --ui-text-dimmed 等高对比中性语义色')
+      if (!hasFontSizeAxis) designDefects.push('main.css 缺失 --text-sm: var(--fs) 字号轴统一绑定')
+      if (!hasDarkGradTokens) designDefects.push('main.css 缺失暗色模式 .dark 块内 --grad / --btn-grad 安全渐变覆盖')
+      if (typoFound) designDefects.push(`组件中存在暗色对比度反转 (${typoFound}，当前配色下实测对比度 < 4.5:1)`)
+      if (missingDarkBadge) designDefects.push('组件中 text-primary-fg-badge 漏配 dark:text-primary-fg-dark 模式覆盖 (模式盲令牌在暗底对比度不足)')
+
+      if (designDefects.length > 0) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', designDefects.join('；'), s)
       } else {
         add('contrast', 'WCAG AA 文本对比度门禁', 'pass',
           consumed

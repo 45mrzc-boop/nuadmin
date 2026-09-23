@@ -1428,8 +1428,10 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('text-primary-fg-badge'), 'verify.ts Case 4.7 must verify text-primary-fg-badge dark coverage')
     assert.ok(verifySrc.includes("bcm.includes('dark:text-primary-fg-dark')"), 'verify.ts Case 4.7 must enforce semantic dark:text-primary-fg-dark coverage on badge tokens')
     assert.ok(verifySrc.includes('hasDarkGradTokens'), 'verify.ts Case 4.7 must verify dark mode gradient tokens')
+    assert.ok(verifySrc.includes("cssContent.indexOf('.dark {')"), 'verify.ts Case 4.7 must strictly scope dark tokens to .dark block')
     assert.ok(verifySrc.includes('hasTextPrimaryMapping'), 'verify.ts Case 4.7 must verify text-primary mapping')
     assert.ok(verifySrc.includes('hasFontSizeAxis'), 'verify.ts Case 4.7 must verify font size axis')
+    assert.ok(verifySrc.includes('designDefects.join'), 'verify.ts Case 4.7 must aggregate all design defects into single comprehensive report')
 
     // 5. Design system dark tokens: skins.ts exports DEFAULT_DARK_BG, DARK_SURFACE_HEX equals #0f172a (calibrated with real Nuxt UI slate-900)
     const { DEFAULT_DARK_BG, SKIN_DARK_BASE_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
