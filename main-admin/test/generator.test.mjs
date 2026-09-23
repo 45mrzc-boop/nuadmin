@@ -1424,7 +1424,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
 
     // 4. Verify.ts Case 4.7 code audit
     const verifySrc = readFileSync(resolve(root, 'server/utils/gen/verify.ts'), 'utf-8')
-    assert.ok(verifySrc.includes('dark:text-primary-900'), 'verify.ts Case 4.7 must actively scan for dark:text-primary-900 typo')
+    assert.ok(verifySrc.includes('dark:text-primary-(700|800|900|950)'), 'verify.ts Case 4.7 must actively scan for dark:text-primary-(700|800|900|950) typo')
     assert.ok(verifySrc.includes('primary-fg-light') && verifySrc.includes('primary-fg-badge'), 'verify.ts Case 4.7 must verify real component consumption')
   })
 })

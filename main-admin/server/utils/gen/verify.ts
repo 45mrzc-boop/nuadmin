@@ -130,15 +130,16 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
 
       const vueFiles = await walkVue(join(root, 'app'))
       let consumed = false
-      let hasTypo = false
+      let hasTypo = ''
       for (const f of vueFiles) {
         try {
           const src = readFileSync(f, 'utf8')
           if (src.includes('primary-fg-light') || src.includes('primary-fg-badge') || src.includes('primary-fg-dark')) {
             consumed = true
           }
-          if (src.includes('dark:text-primary-900')) {
-            hasTypo = true
+          const m = src.match(/dark:text-primary-(700|800|900|950)\b/)
+          if (m) {
+            hasTypo = m[0]
           }
         } catch {}
       }
@@ -146,7 +147,7 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       if (!hasContrastTokens) {
         add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失对比度求解令牌', s)
       } else if (hasTypo) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', '组件中存在暗色对比度反转笔误 (dark:text-primary-900 对比度 < 2:1)', s)
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', `组件中存在暗色对比度反转笔误 (${hasTypo}，暗底深字导致对比度严重不足)`, s)
       } else {
         add('contrast', 'WCAG AA 文本对比度门禁', 'pass',
           consumed
