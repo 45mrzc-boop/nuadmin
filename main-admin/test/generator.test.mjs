@@ -1433,9 +1433,11 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('hasTextPrimaryMapping'), 'verify.ts Case 4.7 must verify text-primary mapping')
     assert.ok(verifySrc.includes('hasFontSizeAxis'), 'verify.ts Case 4.7 must verify font size axis')
     assert.ok(verifySrc.includes('designDefects.join'), 'verify.ts Case 4.7 must aggregate all design defects into single comprehensive report')
+    assert.ok(verifySrc.includes('missingDarkTokens'), 'verify.ts Case 4.7 must check missingDarkTokens coverage')
+    assert.ok(verifySrc.includes('MODE_STABLE'), 'verify.ts Case 4.7 must define MODE_STABLE whitelist')
 
     // 5. Design system dark tokens: skins.ts exports DEFAULT_DARK_BG, DARK_SURFACE_HEX equals #0f172a (calibrated with real Nuxt UI slate-900)
-    const { DEFAULT_DARK_BG, SKIN_DARK_BASE_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
+    const { DEFAULT_DARK_BG, SKIN_DARK_BASE_VARS, SKIN_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
     assert.strictEqual(DEFAULT_DARK_BG, '#0f172a', 'DEFAULT_DARK_BG must equal #0f172a')
     assert.ok(SKIN_DARK_BASE_VARS.includes('--grad: linear-gradient'), 'SKIN_DARK_BASE_VARS must include dark safe --grad token')
     assert.ok(SKIN_DARK_BASE_VARS.includes('--btn-grad: linear-gradient'), 'SKIN_DARK_BASE_VARS must include dark safe --btn-grad token')
@@ -1465,6 +1467,31 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const glassCss = appFiles(glassPlan)['app/assets/css/main.css']
     assert.ok(glassCss.includes('/* 皮肤：glass'), 'glass css must be generated')
     assert.ok(!glassCss.match(/--(?:btn-)?grad:\s*linear-gradient/), 'glass 皮肤不应含任何线性渐变（暗色块无需渐变覆盖）')
+
+    // 5.1 Mode-sensitive color token coverage matrix across all 6 skins
+    const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--inset', '--blur'])
+    const NEUTRAL_TOKENS = /^--(r|r-md|r-sm|r-pill|pad|row-h|fs|gap|frame-r)$/
+    const toks = (css) => [...css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]*)/g)].map(m => m[1])
+
+    for (const skinId of Object.keys(SKIN_VARS)) {
+      const skinGeneratedCss = appFiles({ ...mockPlan, theme: { ...mockPlan.theme, skin: skinId } })['app/assets/css/main.css']
+      const skinStart = skinGeneratedCss.indexOf('/* 皮肤：')
+      const lightBlock = skinStart >= 0 ? skinGeneratedCss.slice(skinStart, skinGeneratedCss.lastIndexOf('.dark {')) : ''
+      const darkBlock = skinGeneratedCss.includes('.dark {') ? skinGeneratedCss.slice(skinGeneratedCss.lastIndexOf('.dark {')) : ''
+      const isNativeDark = /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock)
+      const darkTokenSet = new Set(toks(darkBlock))
+      const missing = (!isNativeDark && lightBlock)
+        ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !darkTokenSet.has(k))
+        : []
+      assert.strictEqual(missing.length, 0, `Skin ${skinId} must have complete dark token coverage, missing: ${missing.join(', ')}`)
+    }
+
+    // Adversarial verification: simulate missing dark token (e.g. --panel removed from dark block)
+    const forgedDroplet = dropletCss.slice(0, iDark) + dropletCss.slice(iDark).replace(/--panel:\s*[^;]+;/, '')
+    const forgedDarkBlock = forgedDroplet.slice(forgedDroplet.lastIndexOf('.dark {'))
+    const forgedMissing = [...new Set(toks(dropletCss.slice(dropletCss.indexOf('/* 皮肤：'), iDark)))]
+      .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !new Set(toks(forgedDarkBlock)).has(k))
+    assert.deepStrictEqual(forgedMissing, ['--panel'], 'Adversarial check: missing --panel in dark block must be detected')
 
     // 6. Nuxt UI app.config.ts badge theme & size tokens
     const genUi = uiFiles(mockPlan)

@@ -139,6 +139,16 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const hasDarkGradTokens = !needsDarkGrad
         || (/--grad:\s*linear-gradient/.test(darkBlock) && /--btn-grad:\s*linear-gradient/.test(darkBlock))
 
+      // 通用模式敏感色令牌覆盖度：除尺寸与跨模式稳定令牌外，浅色块声明的颜色令牌暗色块必须覆盖
+      const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--inset', '--blur'])
+      const NEUTRAL_TOKENS = /^--(r|r-md|r-sm|r-pill|pad|row-h|fs|gap|frame-r)$/
+      const toks = (css: string) => [...css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]*)/g)].map(m => m[1])
+      const isNativeDark = /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock)
+      const darkTokenSet = new Set(toks(darkBlock))
+      const missingDarkTokens = (!isNativeDark && lightBlock)
+        ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !darkTokenSet.has(k))
+        : []
+
       // 基于租户真实配色与统一暗底 (DARK_SURFACE_HEX) 动态计算对比度 < 4.5 的不达标色阶
       const base = resolveBrandBase(plan.theme)
       const shades = ramp(base)
@@ -184,7 +194,8 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       if (!hasTextPrimaryMapping) designDefects.push('main.css 缺失 .text-primary 文本主色高对比映射')
       if (!hasNeutralContrastTokens) designDefects.push('main.css 缺失 --ui-text-dimmed 等高对比中性语义色')
       if (!hasFontSizeAxis) designDefects.push('main.css 缺失 --text-sm: var(--fs) 字号轴统一绑定')
-      if (!hasDarkGradTokens) designDefects.push('main.css 缺失暗色模式 .dark 块内 --grad / --btn-grad 安全渐变覆盖')
+      if (!hasDarkGradTokens) designDefects.push('浅色块含线性渐变，但暗色块未提供安全渐变覆盖 (--grad / --btn-grad)')
+      if (missingDarkTokens.length > 0) designDefects.push(`暗色模式缺失必要基座颜色令牌覆盖 (${missingDarkTokens.join(' ')})`)
       if (typoFound) designDefects.push(`组件中存在暗色对比度反转 (${typoFound}，当前配色下实测对比度 < 4.5:1)`)
       if (missingDarkBadge) designDefects.push('组件中 text-primary-fg-badge 漏配 dark:text-primary-fg-dark 模式覆盖 (模式盲令牌在暗底对比度不足)')
 
