@@ -25,16 +25,67 @@ const REQUIRED = [
 ]
 
 /**
- * 原生暗色皮肤物理双特征判定：
- * 1. 浅色块主文本必须为不透明白（#fff, #ffffff, #ffffffff, rgb(255,255,255), oklch(1/100% 0 0)）
- * 2. 次要文本必须为半透明白（rgba(255,255,255,...), 严格定长的 4/8 位 hex-alpha, 或 oklch alpha）
+ * 解析 CSS 颜色字面量，判断它是否为白色及其 alpha 通道值（0~1）。
+ * 不支持或未识别的格式返回 null（保守策略：不予豁免）。
+ * 彻底终结对 CSS 颜色写法的正则穷举。
+ */
+export function parseWhiteLiteral(raw: string): { white: boolean; alpha: number } | null {
+  const s = raw.trim().toLowerCase()
+  const H = (h: string) => parseInt(h.length === 1 ? h + h : h, 16) / 255
+  let m: RegExpExecArray | null
+  if ((m = /^#([0-9a-f]{3,8})$/.exec(s))) {
+    const d = m[1]
+    if (![3, 4, 6, 8].includes(d.length)) return null
+    const st = d.length <= 4 ? 1 : 2, ch: number[] = []
+    for (let i = 0; i < 3; i++) ch.push(H(d.slice(i * st, i * st + st)))
+    const a = d.length === 4 ? H(d[3]) : d.length === 8 ? H(d.slice(6, 8)) : 1
+    return { white: ch.every((c) => c === 1), alpha: a }
+  }
+  if ((m = /^rgba?\(([^)]*)\)$/.exec(s))) {
+    const p = m[1].split(/[\s,/]+/).filter(Boolean)
+    if (p.length < 3) return null
+    const n = (t: string) => (t.endsWith('%') ? parseFloat(t) / 100 : parseFloat(t) / 255)
+    const ch = p.slice(0, 3).map(n)
+    if (ch.some((c) => !Number.isFinite(c))) return null
+    let a = 1
+    if (p.length >= 4) a = p[3].endsWith('%') ? parseFloat(p[3]) / 100 : parseFloat(p[3])
+    return Number.isFinite(a) ? { white: ch.every((c) => c === 1), alpha: a } : null
+  }
+  if ((m = /^oklch\(([^)]*)\)$/.exec(s))) {
+    const p = m[1].split(/[\s,/]+/).filter(Boolean)
+    if (p.length < 3) return null
+    const L = p[0].endsWith('%') ? parseFloat(p[0]) / 100 : parseFloat(p[0])
+    const C = parseFloat(p[1])
+    let a = 1
+    if (p.length >= 4) a = p[3].endsWith('%') ? parseFloat(p[3]) / 100 : parseFloat(p[3])
+    return [L, C, a].every(Number.isFinite) ? { white: L === 1 && C === 0, alpha: a } : null
+  }
+  if (s === 'white') return { white: true, alpha: 1 }
+  if (s === 'transparent') return { white: false, alpha: 0 }
+  return null
+}
+
+/** 提取属性最后一次声明的值（支持 CSS 层叠后值覆盖前值，如皮肤覆盖基座变量） */
+export function lastDecl(block: string, prop: string): string | null {
+  const re = new RegExp('(?:^|;)\\s*--' + prop + ':\\s*([^;]+)', 'g')
+  let m: RegExpExecArray | null, last: string | null = null
+  while ((m = re.exec(block))) last = m[1]
+  return last
+}
+
+/**
+ * 原生暗色皮肤物理双特征判定（按值精确解析）：
+ * 1. 浅色块主文本最后声明必须为 100% 不透明白（alpha === 1）
+ * 2. 次要文本最后声明必须为半透明白（0 < alpha < 1）
  * 满足双特征即视为原生暗色皮肤，天然无需暗色色板重写。
  */
 export function isNativeDarkSkin(lightBlock: string): boolean {
   if (!lightBlock) return false
-  const isOpaqueWhiteText = /--text:\s*(?:#fff\b|#ffffff\b|#ffffffff\b|rgb\(\s*255,\s*255,\s*255\s*\)|oklch\(\s*(?:1|100%)\s+0\s+0\s*(?:\/\s*1(?:\.0+)?\s*)?\))/i.test(lightBlock)
-  const isTranslucentWhiteMuted = /--muted:\s*(?:rgba\(\s*255,\s*255,\s*255|rgb\(\s*255\s+255\s+255\s*\/|#fff[0-9a-f]\b|#ffffff[0-9a-f]{2}\b|oklch\(\s*(?:1|100%)\s+0\s+0\s*\/\s*(?:0?\.\d+|\d{1,2}%))/i.test(lightBlock)
-  return isOpaqueWhiteText && isTranslucentWhiteMuted
+  const t = lastDecl(lightBlock, 'text'), u = lastDecl(lightBlock, 'muted')
+  if (!t || !u) return false
+  const pt = parseWhiteLiteral(t), pu = parseWhiteLiteral(u)
+  if (!pt || !pu || !pt.white || !pu.white) return false
+  return pt.alpha === 1 && pu.alpha > 0 && pu.alpha < 1
 }
 
 /**

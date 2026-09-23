@@ -1386,14 +1386,16 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(customFormPage.includes(':ui="{ select: \'text-[length:var(--fs,14px)]\' }"'), 'USelect must pass :ui select font size prop')
 
     // 6. Verify smoke gate: includes WCAG AA contrast check
-    const { verify, isNativeDarkSkin } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
+    const { verify, isNativeDarkSkin, parseWhiteLiteral, lastDecl } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
     assert.ok(typeof verify === 'function', 'verify function must be exported')
     assert.ok(typeof isNativeDarkSkin === 'function', 'isNativeDarkSkin helper must be exported')
+    assert.ok(typeof parseWhiteLiteral === 'function', 'parseWhiteLiteral helper must be exported')
+    assert.ok(typeof lastDecl === 'function', 'lastDecl helper must be exported')
   })
 
   it('25. UI Audit v2.3.8 verification (P0 CTA contrast typo eliminated, 100% solver token consumption, deepened Case 4.7 smoke gate)', async () => {
     const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
-    const { isNativeDarkSkin } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
+    const { isNativeDarkSkin, parseWhiteLiteral, lastDecl } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
     const materials = tmagicMaterialFiles()
     const allMaterialsCode = Object.values(materials).join('\n')
 
@@ -1438,6 +1440,8 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('missingDarkTokens'), 'verify.ts Case 4.7 must check missingDarkTokens coverage')
     assert.ok(verifySrc.includes('MODE_STABLE'), 'verify.ts Case 4.7 must define MODE_STABLE whitelist')
     assert.ok(verifySrc.includes('isNativeDarkSkin'), 'verify.ts Case 4.7 must invoke exported isNativeDarkSkin')
+    assert.ok(verifySrc.includes('parseWhiteLiteral'), 'verify.ts Case 4.7 must implement parseWhiteLiteral')
+    assert.ok(verifySrc.includes('lastDecl'), 'verify.ts Case 4.7 must implement lastDecl')
 
     // 5. Design system dark tokens: skins.ts exports DEFAULT_DARK_BG, DARK_SURFACE_HEX equals #0f172a (calibrated with real Nuxt UI slate-900)
     const { DEFAULT_DARK_BG, SKIN_DARK_BASE_VARS, SKIN_VARS } = await jiti.import(resolve(root, 'shared/skins.ts'))
@@ -1497,7 +1501,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !new Set(toks(forgedDarkBlock)).has(k))
     assert.deepStrictEqual(forgedMissing, ['--panel'], 'Adversarial check: missing --panel in dark block must be detected')
 
-    // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing: 20 cases)
+    // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing: 33 cases with value-based parsing)
     const nativeDarkTable = [
       ['--text: #fff; --muted: rgba(255,255,255,.68);', true, 'glass actual CSS'],
       ['--text: #fff; --muted: rgba(255, 255, 255, .68);', true, 'rgba with spaces'],
@@ -1519,7 +1523,22 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       ['--text: #fff; --muted: oklch(100% 0 0 / 1);', false, '--muted oklch(100% 0 0 / 1) opaque percentage'],
       ['--text: #fff; --muted: oklch(100% 0 0 / 68%);', true, '--muted oklch percentage alpha 68%'],
       ['--text: #6e6e73; --muted: rgba(255,255,255,.68);', false, 'dark text with white muted'],
+      // 13 boundary & adversarial cases (fixing overbroad and missed exemptions)
+      ['--text: #fff; --muted: rgba(255,255,255,1);', false, '--muted: rgba(255,255,255,1) opaque (must not exempt)'],
+      ['--text: #fff; --muted: rgba(255,255,255, 1.0);', false, '--muted: rgba(255,255,255, 1.0) opaque (must not exempt)'],
+      ['--text: #fff; --muted: rgb(255 255 255 / 1);', false, '--muted: rgb(255 255 255 / 1) space opaque (must not exempt)'],
+      ['--text: #fff; --muted: #ffffffff;', false, '--muted: 8-digit hex #ffffffff opaque (must not exempt)'],
+      ['--text: rgb(255 255 255); --muted: rgba(255,255,255,.68);', true, '--text: rgb(255 255 255) modern space syntax'],
+      ['--text: rgb(255 255 255 / 1); --muted: rgba(255,255,255,.68);', true, '--text: rgb(255 255 255 / 1) modern space syntax with alpha 1'],
+      ['--text: rgba(255,255,255,1); --muted: rgba(255,255,255,.68);', true, '--text: rgba(255,255,255,1) with alpha 1'],
+      ['--text: white; --muted: rgba(255,255,255,.68);', true, '--text: white CSS keyword'],
+      ['--text: #fff; --muted: oklch(1 0 0 / 68.5%);', true, '--muted: oklch(1 0 0 / 68.5%) fractional percentage alpha'],
+      ['--text: #fff; --muted: white;', false, '--muted: white opaque CSS keyword (must not exempt)'],
+      ['--text: #fff; --muted: transparent;', false, '--muted: transparent alpha 0 (must not exempt)'],
+      ['--text: #1d1d1f; --muted: #6e6e73; --text: #fff; --muted: rgba(255,255,255,.68);', true, 'CSS cascade override (last-wins)'],
+      ['--text: #fff; --muted: oklch(1 0 0 / 100%);', false, '--muted: oklch(1 0 0 / 100%) opaque percentage (must not exempt)']
     ]
+    assert.strictEqual(nativeDarkTable.length, 33, 'nativeDarkTable must contain exactly 33 test cases')
     for (const [block, expected, label] of nativeDarkTable) {
       assert.strictEqual(isNativeDarkSkin(block), expected, `isNativeDarkSkin table assertion failed for: ${label}`)
     }
