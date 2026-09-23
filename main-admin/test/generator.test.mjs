@@ -1469,6 +1469,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(!glassCss.match(/--(?:btn-)?grad:\s*linear-gradient/), 'glass 皮肤不应含任何线性渐变（暗色块无需渐变覆盖）')
 
     // 5.1 Mode-sensitive color token coverage matrix across all 6 skins
+    // (Note: This loop guards the design-system theme skin data invariants; gatekeeper code presence is guarded in step 4 above)
     const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--inset', '--blur'])
     const NEUTRAL_TOKENS = /^--(r|r-md|r-sm|r-pill|pad|row-h|fs|gap|frame-r)$/
     const toks = (css) => [...css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]*)/g)].map(m => m[1])
@@ -1478,7 +1479,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       const skinStart = skinGeneratedCss.indexOf('/* 皮肤：')
       const lightBlock = skinStart >= 0 ? skinGeneratedCss.slice(skinStart, skinGeneratedCss.lastIndexOf('.dark {')) : ''
       const darkBlock = skinGeneratedCss.includes('.dark {') ? skinGeneratedCss.slice(skinGeneratedCss.lastIndexOf('.dark {')) : ''
-      const isNativeDark = /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock)
+      const isNativeDark = /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock) && /--muted:\s*rgba\(255,\s*255,\s*255/i.test(lightBlock)
       const darkTokenSet = new Set(toks(darkBlock))
       const missing = (!isNativeDark && lightBlock)
         ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !darkTokenSet.has(k))

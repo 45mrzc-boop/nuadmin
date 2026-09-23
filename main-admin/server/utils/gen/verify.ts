@@ -131,7 +131,7 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const hasTextPrimaryMapping = cssContent.includes('.text-primary {') && cssContent.includes('var(--color-primary-fg-light)')
       const hasNeutralContrastTokens = cssContent.includes('--ui-text-dimmed:')
       const hasFontSizeAxis = cssContent.includes('--text-sm: var(--fs')
-      // 浅色块无渐变 ⇒ 无需暗色覆盖；浅色块有渐变 ⇒ 暗色块必须提供暗色渐变覆盖
+      // 浅色块无渐变 ⇒ 无需暗色覆盖；浅色块有渐变 ⇒ 暗色块必须提供暗色渐变覆盖（值域守卫：防 --grad: none 或无害但劣化的软回归）
       const skinStart = cssContent.indexOf('/* 皮肤：')
       const lightBlock = skinStart >= 0 ? cssContent.slice(skinStart, cssContent.lastIndexOf('.dark {')) : ''
       const needsDarkGrad = /--(?:btn-)?grad:\s*linear-gradient/.test(lightBlock)
@@ -139,11 +139,12 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const hasDarkGradTokens = !needsDarkGrad
         || (/--grad:\s*linear-gradient/.test(darkBlock) && /--btn-grad:\s*linear-gradient/.test(darkBlock))
 
-      // 通用模式敏感色令牌覆盖度：除尺寸与跨模式稳定令牌外，浅色块声明的颜色令牌暗色块必须覆盖
+      // 通用模式敏感色令牌覆盖度：除尺寸与跨模式稳定令牌外，浅色块声明的颜色令牌暗色块必须全量覆盖
       const MODE_STABLE = new Set(['--accent', '--accent-fg', '--shadow', '--inset', '--blur'])
       const NEUTRAL_TOKENS = /^--(r|r-md|r-sm|r-pill|pad|row-h|fs|gap|frame-r)$/
       const toks = (css: string) => [...css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]*)/g)].map(m => m[1])
-      const isNativeDark = /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock)
+      // 原生暗色皮肤物理双特征：浅色块文本为白色且次要文本为半透明白，天然无需暗色色板重写
+      const isNativeDark = /--text:\s*#(?:fff|ffffff)\b/i.test(lightBlock) && /--muted:\s*rgba\(255,\s*255,\s*255/i.test(lightBlock)
       const darkTokenSet = new Set(toks(darkBlock))
       const missingDarkTokens = (!isNativeDark && lightBlock)
         ? [...new Set(toks(lightBlock))].filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !darkTokenSet.has(k))
