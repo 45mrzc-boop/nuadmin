@@ -116,11 +116,17 @@ export const cssTokens = (css: string): string[] =>
   [...css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]*)/g)].map(m => m[1])
 
 /**
+ * 取值是否为「无色」：none 关键词大小写不敏感，且可能携带 !important（CSS 语义上不属取值）
+ */
+export const isColorless = (v: string): boolean =>
+  v.replace(/!\s*important\s*$/i, '').trim().toLowerCase() === 'none'
+
+/**
  * 检查浅色模式与暗色模式的颜色令牌覆盖缺口。
  * - 原生暗色皮肤（isNativeDarkSkin 为 true）整体豁免。
  * - 尺寸/间距中性变量（NEUTRAL_TOKENS）豁免。
  * - 跨模式稳定变量（MODE_STABLE: --accent, --accent-fg, --shadow, --blur）豁免。
- * - 装饰型变量（DECOR_TOKENS: --inset 等）：值不是 none 时属浅色构造，暗色块必须接管；值为 none 时放行。
+ * - 装饰型变量（DECOR_TOKENS: --inset 等）：值不是 none（或带 !important 的 none）时属浅色构造，暗色块必须接管；值为 none 时放行。
  * 返回暗色块缺失的变量名列表。
  */
 export function darkCoverageGap(lightBlock: string, darkBlock: string): string[] {
@@ -128,7 +134,7 @@ export function darkCoverageGap(lightBlock: string, darkBlock: string): string[]
   const darkTokenSet = new Set(cssTokens(darkBlock))
   const unmanagedDecor = DECOR_TOKENS.filter(p => {
     const v = lastDecl(lightBlock, p.slice(2))
-    return v && v.trim() !== 'none' && !darkTokenSet.has(p)
+    return v && !isColorless(v) && !darkTokenSet.has(p)
   })
   return [...new Set(cssTokens(lightBlock))]
     .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !DECOR_TOKENS.includes(k) && !darkTokenSet.has(k))
@@ -245,10 +251,10 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       // 浅色块无渐变 ⇒ 无需暗色覆盖；浅色块有渐变 ⇒ 暗色块必须提供暗色渐变覆盖（值域守卫：防 --grad: none 或无害但劣化的软回归）
       const skinStart = cssContent.indexOf('/* 皮肤：')
       const lightBlock = skinStart >= 0 ? cssContent.slice(skinStart, cssContent.lastIndexOf('.dark {')) : ''
-      const needsDarkGrad = /--(?:btn-)?grad:\s*linear-gradient/.test(lightBlock)
+      const needsDarkGrad = /--(?:btn-)?grad:\s*linear-gradient/i.test(lightBlock)
       const darkBlock = cssContent.includes('.dark {') ? cssContent.slice(cssContent.lastIndexOf('.dark {')) : ''
       const hasDarkGradTokens = !needsDarkGrad
-        || (/--grad:\s*linear-gradient/.test(darkBlock) && /--btn-grad:\s*linear-gradient/.test(darkBlock))
+        || (/--grad:\s*linear-gradient/i.test(darkBlock) && /--btn-grad:\s*linear-gradient/i.test(darkBlock))
 
       // 通用模式敏感色令牌覆盖度：除尺寸与跨模式稳定令牌外，浅色块声明的颜色令牌暗色块必须全量覆盖（由 darkCoverageGap 统一裁决）
       const missingDarkTokens = darkCoverageGap(lightBlock, darkBlock)

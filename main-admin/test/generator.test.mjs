@@ -1395,7 +1395,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
 
   it('25. UI Audit v2.3.8 verification (P0 CTA contrast typo eliminated, 100% solver token consumption, deepened Case 4.7 smoke gate)', async () => {
     const { tmagicMaterialFiles } = await jiti.import(resolve(root, 'server/utils/gen/foundry/tmagic/materials.ts'))
-    const { isNativeDarkSkin, parseWhiteLiteral, lastDecl, darkCoverageGap } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
+    const { isNativeDarkSkin, parseWhiteLiteral, lastDecl, darkCoverageGap, isColorless } = await jiti.import(resolve(root, 'server/utils/gen/verify.ts'))
     const materials = tmagicMaterialFiles()
     const allMaterialsCode = Object.values(materials).join('\n')
 
@@ -1442,6 +1442,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('DECOR_TOKENS'), 'verify.ts Case 4.7 must define DECOR_TOKENS value-guard')
     assert.ok(verifySrc.includes('unmanagedDecor'), 'verify.ts Case 4.7 must check unmanagedDecor')
     assert.ok(verifySrc.includes('darkCoverageGap'), 'verify.ts Case 4.7 must export and use darkCoverageGap')
+    assert.ok(verifySrc.includes('isColorless'), 'verify.ts Case 4.7 must implement isColorless')
     assert.ok(verifySrc.includes('isNativeDarkSkin'), 'verify.ts Case 4.7 must invoke exported isNativeDarkSkin')
     assert.ok(verifySrc.includes('parseWhiteLiteral'), 'verify.ts Case 4.7 must implement parseWhiteLiteral')
     assert.ok(verifySrc.includes('lastDecl'), 'verify.ts Case 4.7 must implement lastDecl')
@@ -1522,6 +1523,23 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     const glassLightBlock = glassCss.slice(glassCss.indexOf('/* 皮肤：'), glassCss.lastIndexOf('.dark {'))
     const glassDarkBlock = glassCss.slice(glassCss.lastIndexOf('.dark {'))
     assert.deepStrictEqual(darkCoverageGap(glassLightBlock, glassDarkBlock), [], 'Glass native dark skin must be exempted by darkCoverageGap')
+
+    // 5.1.1 isColorless unit test matrix & case-insensitive none / !important tests (P4 Value Guard)
+    assert.strictEqual(isColorless('none'), true, 'none keyword')
+    assert.strictEqual(isColorless(' NONE '), true, 'uppercase NONE with whitespace')
+    assert.strictEqual(isColorless('None !important'), true, 'titlecase None with !important')
+    assert.strictEqual(isColorless('none ! important'), true, 'none with spaced ! important')
+    assert.strictEqual(isColorless('inset 1px 1px 0 #fff'), false, 'real inset shadow is not colorless')
+    assert.strictEqual(isColorless('inherit'), false, 'inherit is not colorless')
+    assert.strictEqual(isColorless('unset'), false, 'unset is not colorless')
+
+    // Case-insensitive / !important none in darkCoverageGap (must not produce false positive)
+    assert.deepStrictEqual(darkCoverageGap('--text:#1d1d1f; --muted:#6e6e73; --inset: NONE;', '--text:#e2e8f0; --muted:#94a3b8;'), [], 'NONE must be exempted as colorless')
+    assert.deepStrictEqual(darkCoverageGap('--text:#1d1d1f; --muted:#6e6e73; --inset: none !important;', '--text:#e2e8f0; --muted:#94a3b8;'), [], 'none !important must be exempted as colorless')
+
+    // Case-insensitive LINEAR-GRADIENT adversarial check
+    const upperGradBlock = dropletLightBlock.replace('linear-gradient', 'LINEAR-GRADIENT')
+    assert.ok(/--(?:btn-)?grad:\s*linear-gradient/i.test(upperGradBlock), 'needsDarkGrad must match uppercase LINEAR-GRADIENT')
 
     // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing; authoritative length asserted below)
     const nativeDarkTable = [
