@@ -1428,7 +1428,8 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes('text-primary-fg-badge'), 'verify.ts Case 4.7 must verify text-primary-fg-badge dark coverage')
     assert.ok(verifySrc.includes("bcm.includes('dark:text-primary-fg-dark')"), 'verify.ts Case 4.7 must enforce semantic dark:text-primary-fg-dark coverage on badge tokens')
     assert.ok(verifySrc.includes('hasDarkGradTokens'), 'verify.ts Case 4.7 must verify dark mode gradient tokens')
-    assert.ok(verifySrc.includes("cssContent.indexOf('.dark {')"), 'verify.ts Case 4.7 must strictly scope dark tokens to .dark block')
+    assert.ok(verifySrc.includes("cssContent.lastIndexOf('.dark {')"), 'verify.ts Case 4.7 must strictly scope dark tokens to last .dark block')
+    assert.ok(verifySrc.includes('isGlass'), 'verify.ts Case 4.7 must exempt glass skin from dark grad tokens')
     assert.ok(verifySrc.includes('hasTextPrimaryMapping'), 'verify.ts Case 4.7 must verify text-primary mapping')
     assert.ok(verifySrc.includes('hasFontSizeAxis'), 'verify.ts Case 4.7 must verify font size axis')
     assert.ok(verifySrc.includes('designDefects.join'), 'verify.ts Case 4.7 must aggregate all design defects into single comprehensive report')
@@ -1451,10 +1452,18 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(generatedMainCss.includes('--btn-grad: linear-gradient'), 'main.css must include dark mode --btn-grad in .dark block')
 
     // Droplet skin dark mode overrides (prevents light gradient regression on panel-head / btn)
-    const dropletPlan = { ...mockPlan, skin: 'macos-droplet' }
+    const dropletPlan = { ...mockPlan, theme: { ...mockPlan.theme, skin: 'macos-droplet' } }
     const dropletCss = appFiles(dropletPlan)['app/assets/css/main.css']
     assert.ok(dropletCss.includes('.dark { --bg: #0b1220;'), 'droplet skin dark mode must override light background')
-    assert.ok(dropletCss.includes('--grad: linear-gradient(180deg, rgba(255,255,255,.06)'), 'droplet skin dark mode must override white panel gradient')
+    const iDark = dropletCss.lastIndexOf('.dark {')
+    const darkSlice = dropletCss.slice(iDark)
+    assert.ok(/--grad:\s*linear-gradient\(180deg, rgba\(255,255,255,\.06\)/.test(darkSlice), 'droplet dark block must contain dark gradient')
+    assert.ok(!/--grad:\s*linear-gradient\(180deg,rgba\(255,255,255,\.85\)/.test(darkSlice), 'droplet dark block must not retain white panel gradient')
+
+    // Glass skin verification (native dark skin, no dark gradient needed)
+    const glassPlan = { ...mockPlan, theme: { ...mockPlan.theme, skin: 'glass' } }
+    const glassCss = appFiles(glassPlan)['app/assets/css/main.css']
+    assert.ok(glassCss.includes('/* 皮肤：glass'), 'glass css must be generated')
 
     // 6. Nuxt UI app.config.ts badge theme & size tokens
     const genUi = uiFiles(mockPlan)

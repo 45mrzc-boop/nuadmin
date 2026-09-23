@@ -131,8 +131,12 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const hasTextPrimaryMapping = cssContent.includes('.text-primary {') && cssContent.includes('var(--color-primary-fg-light)')
       const hasNeutralContrastTokens = cssContent.includes('--ui-text-dimmed:')
       const hasFontSizeAxis = cssContent.includes('--text-sm: var(--fs')
-      const darkBlock = cssContent.includes('.dark {') ? cssContent.slice(cssContent.indexOf('.dark {')) : ''
-      const hasDarkGradTokens = /--grad:\s*linear-gradient/.test(darkBlock) && /--btn-grad:\s*linear-gradient/.test(darkBlock)
+      const isGlass = /\/\* 皮肤：glass/.test(cssContent)
+      const darkBlock = isGlass
+        ? ''
+        : (cssContent.includes('.dark {') ? cssContent.slice(cssContent.lastIndexOf('.dark {')) : '')
+      const hasDarkGradTokens = isGlass
+        || (/--grad:\s*linear-gradient/.test(darkBlock) && /--btn-grad:\s*linear-gradient/.test(darkBlock))
 
       // 基于租户真实配色与统一暗底 (DARK_SURFACE_HEX) 动态计算对比度 < 4.5 的不达标色阶
       const base = resolveBrandBase(plan.theme)
