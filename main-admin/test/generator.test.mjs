@@ -1545,6 +1545,18 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.deepStrictEqual(darkCoverageGap('--text:#1d1d1f; --muted:#6e6e73; --inset: none !important;', '--text:#e2e8f0; --muted:#94a3b8;'), [], 'none !important must be exempted as colorless')
     assert.deepStrictEqual(darkCoverageGap('--text:#1d1d1f; --muted:#6e6e73; --inset: ;', '--text:#e2e8f0; --muted:#94a3b8;'), [], 'empty inset must be exempted as colorless')
 
+    // 5.1.3 lastDecl unit test matrix (last-wins & empty value tolerance)
+    assert.strictEqual(lastDecl('--inset: inset 1px 1px 0 #fff; --inset:;', 'inset'), '', 'lastDecl must return empty string for trailing empty declaration without space')
+    assert.strictEqual(lastDecl('--inset: inset 1px 1px 0 #fff; --inset: ;', 'inset'), '', 'lastDecl must return empty string for trailing declaration with space')
+    assert.strictEqual(lastDecl('--text: #1d1d1f; --text: #fff;', 'text'), '#fff', 'lastDecl must return last valid declaration')
+    assert.strictEqual(lastDecl('--other: 1px;', 'text'), null, 'lastDecl must return null for undeclared property')
+
+    // Regression checks for lastDecl last-wins on empty trailing declarations (bidirectional safety)
+    const trailingEmptyInset = '--text:#1d1d1f; --muted:#6e6e73; --inset: inset 1px 1px 0 #fff; --inset:;'
+    assert.deepStrictEqual(darkCoverageGap(trailingEmptyInset, '--text:#e2e8f0; --muted:#94a3b8;'), [], 'trailing empty --inset:; must not cause false positive via stale earlier value')
+    const trailingEmptyText = '--text: #fff; --muted: rgba(255,255,255,.68); --text:;'
+    assert.strictEqual(isNativeDarkSkin(trailingEmptyText), false, 'trailing empty --text:; must not grant false exemption via stale earlier value')
+
     // 5.1.2 hasLinearGradient unit test matrix & uppercase LINEAR-GRADIENT tests (falsifiable black-box tests)
     const upperGradBlock = dropletLightBlock.replaceAll('linear-gradient', 'LINEAR-GRADIENT')
     const upperDarkBlock = dropletDarkBlock.replaceAll('linear-gradient', 'LINEAR-GRADIENT')
