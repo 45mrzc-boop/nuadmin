@@ -1497,6 +1497,25 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !new Set(toks(forgedDarkBlock)).has(k))
     assert.deepStrictEqual(forgedMissing, ['--panel'], 'Adversarial check: missing --panel in dark block must be detected')
 
+    // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing)
+    const nativeDarkTable = [
+      ['--text: #fff; --muted: rgba(255,255,255,.68);', true, 'glass actual CSS'],
+      ['--text: #fff; --muted: rgba(255, 255, 255, .68);', true, 'rgba with spaces'],
+      ['--text: #FFFFFF; --muted: RGBA(255,255,255,.5);', true, 'uppercase RGBA'],
+      ['--text: #fff; --muted: #ffffffb0;', true, '8-digit hex-alpha translucent'],
+      ['--text: #fff; --muted: #fffb;', true, '4-digit hex-alpha translucent'],
+      ['--text: #fff; --muted: #ffffff;', false, '6-digit hex opaque white (must not exempt)'],
+      ['--text: #fff; --muted: #fff;', false, '3-digit hex opaque white (must not exempt)'],
+      ['--text: #fff; --muted: #6e6e73;', false, 'opaque gray (must not exempt)'],
+      ['--text: #fff; --muted: oklch(1 0 0 / .68);', true, 'oklch translucent white'],
+      ['--text: #fff; --muted: oklch(1 0 0 / 1);', false, 'oklch opaque white (must not exempt)'],
+      ['--text: #1d1d1f; --muted: #6e6e73;', false, 'standard light skin'],
+      ['', false, 'empty block'],
+    ]
+    for (const [block, expected, label] of nativeDarkTable) {
+      assert.strictEqual(isNativeDarkSkin(block), expected, `isNativeDarkSkin table assertion failed for: ${label}`)
+    }
+
     // 6. Nuxt UI app.config.ts badge theme & size tokens
     const genUi = uiFiles(mockPlan)
     const appConfig = genUi['app/app.config.ts']
