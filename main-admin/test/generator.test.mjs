@@ -1541,9 +1541,13 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       [':root{--text: #fff; --muted: rgba(255,255,255,.68);}', true, ':root{--text block start anchor'],
       ['{--text: #fff; --muted: rgba(255,255,255,.68);}', true, '{--text block start anchor'],
       ['--text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.68);', true, 'soft white title .92 > .68'],
-      ['--text: rgba(255,255,255,.68); --muted: rgba(255,255,255,.92);', false, 'muted more opaque than text .68 < .92 (must not exempt)']
+      ['--text: rgba(255,255,255,.68); --muted: rgba(255,255,255,.92);', false, 'muted more opaque than text .68 < .92 (must not exempt)'],
+      // 3 boundary cases for equal alpha and alpha clamping
+      ['--text: rgba(255,255,255,.68); --muted: rgba(255,255,255,.68);', false, 'equal alpha: no hierarchy (must not exempt)'],
+      ['--text: rgb(255 255 255 / 200%); --muted: rgba(255,255,255,.68);', true, 'clamped alpha > 1 still valid (200% clamped to 1)'],
+      ['--text: rgb(255 255 255 / 200%); --muted: rgb(255 255 255 / 150%);', false, 'both alphas > 1 clamp to 1 -> equal alpha -> false']
     ]
-    assert.strictEqual(nativeDarkTable.length, 37, 'nativeDarkTable must contain exactly 37 test cases')
+    assert.strictEqual(nativeDarkTable.length, 40, 'nativeDarkTable must contain exactly 40 test cases')
     for (const [block, expected, label] of nativeDarkTable) {
       assert.strictEqual(isNativeDarkSkin(block), expected, `isNativeDarkSkin table assertion failed for: ${label}`)
     }

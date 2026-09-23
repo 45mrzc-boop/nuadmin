@@ -49,7 +49,7 @@ export function parseWhiteLiteral(raw: string): { white: boolean; alpha: number 
     if (ch.some((c) => !Number.isFinite(c))) return null
     let a = 1
     if (p.length >= 4) a = p[3].endsWith('%') ? parseFloat(p[3]) / 100 : parseFloat(p[3])
-    return Number.isFinite(a) ? { white: ch.every((c) => c === 1), alpha: a } : null
+    return Number.isFinite(a) ? { white: ch.every((c) => c === 1), alpha: Math.min(1, Math.max(0, a)) } : null
   }
   if ((m = /^oklch\(([^)]*)\)$/.exec(s))) {
     const p = m[1].split(/[\s,/]+/).filter(Boolean)
@@ -58,7 +58,7 @@ export function parseWhiteLiteral(raw: string): { white: boolean; alpha: number 
     const C = parseFloat(p[1])
     let a = 1
     if (p.length >= 4) a = p[3].endsWith('%') ? parseFloat(p[3]) / 100 : parseFloat(p[3])
-    return [L, C, a].every(Number.isFinite) ? { white: L === 1 && C === 0, alpha: a } : null
+    return [L, C, a].every(Number.isFinite) ? { white: L === 1 && C === 0, alpha: Math.min(1, Math.max(0, a)) } : null
   }
   if (s === 'white') return { white: true, alpha: 1 }
   if (s === 'transparent') return { white: false, alpha: 0 }
@@ -76,7 +76,7 @@ export function lastDecl(block: string, prop: string): string | null {
 /**
  * 原生暗色皮肤物理双特征判定（按值精确解析）：
  * 1. 浅色块主文本与次要文本最后声明均为白色
- * 2. 主文本比次要文本更不透明且次要文本透明度大于 0（pt.alpha > pu.alpha && pu.alpha > 0）
+ * 2. 主文本比次要文本更不透明且次要文本透明度介于 0 和 1 之间（pt.alpha > pu.alpha && pu.alpha > 0 && pu.alpha < 1）
  * 满足双特征即视为原生暗色皮肤，天然无需暗色色板重写。
  */
 export function isNativeDarkSkin(lightBlock: string): boolean {
@@ -85,7 +85,7 @@ export function isNativeDarkSkin(lightBlock: string): boolean {
   if (!t || !u) return false
   const pt = parseWhiteLiteral(t), pu = parseWhiteLiteral(u)
   if (!pt || !pu || !pt.white || !pu.white) return false
-  return pt.alpha > pu.alpha && pu.alpha > 0
+  return pt.alpha > pu.alpha && pu.alpha > 0 && pu.alpha < 1
 }
 
 /**
