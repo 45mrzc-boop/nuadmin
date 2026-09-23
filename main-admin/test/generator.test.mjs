@@ -1429,7 +1429,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(verifySrc.includes("bcm.includes('dark:text-primary-fg-dark')"), 'verify.ts Case 4.7 must enforce semantic dark:text-primary-fg-dark coverage on badge tokens')
     assert.ok(verifySrc.includes('hasDarkGradTokens'), 'verify.ts Case 4.7 must verify dark mode gradient tokens')
     assert.ok(verifySrc.includes("cssContent.lastIndexOf('.dark {')"), 'verify.ts Case 4.7 must strictly scope dark tokens to last .dark block')
-    assert.ok(verifySrc.includes('isGlass'), 'verify.ts Case 4.7 must exempt glass skin from dark grad tokens')
+    assert.ok(verifySrc.includes('needsDarkGrad'), 'verify.ts Case 4.7 must derive needsDarkGrad dynamically from lightBlock')
     assert.ok(verifySrc.includes('hasTextPrimaryMapping'), 'verify.ts Case 4.7 must verify text-primary mapping')
     assert.ok(verifySrc.includes('hasFontSizeAxis'), 'verify.ts Case 4.7 must verify font size axis')
     assert.ok(verifySrc.includes('designDefects.join'), 'verify.ts Case 4.7 must aggregate all design defects into single comprehensive report')
@@ -1460,10 +1460,11 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(/--grad:\s*linear-gradient\(180deg, rgba\(255,255,255,\.06\)/.test(darkSlice), 'droplet dark block must contain dark gradient')
     assert.ok(!/--grad:\s*linear-gradient\(180deg,rgba\(255,255,255,\.85\)/.test(darkSlice), 'droplet dark block must not retain white panel gradient')
 
-    // Glass skin verification (native dark skin, no dark gradient needed)
+    // Glass skin verification (native dark skin, no linear gradient, darkBlock requires no gradient override)
     const glassPlan = { ...mockPlan, theme: { ...mockPlan.theme, skin: 'glass' } }
     const glassCss = appFiles(glassPlan)['app/assets/css/main.css']
     assert.ok(glassCss.includes('/* 皮肤：glass'), 'glass css must be generated')
+    assert.ok(!glassCss.match(/--(?:btn-)?grad:\s*linear-gradient/), 'glass 皮肤不应含任何线性渐变（暗色块无需渐变覆盖）')
 
     // 6. Nuxt UI app.config.ts badge theme & size tokens
     const genUi = uiFiles(mockPlan)

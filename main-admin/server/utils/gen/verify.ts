@@ -131,11 +131,12 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const hasTextPrimaryMapping = cssContent.includes('.text-primary {') && cssContent.includes('var(--color-primary-fg-light)')
       const hasNeutralContrastTokens = cssContent.includes('--ui-text-dimmed:')
       const hasFontSizeAxis = cssContent.includes('--text-sm: var(--fs')
-      const isGlass = /\/\* 皮肤：glass/.test(cssContent)
-      const darkBlock = isGlass
-        ? ''
-        : (cssContent.includes('.dark {') ? cssContent.slice(cssContent.lastIndexOf('.dark {')) : '')
-      const hasDarkGradTokens = isGlass
+      // 浅色块无渐变 ⇒ 无需暗色覆盖；浅色块有渐变 ⇒ 暗色块必须提供暗色渐变覆盖
+      const skinStart = cssContent.indexOf('/* 皮肤：')
+      const lightBlock = skinStart >= 0 ? cssContent.slice(skinStart, cssContent.lastIndexOf('.dark {')) : ''
+      const needsDarkGrad = /--(?:btn-)?grad:\s*linear-gradient/.test(lightBlock)
+      const darkBlock = cssContent.includes('.dark {') ? cssContent.slice(cssContent.lastIndexOf('.dark {')) : ''
+      const hasDarkGradTokens = !needsDarkGrad
         || (/--grad:\s*linear-gradient/.test(darkBlock) && /--btn-grad:\s*linear-gradient/.test(darkBlock))
 
       // 基于租户真实配色与统一暗底 (DARK_SURFACE_HEX) 动态计算对比度 < 4.5 的不达标色阶
