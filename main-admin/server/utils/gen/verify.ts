@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { buildPlan } from './plan'
 import { tenantDdl } from './server'
+import { ramp, contrastRatio, resolveBrandBase } from './app'
 
 const run1 = promisify(execFile)
 
@@ -128,30 +129,56 @@ export async function verify(tenantId: number, opts: { boot?: boolean } = {}): P
       const cssContent = readFileSync(cssPath, 'utf8')
       const hasContrastTokens = cssContent.includes('--color-primary-fg-light') && cssContent.includes('--ui-primary-fg-light')
 
+      // 基于租户真实配色与实际暗底 (#171717) 动态计算对比度 < 4.5 的不达标色阶
+      const base = resolveBrandBase(plan.theme)
+      const shades = ramp(base)
+      const shadeNames = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']
+      const nonCompliantDarkShades: string[] = []
+      for (let i = 0; i < shades.length; i++) {
+        const ratio = contrastRatio(shades[i], '#171717')
+        if (ratio < 4.5) {
+          nonCompliantDarkShades.push(shadeNames[i])
+        }
+      }
+      const darkInversionRe = nonCompliantDarkShades.length
+        ? new RegExp(`dark:text-primary-(${nonCompliantDarkShades.join('|')})\\b`)
+        : null
+
       const vueFiles = await walkVue(join(root, 'app'))
       let consumed = false
-      let hasTypo = ''
+      let typoFound = ''
+      let missingDarkBadge = false
+
       for (const f of vueFiles) {
         try {
           const src = readFileSync(f, 'utf8')
           if (src.includes('primary-fg-light') || src.includes('primary-fg-badge') || src.includes('primary-fg-dark')) {
             consumed = true
           }
-          const m = src.match(/dark:text-primary-(700|800|900|950)\b/)
-          if (m) {
-            hasTypo = m[0]
+          if (darkInversionRe) {
+            const m = src.match(darkInversionRe)
+            if (m) typoFound = m[0]
+          }
+          // 模式盲令牌漏配 dark: 覆盖检测
+          const badgeClassMatches = src.match(/class="[^"]*text-primary-fg-badge[^"]*"/g) || []
+          for (const bcm of badgeClassMatches) {
+            if (!bcm.includes('dark:')) {
+              missingDarkBadge = true
+            }
           }
         } catch {}
       }
 
       if (!hasContrastTokens) {
         add('contrast', 'WCAG AA 文本对比度门禁', 'fail', 'main.css 缺失对比度求解令牌', s)
-      } else if (hasTypo) {
-        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', `组件中存在暗色对比度反转笔误 (${hasTypo}，暗底深字导致对比度严重不足)`, s)
+      } else if (typoFound) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', `组件中存在暗色对比度反转 (${typoFound}，当前配色下实测对比度 < 4.5:1)`, s)
+      } else if (missingDarkBadge) {
+        add('contrast', 'WCAG AA 文本对比度门禁', 'fail', '组件中 text-primary-fg-badge 漏配 dark: 模式覆盖 (模式盲令牌在暗底对比度不足)', s)
       } else {
         add('contrast', 'WCAG AA 文本对比度门禁', 'pass',
           consumed
-            ? '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1) 且物料组件真实消费'
+            ? '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1) 且物料组件真实消费（动态亮度判据 0 缺陷）'
             : '已成对求解高对比度色阶 (--ui-primary-fg-light/dark, ≥4.5:1)', s)
       }
     } else {

@@ -1422,10 +1422,11 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
     assert.ok(portalPage.includes('text-primary-fg-light dark:text-primary-fg-dark'), 'portal page must consume text-primary-fg-light dark:text-primary-fg-dark')
     assert.ok(formPage.includes('text-primary-fg-badge dark:text-primary-fg-dark'), 'form page must consume text-primary-fg-badge dark:text-primary-fg-dark')
 
-    // 4. Verify.ts Case 4.7 code audit
+    // 4. Verify.ts Case 4.7 code audit (Dynamic luminance contrast ratio & badge dark coverage)
     const verifySrc = readFileSync(resolve(root, 'server/utils/gen/verify.ts'), 'utf-8')
-    assert.ok(verifySrc.includes('dark:text-primary-(700|800|900|950)'), 'verify.ts Case 4.7 must actively scan for dark:text-primary-(700|800|900|950) typo')
-    assert.ok(verifySrc.includes('primary-fg-light') && verifySrc.includes('primary-fg-badge'), 'verify.ts Case 4.7 must verify real component consumption')
+    assert.ok(verifySrc.includes("contrastRatio(shades[i], '#171717')"), 'verify.ts Case 4.7 must compute real contrast ratio per shade against dark background')
+    assert.ok(verifySrc.includes('text-primary-fg-badge'), 'verify.ts Case 4.7 must verify text-primary-fg-badge dark coverage')
+    assert.ok(verifySrc.includes('missingDarkBadge'), 'verify.ts Case 4.7 must guard against missing dark coverage on mode-blind tokens')
   })
 })
 

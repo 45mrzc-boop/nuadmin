@@ -296,7 +296,7 @@ function mix(a: string, b: string, t: number): string {
  * Real tint/shade ramp. Appending an alpha suffix to the brand hex is NOT a
  * tint — it yields translucent steps that read wrong on any background.
  */
-function ramp(base: string): string[] {
+export function ramp(base: string): string[] {
   const white = '#ffffff', black = '#000000'
   return [
     mix(base, white, 0.92), mix(base, white, 0.84), mix(base, white, 0.66), mix(base, white, 0.45),
@@ -348,6 +348,13 @@ export function fgOn(surface: string, shades: string[], target = 4.5): { shadeNa
   }
 }
 
+/** Resolve primary brand hex from theme configuration (palette accent takes precedence). */
+export function resolveBrandBase(t: TenantPlan['theme']): string {
+  const pal = findPalette(t.skin, t.palette)
+  const raw = pal?.accent ?? t.primary ?? ''
+  return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : '#0a84ff'
+}
+
 /** Brand tokens become real Tailwind v4 theme variables, not runtime CSS vars. */
 function mainCss(p: TenantPlan) {
   const t = p.theme
@@ -358,8 +365,7 @@ function mainCss(p: TenantPlan) {
   // 配色优先于手填主色：设计站选皮肤+配色后，accent 就是主色，
   // 保证「画廊里看到的」和「生成出来的」是同一个值。
   const pal = findPalette(t.skin, t.palette)
-  const raw = pal?.accent ?? t.primary ?? ''
-  const base = /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : '#0a84ff'
+  const base = resolveBrandBase(t)
   const shades = ramp(base)
   const names = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']
 
