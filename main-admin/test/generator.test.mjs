@@ -1501,7 +1501,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       .filter(k => !NEUTRAL_TOKENS.test(k) && !MODE_STABLE.has(k) && !new Set(toks(forgedDarkBlock)).has(k))
     assert.deepStrictEqual(forgedMissing, ['--panel'], 'Adversarial check: missing --panel in dark block must be detected')
 
-    // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing: 33 cases with value-based parsing)
+    // 5.2 Unit test matrix for isNativeDarkSkin predicate (synthetic lightBlock table testing; authoritative length asserted below)
     const nativeDarkTable = [
       ['--text: #fff; --muted: rgba(255,255,255,.68);', true, 'glass actual CSS'],
       ['--text: #fff; --muted: rgba(255, 255, 255, .68);', true, 'rgba with spaces'],
@@ -1523,7 +1523,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       ['--text: #fff; --muted: oklch(100% 0 0 / 1);', false, '--muted oklch(100% 0 0 / 1) opaque percentage'],
       ['--text: #fff; --muted: oklch(100% 0 0 / 68%);', true, '--muted oklch percentage alpha 68%'],
       ['--text: #6e6e73; --muted: rgba(255,255,255,.68);', false, 'dark text with white muted'],
-      // 13 boundary & adversarial cases (fixing overbroad and missed exemptions)
+      ['--text: #fff; --muted: #6e6e73;', false, 'white text with dark muted (must not exempt)'],
       ['--text: #fff; --muted: rgba(255,255,255,1);', false, '--muted: rgba(255,255,255,1) opaque (must not exempt)'],
       ['--text: #fff; --muted: rgba(255,255,255, 1.0);', false, '--muted: rgba(255,255,255, 1.0) opaque (must not exempt)'],
       ['--text: #fff; --muted: rgb(255 255 255 / 1);', false, '--muted: rgb(255 255 255 / 1) space opaque (must not exempt)'],
@@ -1537,17 +1537,15 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && (keyMatch2(r.obj, p.obj) || p.ob
       ['--text: #fff; --muted: transparent;', false, '--muted: transparent alpha 0 (must not exempt)'],
       ['--text: #1d1d1f; --muted: #6e6e73; --text: #fff; --muted: rgba(255,255,255,.68);', true, 'CSS cascade override (last-wins)'],
       ['--text: #fff; --muted: oklch(1 0 0 / 100%);', false, '--muted: oklch(1 0 0 / 100%) opaque percentage (must not exempt)'],
-      // 4 new boundary & adversarial cases for anchor and relative alpha
       [':root{--text: #fff; --muted: rgba(255,255,255,.68);}', true, ':root{--text block start anchor'],
       ['{--text: #fff; --muted: rgba(255,255,255,.68);}', true, '{--text block start anchor'],
       ['--text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.68);', true, 'soft white title .92 > .68'],
       ['--text: rgba(255,255,255,.68); --muted: rgba(255,255,255,.92);', false, 'muted more opaque than text .68 < .92 (must not exempt)'],
-      // 3 boundary cases for equal alpha and alpha clamping
       ['--text: rgba(255,255,255,.68); --muted: rgba(255,255,255,.68);', false, 'equal alpha: no hierarchy (must not exempt)'],
       ['--text: rgb(255 255 255 / 200%); --muted: rgba(255,255,255,.68);', true, 'clamped alpha > 1 still valid (200% clamped to 1)'],
       ['--text: rgb(255 255 255 / 200%); --muted: rgb(255 255 255 / 150%);', false, 'both alphas > 1 clamp to 1 -> equal alpha -> false']
     ]
-    assert.strictEqual(nativeDarkTable.length, 40, 'nativeDarkTable must contain exactly 40 test cases')
+    assert.strictEqual(nativeDarkTable.length, 41, 'nativeDarkTable must contain exactly 41 test cases')
     for (const [block, expected, label] of nativeDarkTable) {
       assert.strictEqual(isNativeDarkSkin(block), expected, `isNativeDarkSkin table assertion failed for: ${label}`)
     }

@@ -65,7 +65,11 @@ export function parseWhiteLiteral(raw: string): { white: boolean; alpha: number 
   return null
 }
 
-/** 提取属性最后一次声明的值（支持 CSS 层叠后值覆盖前值，如皮肤覆盖基座变量） */
+/**
+ * 提取属性最后一次声明的值（支持 CSS 层叠后值覆盖前值，如皮肤覆盖基座变量）。
+ * 注意：CSS 自定义属性名严格区分大小写（--TEXT !== --text，正则不加 i 标志），
+ * 而属性取值不区分大小写（由 parseWhiteLiteral 开头 .toLowerCase() 归一化）。
+ */
 export function lastDecl(block: string, prop: string): string | null {
   const re = new RegExp('(?:^|[{;])\\s*--' + prop + ':\\s*([^;]+)', 'g')
   let m: RegExpExecArray | null, last: string | null = null
